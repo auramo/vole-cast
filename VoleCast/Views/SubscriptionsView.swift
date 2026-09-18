@@ -2,7 +2,7 @@ import SwiftData
 import SwiftUI
 
 /// The shows you subscribe to, newest subscription first.
-struct LibraryView: View {
+struct SubscriptionsView: View {
     @Binding var path: NavigationPath
     let onFindShows: () -> Void
 
@@ -34,13 +34,13 @@ struct LibraryView: View {
                     .listStyle(.plain)
                 }
             }
-            .navigationTitle("Library")
+            .navigationTitle("Subscriptions")
             .navigationDestination(for: Podcast.self) { PodcastDetailView(podcast: $0) }
         }
     }
 }
 
-extension LibraryView {
+extension SubscriptionsView {
     private func unsubscribe(at offsets: IndexSet) {
         for index in offsets {
             Subscriptions.unsubscribe(podcasts[index], in: context)
@@ -71,6 +71,6 @@ private struct PodcastRow: View {
 }
 
 #Preview {
-    LibraryView(path: .constant(NavigationPath()), onFindShows: {})
+    SubscriptionsView(path: .constant(NavigationPath()), onFindShows: {})
         .modelContainer(VoleCastModelContainer.makeInMemory())
 }

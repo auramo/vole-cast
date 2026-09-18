@@ -1,28 +1,36 @@
 import SwiftUI
 
-/// Two top-level tabs: the shows you subscribe to, and finding new ones.
+/// Three top-level tabs: what's new, the shows you follow, and finding more.
 ///
 /// Each tab owns its navigation path so switching tabs doesn't unwind where you
 /// were. When playback arrives, the mini-player becomes a bottom overlay here
 /// and this structure stays as it is.
 struct RootView: View {
     enum TabSelection {
-        case library, search
+        case latest, subscriptions, search
     }
 
-    @State private var selection: TabSelection = .library
-    @State private var libraryPath = NavigationPath()
+    @State private var selection: TabSelection = .latest
+    @State private var latestPath = NavigationPath()
+    @State private var subscriptionsPath = NavigationPath()
     @State private var searchPath = NavigationPath()
 
     var body: some View {
         TabView(selection: $selection) {
-            LibraryView(path: $libraryPath, onFindShows: { selection = .search })
-                .tabItem { Label("Library", systemImage: "square.stack.fill") }
-                .tag(TabSelection.library)
+            LatestEpisodesView(path: $latestPath, onFindShows: showSearch)
+                .tabItem { Label("Latest", systemImage: "waveform") }
+                .tag(TabSelection.latest)
+            SubscriptionsView(path: $subscriptionsPath, onFindShows: showSearch)
+                .tabItem { Label("Subscriptions", systemImage: "square.stack.fill") }
+                .tag(TabSelection.subscriptions)
             SearchView(path: $searchPath)
                 .tabItem { Label("Search", systemImage: "magnifyingglass") }
                 .tag(TabSelection.search)
         }
+    }
+
+    private func showSearch() {
+        selection = .search
     }
 }
 
