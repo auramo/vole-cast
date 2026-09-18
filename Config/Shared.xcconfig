@@ -1,0 +1,18 @@
+// Shared build configuration — committed to the repository.
+//
+// Personal values (Apple Developer team, bundle identifier prefix) are NOT
+// kept here. They live in Config/Local.xcconfig, which is git-ignored.
+//
+// To build with your own signing: copy Local.xcconfig.template to
+// Local.xcconfig and fill it in. Without that file the project still
+// configures and builds; only code signing needs a team of your own.
+
+// Reverse-DNS prefix for every bundle identifier in the project.
+ORG_IDENTIFIER = com.example
+
+// Empty by default so a fresh clone never inherits someone else's team.
+DEVELOPMENT_TEAM =
+
+// Local values win, so this include comes last. The "?" makes it a no-op
+// when the file is absent, which is what keeps a fresh clone working.
+#include? "Local.xcconfig"

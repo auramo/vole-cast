@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Old School</title>
+    <link>https://example.com/old</link>
+    <description>No iTunes tags at all.</description>
+    <image>
+      <url>https://cdn.example.com/old-144.png</url>
+      <title>Old School</title>
+      <link>https://example.com/old</link>
+    </image>
+    <item>
+      <title>Just one episode</title>
+      <pubDate>Mon, 01 Sep 2025 07:00:00 GMT</pubDate>
+      <enclosure url="https://cdn.example.com/old-1.mp3" type="audio/mpeg" length="7"/>
+    </item>
+  </channel>
+</rss>

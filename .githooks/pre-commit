@@ -1,0 +1,66 @@
+#!/bin/sh
+#
+# Keeps personal signing values out of commits.
+#
+# Xcode rewrites DEVELOPMENT_TEAM and literal bundle identifiers back into
+# project.pbxproj (and sometimes .entitlements files) whenever you touch the
+# Signing & Capabilities pane. Those values belong in Config/Local.xcconfig,
+# which is git-ignored, so this hook strips them from staged files and
+# re-stages the result. Nothing is lost: the build reads them from the
+# xcconfig, not from the project file.
+#
+# Enable with:  git config core.hooksPath .githooks
+
+set -e
+
+LOCAL_CONFIG="Config/Local.xcconfig"
+[ -f "$LOCAL_CONFIG" ] || exit 0
+
+# The literals to scrub are whatever this machine's local config declares.
+ORG=$(sed -n 's/^[[:space:]]*ORG_IDENTIFIER[[:space:]]*=[[:space:]]*//p' "$LOCAL_CONFIG" | tail -1 | tr -d ' \r')
+TEAM=$(sed -n 's/^[[:space:]]*DEVELOPMENT_TEAM[[:space:]]*=[[:space:]]*//p' "$LOCAL_CONFIG" | tail -1 | tr -d ' \r')
+
+cleaned=""
+
+for file in $(git diff --cached --name-only --diff-filter=ACM); do
+	case "$file" in
+		*.pbxproj|*.entitlements|*.plist) ;;
+		*) continue ;;
+	esac
+	[ -f "$file" ] || continue
+
+	before=$(md5 -q "$file" 2>/dev/null || md5sum "$file" | cut -d' ' -f1)
+
+	# Drop any hardcoded team; the xcconfig supplies it.
+	if [ -n "$TEAM" ]; then
+		sed -i '' "/DEVELOPMENT_TEAM = $TEAM;/d" "$file" 2>/dev/null || \
+			sed -i "/DEVELOPMENT_TEAM = $TEAM;/d" "$file"
+	fi
+
+	# Re-parameterise any bundle id or container Xcode wrote out in full.
+	if [ -n "$ORG" ]; then
+		sed -i '' "s/iCloud\.$ORG\./iCloud.\$(ORG_IDENTIFIER)./g; s/= $ORG\.\([A-Za-z0-9_]*\);/= \"\$(ORG_IDENTIFIER).\1\";/g" "$file" 2>/dev/null || \
+			sed -i "s/iCloud\.$ORG\./iCloud.\$(ORG_IDENTIFIER)./g; s/= $ORG\.\([A-Za-z0-9_]*\);/= \"\$(ORG_IDENTIFIER).\1\";/g" "$file"
+	fi
+
+	after=$(md5 -q "$file" 2>/dev/null || md5sum "$file" | cut -d' ' -f1)
+	if [ "$before" != "$after" ]; then
+		git add "$file"
+		cleaned="$cleaned $file"
+	fi
+done
+
+if [ -n "$cleaned" ]; then
+	echo "pre-commit: stripped personal signing values from:$cleaned"
+	echo "pre-commit: values still live in $LOCAL_CONFIG; the build is unaffected."
+fi
+
+# Backstop: never let the team id through, even from a file type not handled above.
+if [ -n "$TEAM" ] && git diff --cached -U0 | grep -q "^+.*$TEAM"; then
+	echo "pre-commit: ERROR — team id $TEAM still present in staged changes:" >&2
+	git diff --cached --name-only -G"$TEAM" >&2
+	echo "pre-commit: remove it by hand, or commit with --no-verify if intended." >&2
+	exit 1
+fi
+
+exit 0

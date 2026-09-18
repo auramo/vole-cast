@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+  <channel>
+    <title>Full Show</title>
+    <link>https://example.com/full</link>
+    <description>Channel description wins over the iTunes summary.</description>
+    <itunes:summary>An iTunes summary that should lose.</itunes:summary>
+    <itunes:author>Anna Aalto</itunes:author>
+    <managingEditor>editor@example.com</managingEditor>
+    <language>fi</language>
+    <itunes:new-feed-url>https://example.com/moved/feed.xml</itunes:new-feed-url>
+    <itunes:image href="https://cdn.example.com/art-3000.jpg"/>
+    <image>
+      <url>https://cdn.example.com/art-144.png</url>
+      <title>Full Show</title>
+      <link>https://example.com/full</link>
+    </image>
+    <item>
+      <title>Seconds</title>
+      <guid>full-3</guid>
+      <pubDate>Wed, 03 Sep 2025 07:00:00 GMT</pubDate>
+      <itunes:duration>3600</itunes:duration>
+      <itunes:image href="https://cdn.example.com/ep3.jpg"/>
+      <enclosure url="https://cdn.example.com/3.mp3" type="audio/mpeg" length="3"/>
+    </item>
+    <item>
+      <title>Minutes and seconds</title>
+      <guid>full-2</guid>
+      <pubDate>Tue, 02 Sep 2025 07:00:00 GMT</pubDate>
+      <itunes:duration>56:12</itunes:duration>
+      <enclosure url="https://cdn.example.com/2.mp3" type="audio/mpeg" length="2"/>
+    </item>
+    <item>
+      <title>Hours, minutes and seconds</title>
+      <guid>full-1</guid>
+      <pubDate>Mon, 01 Sep 2025 07:00:00 GMT</pubDate>
+      <itunes:duration>01:02:03</itunes:duration>
+      <enclosure url="https://cdn.example.com/1.mp3" type="audio/mpeg" length="1"/>
+    </item>
+  </channel>
+</rss>

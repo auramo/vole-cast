@@ -1,0 +1,40 @@
+# macOS
+.DS_Store
+
+# Xcode — user-specific state (window layout, open files, breakpoints, local paths)
+xcuserdata/
+*.xcuserstate
+*.xcuserdatad/
+
+# Xcode build output
+build/
+DerivedData/
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Signing / provisioning — never commit these
+*.mobileprovision
+*.provisionprofile
+*.p12
+*.p8
+*.cer
+*.certSigningRequest
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Packages/
+Package.resolved
+
+# CocoaPods / Carthage (unused today, harmless to keep)
+Pods/
+Carthage/Build/
+
+# Local tooling
+.claude/settings.local.json
+
+# Personal signing values — see Config/Local.xcconfig.template
+Config/Local.xcconfig

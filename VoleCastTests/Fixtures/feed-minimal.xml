@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Minimal Show</title>
+    <link>https://example.com/show</link>
+    <description>A show with nothing unusual about it.</description>
+    <language>en-us</language>
+    <item>
+      <title>Episode Two</title>
+      <description>The second one.</description>
+      <link>https://example.com/show/2</link>
+      <guid isPermaLink="false">episode-2</guid>
+      <pubDate>Tue, 02 Sep 2025 07:00:00 GMT</pubDate>
+      <enclosure url="https://cdn.example.com/2.mp3" type="audio/mpeg" length="2048"/>
+    </item>
+    <item>
+      <title>Episode One</title>
+      <description>The first one.</description>
+      <link>https://example.com/show/1</link>
+      <guid isPermaLink="false">episode-1</guid>
+      <pubDate>Mon, 01 Sep 2025 07:00:00 GMT</pubDate>
+      <enclosure url="https://cdn.example.com/1.mp3" type="audio/mpeg" length="1024"/>
+    </item>
+  </channel>
+</rss>

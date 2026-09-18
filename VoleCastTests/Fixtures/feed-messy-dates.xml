@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Messy Dates</title>
+    <link>https://example.com/dates</link>
+    <description>Every pubDate written differently.</description>
+    <item>
+      <title>Numeric offset</title>
+      <guid>d1</guid>
+      <pubDate>Mon, 01 Sep 2025 10:00:00 +0300</pubDate>
+      <enclosure url="https://cdn.example.com/d1.mp3" type="audio/mpeg" length="1"/>
+    </item>
+    <item>
+      <title>No weekday</title>
+      <guid>d2</guid>
+      <pubDate>02 Sep 2025 07:00:00 GMT</pubDate>
+      <enclosure url="https://cdn.example.com/d2.mp3" type="audio/mpeg" length="1"/>
+    </item>
+    <item>
+      <title>Zone comment</title>
+      <guid>d3</guid>
+      <pubDate>Wed, 03 Sep 2025 10:00:00 +0300 (EEST)</pubDate>
+      <enclosure url="https://cdn.example.com/d3.mp3" type="audio/mpeg" length="1"/>
+    </item>
+    <item>
+      <title>ISO 8601</title>
+      <guid>d4</guid>
+      <pubDate>2025-09-04T07:00:00Z</pubDate>
+      <enclosure url="https://cdn.example.com/d4.mp3" type="audio/mpeg" length="1"/>
+    </item>
+    <item>
+      <title>Single digit day</title>
+      <guid>d5</guid>
+      <pubDate>Fri, 5 Sep 2025 07:00:00 GMT</pubDate>
+      <enclosure url="https://cdn.example.com/d5.mp3" type="audio/mpeg" length="1"/>
+    </item>
+    <item>
+      <title>Unparseable</title>
+      <guid>d6</guid>
+      <pubDate>sometime last autumn</pubDate>
+      <enclosure url="https://cdn.example.com/d6.mp3" type="audio/mpeg" length="1"/>
+    </item>
+  </channel>
+</rss>

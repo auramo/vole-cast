@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title><![CDATA[CDATA & Entities]]></title>
+    <link>https://example.com/cdata</link>
+    <description><![CDATA[<p>A show about <strong>markup</strong>.</p>]]></description>
+    <item>
+      <title>Episode with &amp; entity</title>
+      <guid>cdata-1</guid>
+      <pubDate>Mon, 01 Sep 2025 07:00:00 GMT</pubDate>
+      <description><![CDATA[<p>Show notes with a <a href="https://example.com">link</a>.</p>]]></description>
+      <content:encoded><![CDATA[<p>Longer notes that should lose to description.</p>]]></content:encoded>
+      <enclosure url="https://cdn.example.com/cdata-1.mp3" type="audio/mpeg" length="10"/>
+    </item>
+    <item>
+      <title>Only content:encoded</title>
+      <guid>cdata-2</guid>
+      <pubDate>Sun, 31 Aug 2025 07:00:00 GMT</pubDate>
+      <content:encoded><![CDATA[<p>The only notes there are.</p>]]></content:encoded>
+      <enclosure url="https://cdn.example.com/cdata-2.mp3" type="audio/mpeg" length="10"/>
+    </item>
+  </channel>
+</rss>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<rss version="2.0">
+  <channel>
+    <title>Jäljillä</title>
+    <link>https://example.com/latin1</link>
+    <description>Suomenkielinen ohjelma, ISO-8859-1 -merkistöllä.</description>
+    <item>
+      <title>Ensimmäinen jakso</title>
+      <guid>latin1-1</guid>
+      <pubDate>Mon, 01 Sep 2025 07:00:00 GMT</pubDate>
+      <enclosure url="https://cdn.example.com/latin1-1.mp3" type="audio/mpeg" length="1"/>
+    </item>
+  </channel>
+</rss>

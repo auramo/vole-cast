@@ -1,0 +1,9 @@
+// Copy this file to Config/Local.xcconfig (git-ignored) and fill in your own
+// values. Config/Shared.xcconfig includes it automatically if it exists.
+
+// Reverse-DNS prefix for bundle identifiers, e.g. com.yourname
+ORG_IDENTIFIER = com.example
+
+// Your Apple Developer Team ID — Xcode > Settings > Accounts, or the Apple
+// Developer portal under Membership details. Leave empty to build unsigned.
+DEVELOPMENT_TEAM =
