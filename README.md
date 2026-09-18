@@ -33,6 +33,26 @@ be added without the UI knowing. That one needs an API key; if it is ever added,
 the key belongs in a git-ignored xcconfig with a committed template, the same
 way `Config/Local.xcconfig` works.
 
+## Code layout
+
+Each folder is defined by what it is allowed to touch, so the dependencies only
+ever point one way — parsing knows nothing about the network, and nothing below
+`Views/` knows about SwiftUI.
+
+| Folder | Holds | May use |
+| --- | --- | --- |
+| `Models/` | `Podcast`, `Episode` | SwiftData |
+| `Persistence/` | the container, and `Subscriptions` — the only writer to the store | SwiftData |
+| `FeedParsing/` | `FeedParser` and the pure helpers it needs (`RSSDate`, `EpisodeDuration`, `FeedURL`, `ParsedFeed`) | nothing but Foundation |
+| `Networking/` | `HTTPClient`, `AppURLSession`, `NetworkError` — transport, no podcast knowledge | URLSession |
+| `Catalog/` | where shows come from: `PodcastDirectory`, its iTunes implementation, and `FeedLoader` | Networking + FeedParsing |
+| `Formatting/` | turning stored values into display strings | Foundation |
+| `Views/` | SwiftUI screens and `SearchModel` | everything above |
+
+Services reach the views through the environment (`Views/Environment+Services.swift`),
+so no view names a concrete implementation and previews and tests can substitute
+fakes.
+
 ## Requirements
 
 - Xcode 26.3 or newer
