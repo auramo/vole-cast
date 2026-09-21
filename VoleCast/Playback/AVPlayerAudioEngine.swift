@@ -31,6 +31,7 @@ final class AVPlayerAudioEngine: AudioPlayback {
 
     private var player: AVPlayer?
     private let session = AudioSessionController()
+    private let nowPlaying = NowPlayingCentre()
     private var loaded: PlayableEpisode?
 
     private var timeObserver: Any?
@@ -59,6 +60,11 @@ final class AVPlayerAudioEngine: AudioPlayback {
         session.onMediaServicesReset = { [weak self] in
             self?.rebuildAfterReset()
         }
+
+        nowPlaying.onPlay = { [weak self] in self?.play() }
+        nowPlaying.onPause = { [weak self] in self?.pause() }
+        nowPlaying.onSkip = { [weak self] delta in self?.skip(by: delta) }
+        nowPlaying.onSeek = { [weak self] time in self?.seek(to: time) }
     }
 
     // MARK: - AudioPlayback
@@ -96,6 +102,10 @@ final class AVPlayerAudioEngine: AudioPlayback {
         observe(item)
         raisedBuffer = false
 
+        // Before `play()`, which activates the session: populating afterwards
+        // leaves the lock screen blank for the first few seconds.
+        nowPlaying.describe(episode, position: position, duration: duration, isPlaying: false)
+
         if episode.startAt > 0 {
             seek(to: episode.startAt)
         }
@@ -110,6 +120,7 @@ final class AVPlayerAudioEngine: AudioPlayback {
 
     func pause() {
         player?.pause()
+        nowPlaying.updatePlayback(position: position, duration: duration, isPlaying: false)
         onEvent?(.phase(.paused))
     }
 
@@ -129,6 +140,11 @@ final class AVPlayerAudioEngine: AudioPlayback {
         let target = CMTime(seconds: clamped, preferredTimescale: 600)
         position = clamped
         onEvent?(.time(clamped))
+        nowPlaying.updatePlayback(
+            position: clamped,
+            duration: duration,
+            isPlaying: player.timeControlStatus == .playing
+        )
 
         player.seek(to: target, toleranceBefore: tolerance, toleranceAfter: tolerance) { [weak self] _ in
             MainActor.assumeIsolated {
@@ -153,6 +169,7 @@ final class AVPlayerAudioEngine: AudioPlayback {
         loaded = nil
         position = 0
         duration = nil
+        nowPlaying.clear()
         session.deactivate()
         onEvent?(.phase(.idle))
     }
@@ -170,6 +187,7 @@ final class AVPlayerAudioEngine: AudioPlayback {
         playerObservations.removeAll()
         player?.replaceCurrentItem(with: nil)
         player = nil
+        nowPlaying.tearDown()
         session.tearDown()
     }
 
@@ -210,8 +228,10 @@ final class AVPlayerAudioEngine: AudioPlayback {
         switch player.timeControlStatus {
         case .playing:
             raiseBufferOnce()
+            nowPlaying.updatePlayback(position: position, duration: duration, isPlaying: true)
             onEvent?(.phase(.playing))
         case .paused:
+            nowPlaying.updatePlayback(position: position, duration: duration, isPlaying: false)
             onEvent?(.phase(loaded == nil ? .idle : .paused))
         case .waitingToPlayAtSpecifiedRate:
             onEvent?(.phase(player.reasonForWaitingToPlay == .noItemToPlay ? .idle : .buffering))
@@ -272,6 +292,11 @@ final class AVPlayerAudioEngine: AudioPlayback {
         guard seconds.isFinite, seconds > 0 else { return }
         duration = seconds
         onEvent?(.duration(seconds))
+        nowPlaying.updatePlayback(
+            position: position,
+            duration: seconds,
+            isPlaying: player?.timeControlStatus == .playing
+        )
     }
 
     private func emitFailure(_ error: Error?) {
