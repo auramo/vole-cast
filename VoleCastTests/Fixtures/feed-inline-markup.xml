@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+  <channel>
+    <title>Inline Markup Show</title>
+    <description>A show whose notes carry raw <b>XHTML</b> rather than CDATA.</description>
+    <link>https://example.com/inline</link>
+    <item>
+      <title>Episode One</title>
+      <guid>inline-1</guid>
+      <description>Hello <b>world</b> and more.</description>
+      <pubDate>Tue, 02 Sep 2025 07:00:00 +0000</pubDate>
+      <enclosure url="https://cdn.example.com/inline-1.mp3" type="audio/mpeg" length="1024"/>
+    </item>
+    <item>
+      <title>Episode Two</title>
+      <guid>inline-2</guid>
+      <description>Leading text <a href="https://example.com/x">a link</a> then trailing text.</description>
+      <pubDate>Mon, 01 Sep 2025 07:00:00 +0000</pubDate>
+      <enclosure url="https://cdn.example.com/inline-2.mp3" type="audio/mpeg" length="1024"/>
+    </item>
+  </channel>
+</rss>

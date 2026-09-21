@@ -61,6 +61,10 @@ private final class FeedParserDelegate: NSObject, XMLParserDelegate {
 
     private var path: [String] = []
     private var text = ""
+    // The enclosing elements' text, so that opening a child doesn't throw away
+    // what its parent had gathered. A description carrying raw XHTML rather
+    // than CDATA — `Hello <b>world</b> and more.` — depends on it.
+    private var textStack: [String] = []
 
     // Channel-level candidates, resolved at the end of `</channel>` so that
     // precedence doesn't depend on the order elements happen to appear in.
@@ -101,6 +105,7 @@ private final class FeedParserDelegate: NSObject, XMLParserDelegate {
     ) {
         let name = (qualifiedName ?? elementName).lowercased()
         path.append(name)
+        textStack.append(text)
         text = ""
 
         switch name {
@@ -147,7 +152,9 @@ private final class FeedParserDelegate: NSObject, XMLParserDelegate {
         let value = text.trimmingCharacters(in: .whitespacesAndNewlines)
         defer {
             if !path.isEmpty { path.removeLast() }
-            text = ""
+            // Hand this element's text back to its parent, which may still be
+            // gathering around it.
+            text = (textStack.popLast() ?? "") + text
         }
 
         if inItem {

@@ -114,4 +114,19 @@ struct FeedParserTests {
             try FeedParser.parse(Data())
         }
     }
+
+    /// Descriptions are usually CDATA or escaped, but a feed may carry raw
+    /// XHTML instead. Opening a child element must not discard the text
+    /// already gathered for its parent.
+    @Test func keepsDescriptionTextAroundRawInlineMarkup() throws {
+        let feed = try FeedParser.parse(try Fixtures.feed("feed-inline-markup"))
+
+        #expect(feed.summary == "A show whose notes carry raw XHTML rather than CDATA.")
+
+        let first = try #require(feed.episodes.first { $0.guid == "inline-1" })
+        #expect(first.summary == "Hello world and more.")
+
+        let second = try #require(feed.episodes.first { $0.guid == "inline-2" })
+        #expect(second.summary == "Leading text a link then trailing text.")
+    }
 }

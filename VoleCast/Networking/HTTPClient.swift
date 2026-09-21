@@ -24,21 +24,43 @@ struct URLSessionHTTPClient: HTTPClient {
 
     func data(for request: URLRequest, maxBytes: Int) async throws -> (Data, HTTPURLResponse) {
         do {
-            // Buffered rather than streamed with `bytes(for:)`: measured on a
-            // 600 KB feed, reading `AsyncBytes` a byte at a time took 4.1s
-            // against 0.06s here. So the size cap is enforced from the declared
-            // length up front, and from the body afterwards.
-            let (data, response) = try await session.data(for: request)
+            // Streamed rather than buffered, so that `maxBytes` is a real bound
+            // rather than something noticed once the body is already in memory.
+            // `bytes(for:)` returns at the headers, which is the only moment a
+            // declared length can be refused for free; the running total then
+            // covers a host that lies about it or declares nothing at all.
+            // Measured at 62ms for a 600 KB feed against 1ms for `data(for:)`
+            // in a debug build — and `URLCache` still stores the response, so
+            // conditional revalidation is unaffected.
+            let (stream, response) = try await session.bytes(for: request)
             guard let http = response as? HTTPURLResponse else {
+                stream.task.cancel()
                 throw NetworkError.invalidResponse
             }
-            guard data.count <= maxBytes else { throw NetworkError.tooLarge }
 
+            let declared = response.expectedContentLength
+            if declared != NSURLSessionTransferSizeUnknown, declared > Int64(maxBytes) {
+                stream.task.cancel()
+                throw NetworkError.tooLarge
+            }
+
+            // Worth doing before the body: an error page is never read at all.
             if let error = NetworkError.forStatus(http.statusCode) {
                 Self.logger.debug(
                     "\(request.url?.absoluteString ?? "?") -> HTTP \(http.statusCode)"
                 )
+                stream.task.cancel()
                 throw error
+            }
+
+            var data = Data()
+            data.reserveCapacity(declared > 0 ? Int(min(declared, Int64(maxBytes))) : 64 << 10)
+            for try await byte in stream {
+                data.append(byte)
+                if data.count > maxBytes {
+                    stream.task.cancel()
+                    throw NetworkError.tooLarge
+                }
             }
             return (data, http)
         } catch let error as URLError where error.code == .cancelled {

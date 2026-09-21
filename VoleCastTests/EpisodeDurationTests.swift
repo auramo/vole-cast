@@ -24,4 +24,26 @@ struct EpisodeDurationTests {
     func rejectsNonsense(_ input: String) {
         #expect(EpisodeDuration.seconds(from: input) == nil)
     }
+
+    /// `Double("inf")` and `Double("1e400")` both succeed, and infinity passes a
+    /// bare `>= 0` check. Left in, the value reaches `Duration.seconds` and
+    /// traps — and because it is persisted, it traps on every later launch.
+    @Test(arguments: ["inf", "-inf", "infinity", "Inf", "1e400", "nan", "NaN"])
+    func rejectsValuesThatAreNotRealDurations(_ input: String) {
+        #expect(EpisodeDuration.seconds(from: input) == nil)
+    }
+
+    /// Finite but absurd values trap the same way: anything past roughly 1.7e20
+    /// seconds overflows `Duration`'s internal Int128.
+    @Test(arguments: ["1e21", "999999999999999999999", "86400000", "3:1e20"])
+    func rejectsDurationsLongerThanAnyEpisode(_ input: String) {
+        #expect(EpisodeDuration.seconds(from: input) == nil)
+    }
+
+    /// The ceiling has to stay clear of genuinely long shows — unabridged
+    /// audiobook chapters and 24-hour charity streams are real.
+    @Test func acceptsGenuinelyLongEpisodes() {
+        #expect(EpisodeDuration.seconds(from: "86400") == 86400.0)
+        #expect(EpisodeDuration.seconds(from: "24:00:00") == 86400.0)
+    }
 }

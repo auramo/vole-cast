@@ -6,12 +6,12 @@ import Foundation
 /// tripping its 403 is exactly the failure we don't want in CI.
 struct ITunesPodcastDirectoryTests {
 
-    @Test func decodesACapturedResponse() throws {
+    @Test func decodesASearchResponse() throws {
         let results = try ITunesPodcastDirectory.decodeResults(try Fixtures.json("itunes-search"))
 
         let first = try #require(results.first)
-        #expect(first.title == "Rikosmyytit")
-        #expect(first.feedURL.absoluteString == "https://rss.podplaystudio.com/3038.xml")
+        #expect(first.title == "Directory Show")
+        #expect(first.feedURL.absoluteString == "https://feeds.example.com/directory-show.xml")
         #expect(first.itunesCollectionID != nil)
         #expect(first.id.hasPrefix("itunes:"))
         #expect(first.artworkURL != nil)

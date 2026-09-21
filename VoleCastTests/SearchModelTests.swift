@@ -36,12 +36,12 @@ struct SearchModelTests {
     }
 
     @Test func showsResults() async {
-        let directory = StubDirectory(results: [result("Rikosmyytit")])
+        let directory = StubDirectory(results: [result("Directory Show")])
         let model = model(directory)
 
-        await model.search("rikos")
+        await model.search("directory")
 
-        #expect(model.state == .results([result("Rikosmyytit")]))
+        #expect(model.state == .results([result("Directory Show")]))
         #expect(directory.calls.current == 1)
     }
 
@@ -103,8 +103,9 @@ struct SearchModelTests {
         ("https://example.com/feed.xml", true),
         ("example.com/feed", true),
         ("feed://example.com/rss", true),
-        ("Rikosmyytit", false),
-        ("Mitä ihmettä, Japani?", false),
+        ("Directory Show", false),
+        // Accents and punctuation must not read as an address either.
+        ("Mitä ihmettä, Esimerkki?", false),
         ("", false),
     ])
     func recognisesATypedFeedURL(_ query: String, _ isURL: Bool) {
