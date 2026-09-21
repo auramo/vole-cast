@@ -12,13 +12,21 @@ concurrency:
 jobs:
   test:
     name: Build and test
-    runs-on: macos-15
+    runs-on: macos-26
+
+    # The macos-15 image stops at Xcode 16.4, which cannot open this project.
+    # Pinned to the version the README states as the minimum, so CI proves that
+    # requirement is truthful rather than testing whatever the image defaults to.
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Show toolchain
-        run: xcodebuild -version
+        run: |
+          xcodebuild -version
+          swift --version
 
       # Simulator names change with every Xcode release, so the destination is
       # resolved at run time rather than pinned to whatever this month's runner
@@ -54,7 +62,7 @@ jobs:
 
       - name: Upload test results
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: test-results
           path: TestResults.xcresult
@@ -64,7 +72,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # .githooks/pre-commit strips these, but it only runs for contributors who
       # opted in with `git config core.hooksPath .githooks`. This is the part
