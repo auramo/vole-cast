@@ -85,10 +85,18 @@ from the xcconfig.
 
 ## Tests
 
+`Cmd-U` in Xcode, or from the command line against any installed iPhone
+simulator:
+
 ```sh
+xcrun simctl list devices available | grep iPhone   # pick one you have
 xcodebuild -project VoleCast.xcodeproj -scheme VoleCast \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' test
 ```
+
+Simulator names change with each Xcode release, so substitute a name from the
+first command rather than trusting the one above. CI resolves it at run time
+and runs the same suite on every push and pull request.
 
 ## License
 

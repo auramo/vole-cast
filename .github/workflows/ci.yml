@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Build and test
+    runs-on: macos-15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: xcodebuild -version
+
+      # Simulator names change with every Xcode release, so the destination is
+      # resolved at run time rather than pinned to whatever this month's runner
+      # image happens to ship.
+      - name: Choose a simulator
+        id: sim
+        run: |
+          udid=$(xcrun simctl list devices available --json \
+            | python3 -c '
+          import json, sys
+          runtimes = json.load(sys.stdin)["devices"]
+          for runtime in sorted(runtimes, reverse=True):
+              if "iOS" not in runtime:
+                  continue
+              for device in runtimes[runtime]:
+                  if device.get("isAvailable") and "iPhone" in device["name"]:
+                      print(device["udid"])
+                      sys.exit(0)
+          sys.exit("no available iPhone simulator")
+          ')
+          echo "udid=$udid" >> "$GITHUB_OUTPUT"
+          xcrun simctl list devices | grep -F "$udid"
+
+      - name: Test
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project VoleCast.xcodeproj \
+            -scheme VoleCast \
+            -destination "platform=iOS Simulator,id=${{ steps.sim.outputs.udid }}" \
+            -resultBundlePath TestResults.xcresult \
+            test
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults.xcresult
+
+  signing-values:
+    name: No personal signing values
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # .githooks/pre-commit strips these, but it only runs for contributors who
+      # opted in with `git config core.hooksPath .githooks`. This is the part
+      # nobody can forget to enable.
+      - name: Check for a committed team ID or bundle prefix
+        run: |
+          if git grep -nE 'DEVELOPMENT_TEAM[[:space:]]*=[[:space:]]*[A-Z0-9]{6,}' -- . ; then
+            echo "::error::A Development Team ID is committed. It belongs in Config/Local.xcconfig, which is git-ignored."
+            exit 1
+          fi
+          if git grep -nE 'PRODUCT_BUNDLE_IDENTIFIER[[:space:]]*=[[:space:]]*"?[a-z]+\.[a-zA-Z0-9]+\.' -- '*.pbxproj' ; then
+            echo "::error::A literal bundle identifier is committed. Use \$(ORG_IDENTIFIER)."
+            exit 1
+          fi
+          echo "No personal signing values found."
