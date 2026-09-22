@@ -20,8 +20,22 @@ struct LatestEpisodesView: View {
                     emptyState
                 } else {
                     List(episodes) { episode in
-                        NavigationLink(value: episode) {
-                            LatestEpisodeRow(episode: episode)
+                        // Two sibling buttons rather than a `NavigationLink`
+                        // wrapping the row: a button inside a link's label
+                        // doesn't get its own taps in a list, the link's
+                        // gesture takes them. `path.append` pushes exactly what
+                        // `NavigationLink(value:)` did, and the destinations
+                        // below are unchanged.
+                        HStack(spacing: 8) {
+                            Button {
+                                path.append(episode)
+                            } label: {
+                                LatestEpisodeRow(episode: episode)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityHint("Shows episode details")
+
+                            EpisodePlayButton(episode: episode)
                         }
                     }
                     .listStyle(.plain)
@@ -74,8 +88,12 @@ private struct LatestEpisodeRow: View {
                     .font(.caption)
                     .foregroundStyle(.tertiary)
             }
+            // Without this the gap between the text and the play button belongs
+            // to neither control and swallows taps.
+            Spacer(minLength: 12)
         }
         .padding(.vertical, 4)
+        .contentShape(Rectangle())
     }
 }
 
