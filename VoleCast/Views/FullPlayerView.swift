@@ -47,6 +47,10 @@ struct FullPlayerView: View {
             }
             .padding(.horizontal)
 
+            if let error = player.error {
+                failure(error)
+            }
+
             scrubber
             transport
 
@@ -61,6 +65,22 @@ struct FullPlayerView: View {
                 Button("Done") { dismiss() }
             }
         }
+    }
+
+    @ViewBuilder
+    private func failure(_ error: PlaybackError) -> some View {
+        VStack(spacing: 2) {
+            Label(error.errorDescription ?? "", systemImage: error.symbolName)
+                .font(.subheadline.weight(.medium))
+            if let suggestion = error.recoverySuggestion {
+                Text(suggestion)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .foregroundStyle(.red)
+        .padding(.horizontal)
     }
 
     // MARK: - Scrubber

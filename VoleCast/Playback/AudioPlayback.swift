@@ -37,10 +37,40 @@ enum PlaybackPhase: Equatable, Sendable {
     var isBusy: Bool { self == .loading || self == .buffering }
 }
 
-enum PlaybackError: Error, Equatable, Sendable {
+enum PlaybackError: Error, Equatable, Sendable, LocalizedError {
     case unplayable
     case offline
+    /// Carries the framework's own text for the log. It is deliberately not
+    /// shown to anyone — this is where "Error Domain=NSURLErrorDomain
+    /// Code=-1008" would otherwise end up on screen.
     case failed(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .unplayable: String(localized: "Can't Play This Episode")
+        case .offline: String(localized: "No Internet Connection")
+        case .failed: String(localized: "Playback Stopped")
+        }
+    }
+
+    var recoverySuggestion: String? {
+        switch self {
+        case .unplayable:
+            String(localized: "The show's host may have moved or removed the audio.")
+        case .offline:
+            String(localized: "Check your connection and try again.")
+        case .failed:
+            String(localized: "Try again in a moment.")
+        }
+    }
+
+    var symbolName: String {
+        switch self {
+        case .unplayable: "questionmark.circle"
+        case .offline: "wifi.slash"
+        case .failed: "exclamationmark.triangle"
+        }
+    }
 }
 
 /// What the engine tells the world. Delivered on the main actor.

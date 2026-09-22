@@ -46,7 +46,15 @@ struct MiniPlayerBar: View {
                         Text(episode.title)
                             .font(.footnote.weight(.medium))
                             .lineLimit(1)
-                        if !episode.showTitle.isEmpty {
+                        if let error = player.error {
+                            Label(
+                                error.errorDescription ?? "Playback Stopped",
+                                systemImage: error.symbolName
+                            )
+                            .font(.caption2)
+                            .foregroundStyle(.red)
+                            .lineLimit(1)
+                        } else if !episode.showTitle.isEmpty {
                             Text(episode.showTitle)
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)

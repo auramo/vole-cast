@@ -24,6 +24,11 @@ final class AVPlayerAudioEngine: AudioPlayback {
     /// notice, so it is applied only after playback starts.
     private static let forwardBuffer: TimeInterval = 60
 
+    /// How long to sit in `waitingToPlayAtSpecifiedRate` before nudging the
+    /// player. AVPlayer occasionally stays there after the network has come
+    /// back, and one `play()` shakes it loose.
+    private static let stallPatience: Duration = .seconds(20)
+
     var onEvent: ((PlaybackEvent) -> Void)?
 
     private(set) var position: TimeInterval = 0
@@ -47,6 +52,9 @@ final class AVPlayerAudioEngine: AudioPlayback {
     private var seekInFlight = false
     private var pendingSeek: TimeInterval?
     private var raisedBuffer = false
+    private var stallWatchdog: Task<Void, Never>?
+    /// Capped so a genuinely dead stream cannot become a retry loop.
+    private var nudgesUsed = 0
 
     init() {
         session.onInterruption = { [weak self] began, resumable in
@@ -172,6 +180,7 @@ final class AVPlayerAudioEngine: AudioPlayback {
         loaded = nil
         position = 0
         duration = nil
+        cancelStallWatchdog()
         nowPlaying.clear()
         session.deactivate()
         onEvent?(.phase(.idle))
@@ -185,6 +194,7 @@ final class AVPlayerAudioEngine: AudioPlayback {
             player.removeTimeObserver(timeObserver)
         }
         timeObserver = nil
+        cancelStallWatchdog()
         clearItemObservations()
         playerObservations.forEach { $0.invalidate() }
         playerObservations.removeAll()
@@ -233,13 +243,22 @@ final class AVPlayerAudioEngine: AudioPlayback {
         switch player.timeControlStatus {
         case .playing:
             raiseBufferOnce()
+            cancelStallWatchdog()
+            nudgesUsed = 0
             nowPlaying.updatePlayback(position: position, duration: duration, isPlaying: true)
             onEvent?(.phase(.playing))
         case .paused:
+            cancelStallWatchdog()
             nowPlaying.updatePlayback(position: position, duration: duration, isPlaying: false)
             onEvent?(.phase(loaded == nil ? .idle : .paused))
         case .waitingToPlayAtSpecifiedRate:
-            onEvent?(.phase(player.reasonForWaitingToPlay == .noItemToPlay ? .idle : .buffering))
+            if player.reasonForWaitingToPlay == .noItemToPlay {
+                cancelStallWatchdog()
+                onEvent?(.phase(.idle))
+            } else {
+                startStallWatchdog()
+                onEvent?(.phase(.buffering))
+            }
         @unknown default:
             break
         }
@@ -251,6 +270,27 @@ final class AVPlayerAudioEngine: AudioPlayback {
         guard !raisedBuffer, let item = player?.currentItem else { return }
         item.preferredForwardBufferDuration = Self.forwardBuffer
         raisedBuffer = true
+    }
+
+    // MARK: - Stalls
+
+    private func startStallWatchdog() {
+        guard stallWatchdog == nil, nudgesUsed < 2 else { return }
+        stallWatchdog = Task { [weak self] in
+            try? await Task.sleep(for: Self.stallPatience)
+            guard !Task.isCancelled, let self else { return }
+            guard player?.timeControlStatus == .waitingToPlayAtSpecifiedRate else { return }
+
+            nudgesUsed += 1
+            Self.logger.notice("Still buffering after \(Self.stallPatience); nudging playback.")
+            stallWatchdog = nil
+            player?.play()
+        }
+    }
+
+    private func cancelStallWatchdog() {
+        stallWatchdog?.cancel()
+        stallWatchdog = nil
     }
 
     // MARK: - Item observation
