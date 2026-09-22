@@ -3,7 +3,8 @@
 An open-source podcast app for iOS.
 
 Early days. You can find a show by name, or paste an RSS feed URL, subscribe to
-it, and browse its episodes. Playing them comes next.
+it, browse its episodes and play them — streaming, with the lock-screen
+controls and resume-where-you-left-off you'd expect. Downloads come next.
 
 Built with SwiftUI and SwiftData, with no third-party dependencies — feeds are
 parsed with Foundation's `XMLParser`.
@@ -33,6 +34,43 @@ be added without the UI knowing. That one needs an API key; if it is ever added,
 the key belongs in a git-ignored xcconfig with a committed template, the same
 way `Config/Local.xcconfig` works.
 
+## How playback works
+
+Episodes stream. Nothing is stored on the device beyond the session, and that
+is a property of the design rather than a policy anyone has to enforce:
+`AVURLAsset` uses CoreMedia's own HTTP stack, which neither consults nor
+populates the `URLCache` in `AppURLSession`, and the one API that writes audio
+durably — `AVAssetDownloadURLSession` — is not used. There is no downloads
+directory, nothing to enumerate and nothing to delete when you unsubscribe.
+
+What that does *not* mean is a bounded memory footprint. While an episode
+plays, AVFoundation buffers into its own scratch storage, and for a plain
+progressive MP3 it fetches front-to-back and may hold a large fraction of the
+item for the session — a two-hour show at 128 kbps is around 115 MB.
+`preferredForwardBufferDuration` is a hint, and constrains HLS far more tightly
+than it constrains a progressive download. Capping it for real would mean a
+caching layer, which is the thing streaming was chosen to avoid.
+
+Three things guard against stalls, none of them a cache. The forward buffer
+starts automatic and is raised to sixty seconds only once audio is flowing,
+because asking for a large read-ahead up front buys stall resistance at the
+cost of time-to-first-sound — the delay people actually notice. Seeks carry a
+one-second tolerance and coalesce, so dragging the scrubber cannot queue a
+burst of byte-range requests. And a watchdog nudges the player if it sits
+waiting to play for twenty seconds, which AVPlayer occasionally does even after
+the network has returned; it gives up after two attempts so a dead stream
+cannot become a retry loop.
+
+`Playback/` imports neither SwiftUI nor SwiftData. Episodes reach it as a
+`PlayableEpisode` snapshot, which keeps the engine testable without a store and
+means it cannot trap by reading an `Episode` that unsubscribing has already
+deleted. `PlayerModel` is the only place that sees both.
+
+Background audio is declared in `Config/Info.plist` rather than through a
+build setting. `INFOPLIST_KEY_UIBackgroundModes` is not a real setting —
+`xcodebuild` accepts it and then silently drops it — so that one key lives in a
+partial plist which `GENERATE_INFOPLIST_FILE` merges the generated keys into.
+
 ## Code layout
 
 Each folder is defined by what it is allowed to touch, so the dependencies only
@@ -42,12 +80,13 @@ ever point one way — parsing knows nothing about the network, and nothing belo
 | Folder | Holds | May use |
 | --- | --- | --- |
 | `Models/` | `Podcast`, `Episode` | SwiftData |
-| `Persistence/` | the container, and `Subscriptions` — the only writer to the store | SwiftData |
+| `Persistence/` | the container, plus `Subscriptions` and `PlaybackProgress` — the only writers to the store | SwiftData |
 | `FeedParsing/` | `FeedParser` and the pure helpers it needs (`RSSDate`, `EpisodeDuration`, `FeedURL`, `ParsedFeed`) | nothing but Foundation |
 | `Networking/` | `HTTPClient`, `AppURLSession`, `NetworkError` — transport, no podcast knowledge | URLSession |
 | `Catalog/` | where shows come from: `PodcastDirectory`, its iTunes implementation, and `FeedLoader` | Networking + FeedParsing |
 | `Formatting/` | turning stored values into display strings | Foundation |
-| `Views/` | SwiftUI screens and `SearchModel` | everything above |
+| `Playback/` | `AudioPlayback` and its AVPlayer engine, the audio session, now-playing and remote commands. Speaks in `PlayableEpisode` values, never `Episode` | AVFoundation, MediaPlayer, UIKit |
+| `Views/` | SwiftUI screens, `SearchModel` and `PlayerModel` | everything above |
 
 Services reach the views through the environment (`Views/Environment+Services.swift`),
 so no view names a concrete implementation and previews and tests can substitute

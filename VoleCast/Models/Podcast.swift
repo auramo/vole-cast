@@ -12,9 +12,9 @@ import SwiftData
 /// inverses) in case sync is ever switched on. Enabling it would also mean a
 /// dedupe pass at launch, since two devices could subscribe at the same time.
 ///
-/// Playback state (position, played flag, downloads) is deliberately absent for
-/// now. Those fields are additive and defaulted, so adding them later is a
-/// schema addition rather than a migration.
+/// Playback position and a played flag live on `Episode`; both were added as
+/// defaulted fields, so it was a schema addition rather than a migration.
+/// Downloads are still absent and would go the same way.
 @Model
 final class Podcast {
     /// The URL actually fetched: normalised, and resolved through any redirect.
