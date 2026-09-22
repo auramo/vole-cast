@@ -3,14 +3,16 @@ import SwiftUI
 /// Three top-level tabs: what's new, the shows you follow, and finding more.
 ///
 /// Each tab owns its navigation path so switching tabs doesn't unwind where you
-/// were. When playback arrives, the mini-player becomes a bottom overlay here
-/// and this structure stays as it is.
+/// were, and each is inset at the bottom by the mini-player, which is why the
+/// bar survives navigating and changing tabs.
 struct RootView: View {
     enum TabSelection {
         case latest, subscriptions, search
     }
 
     @Environment(\.makeAudioPlayback) private var makeAudioPlayback
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.scenePhase) private var scenePhase
 
     @State private var selection: TabSelection = .latest
     @State private var latestPath = NavigationPath()
@@ -38,7 +40,15 @@ struct RootView: View {
                 .tag(TabSelection.search)
         }
         .onAppear {
-            if player == nil { player = PlayerModel(playback: makeAudioPlayback()) }
+            if player == nil {
+                player = PlayerModel(playback: makeAudioPlayback(), context: modelContext)
+            }
+        }
+        // Autosave cannot be relied on once the app is suspended while still
+        // playing: it can be killed without another pass of the main runloop,
+        // taking the last few seconds of position with it.
+        .onChange(of: scenePhase) { _, phase in
+            if phase != .active { player?.flush() }
         }
     }
 

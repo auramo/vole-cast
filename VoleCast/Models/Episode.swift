@@ -5,7 +5,8 @@ import SwiftData
 ///
 /// `guid` is the feed's own identity for the episode and is never empty — the
 /// parser falls back through enclosure URL, page link and title+date. Refreshes
-/// merge on it, which is also what future playback state will hang off.
+/// merge on it, which is what the playback state below hangs off: an episode
+/// that falls out of the feed keeps its position rather than being discarded.
 @Model
 final class Episode {
     var guid: String = ""
@@ -22,6 +23,16 @@ final class Episode {
     /// Episode-specific artwork, when the feed provides it; else the show's.
     var artworkURL: String?
     var pageURL: String?
+
+    // Playback state. Defaulted and optional like everything else here, so this
+    // was a schema addition rather than a migration. `PlaybackProgress` is the
+    // only thing that writes these.
+
+    /// Seconds in. 0 means "not started", which is also where a finished
+    /// episode is reset to, so the two can never disagree.
+    var playbackPosition: Double = 0
+    var isPlayed: Bool = false
+    var lastPlayedAt: Date?
 
     var podcast: Podcast?
 

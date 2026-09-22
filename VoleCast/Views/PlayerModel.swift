@@ -12,6 +12,7 @@ import SwiftData
 @Observable
 final class PlayerModel {
     private let playback: any AudioPlayback
+    private let context: ModelContext
 
     /// The snapshot being played. Safe to read after the store has deleted the
     /// episode it came from.
@@ -26,6 +27,9 @@ final class PlayerModel {
     var isExpanded = false
 
     private var currentID: PersistentIdentifier?
+    /// The position last written to the store, so ticks can be thinned against
+    /// it rather than writing on every one.
+    private var lastWritten: TimeInterval = 0
 
     var isPlaying: Bool { phase == .playing }
     var isBuffering: Bool { phase.isBusy }
@@ -36,8 +40,9 @@ final class PlayerModel {
         return min(max(position / duration, 0), 1)
     }
 
-    init(playback: any AudioPlayback) {
+    init(playback: any AudioPlayback, context: ModelContext) {
         self.playback = playback
+        self.context = context
         self.playback.onEvent = { [weak self] event in
             self?.handle(event)
         }
@@ -61,11 +66,14 @@ final class PlayerModel {
 
     func play(_ episode: Episode) {
         guard let playable = snapshot(of: episode) else { return }
+        // Whatever was playing keeps where it got to before being replaced.
+        writePosition()
         error = nil
         currentID = episode.persistentModelID
         current = playable
         position = playable.startAt
         duration = playable.feedDuration
+        lastWritten = playable.startAt
         playback.load(playable)
     }
 
@@ -79,11 +87,13 @@ final class PlayerModel {
     func pause() {
         guard current != nil else { return }
         playback.pause()
+        writePosition(force: true)
     }
 
     func seek(to time: TimeInterval) {
         guard current != nil else { return }
         playback.seek(to: min(max(time, 0), duration ?? time))
+        writePosition(force: true)
     }
 
     func skip(by delta: TimeInterval) {
@@ -102,6 +112,7 @@ final class PlayerModel {
     }
 
     func stop() {
+        writePosition(force: true)
         playback.stop()
         current = nil
         currentID = nil
@@ -119,17 +130,56 @@ final class PlayerModel {
             if case let .failed(error) = phase { self.error = error }
         case let .time(seconds):
             position = seconds
+            writePosition()
         case let .duration(seconds):
             // The asset's answer beats the feed's claim.
             duration = seconds
         case .reachedEnd:
             phase = .paused
             position = duration ?? position
+            if let episode = liveEpisode() {
+                PlaybackProgress.markPlayed(episode, in: context)
+            }
+            lastWritten = 0
         case .interrupted:
             phase = .paused
+            writePosition(force: true)
+            PlaybackProgress.flush(in: context)
         case .routeLost:
             phase = .paused
+            writePosition(force: true)
         }
+    }
+
+    // MARK: - Persistence
+
+    /// Called on every tick, but only writes when the position has actually
+    /// moved far enough — or when the moment itself matters.
+    private func writePosition(force: Bool = false) {
+        guard current != nil else { return }
+        guard force || PlaybackProgress.shouldWrite(position: position, lastWritten: lastWritten)
+        else { return }
+        guard let episode = liveEpisode() else { return }
+
+        PlaybackProgress.record(position: position, for: episode, in: context)
+        lastWritten = position
+    }
+
+    /// Writes whatever is pending and saves. For the scene leaving `.active`,
+    /// where autosave can no longer be relied on.
+    func flush() {
+        writePosition(force: true)
+        PlaybackProgress.flush(in: context)
+    }
+
+    /// Re-resolves the stored episode only when something must be written.
+    /// Returns nil once it has been deleted, so nothing reads a dead model.
+    private func liveEpisode() -> Episode? {
+        guard let currentID else { return nil }
+        guard let episode = context.registeredModel(for: currentID) as Episode?,
+              !episode.isDeleted
+        else { return nil }
+        return episode
     }
 
     // MARK: - Translation
@@ -145,7 +195,11 @@ final class PlayerModel {
             artworkURL: (episode.artworkURL ?? episode.podcast?.artworkURL)
                 .flatMap(URL.init(string:)),
             feedDuration: episode.duration,
-            startAt: 0
+            startAt: PlaybackProgress.resumePosition(
+                stored: episode.playbackPosition,
+                duration: episode.duration,
+                isPlayed: episode.isPlayed
+            )
         )
     }
 }

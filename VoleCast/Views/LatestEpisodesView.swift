@@ -80,6 +80,8 @@ private struct LatestEpisodeRow: View {
 }
 
 #Preview {
+    let container = VoleCastModelContainer.makeInMemory()
     LatestEpisodesView(path: .constant(NavigationPath()), onFindShows: {})
-        .modelContainer(VoleCastModelContainer.makeInMemory())
+        .modelContainer(container)
+        .environment(PlayerModel(playback: AVPlayerAudioEngine(), context: ModelContext(container)))
 }

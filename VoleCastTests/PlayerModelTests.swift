@@ -30,8 +30,8 @@ struct PlayerModelTests {
         return show
     }
 
-    private func model(_ playback: FakeAudioPlayback) -> PlayerModel {
-        PlayerModel(playback: playback)
+    private func model(_ playback: FakeAudioPlayback, _ context: ModelContext) -> PlayerModel {
+        PlayerModel(playback: playback, context: context)
     }
 
     @Test func playingAFreshEpisodeLoadsIt() throws {
@@ -39,7 +39,7 @@ struct PlayerModelTests {
         let show = makeShow(context, identity: "a.example.com", episodes: ["a1"])
         let episode = try #require(show.episodes?.first)
         let fake = FakeAudioPlayback()
-        let player = model(fake)
+        let player = model(fake, context)
 
         player.toggle(episode)
 
@@ -56,7 +56,7 @@ struct PlayerModelTests {
         let show = makeShow(context, identity: "b.example.com", episodes: ["b1"])
         let episode = try #require(show.episodes?.first)
         let fake = FakeAudioPlayback()
-        let player = model(fake)
+        let player = model(fake, context)
 
         player.toggle(episode)
         fake.emit(.phase(.playing))
@@ -72,7 +72,7 @@ struct PlayerModelTests {
         let show = makeShow(context, identity: "c.example.com", episodes: ["c1"])
         let episode = try #require(show.episodes?.first)
         let fake = FakeAudioPlayback()
-        let player = model(fake)
+        let player = model(fake, context)
 
         player.toggle(episode)
         fake.emit(.phase(.paused))
@@ -90,7 +90,7 @@ struct PlayerModelTests {
         let first = try #require(episodes.first { $0.guid == "d1" })
         let second = try #require(episodes.first { $0.guid == "d2" })
         let fake = FakeAudioPlayback()
-        let player = model(fake)
+        let player = model(fake, context)
 
         player.toggle(first)
         fake.emit(.phase(.playing))
@@ -106,7 +106,7 @@ struct PlayerModelTests {
         let show = makeShow(context, identity: "e.example.com", episodes: ["e1"])
         let episode = try #require(show.episodes?.first)
         let fake = FakeAudioPlayback()
-        let player = model(fake)
+        let player = model(fake, context)
 
         player.toggle(episode)
         fake.emit(.time(42))
@@ -123,7 +123,7 @@ struct PlayerModelTests {
         let show = makeShow(context, identity: "f.example.com", episodes: ["f1"])
         let episode = try #require(show.episodes?.first)
         let fake = FakeAudioPlayback()
-        let player = model(fake)
+        let player = model(fake, context)
 
         player.toggle(episode)
         #expect(player.duration == 1800)
@@ -137,7 +137,7 @@ struct PlayerModelTests {
         let show = makeShow(context, identity: "g.example.com", episodes: ["g1"])
         let episode = try #require(show.episodes?.first)
         let fake = FakeAudioPlayback()
-        let player = model(fake)
+        let player = model(fake, context)
 
         player.toggle(episode)
         fake.emit(.phase(.failed(.offline)))
@@ -153,7 +153,7 @@ struct PlayerModelTests {
         let first = try #require(episodes.first { $0.guid == "h1" })
         let second = try #require(episodes.first { $0.guid == "h2" })
         let fake = FakeAudioPlayback()
-        let player = model(fake)
+        let player = model(fake, context)
 
         player.toggle(first)
         fake.emit(.phase(.failed(.unplayable)))
@@ -167,7 +167,7 @@ struct PlayerModelTests {
         let show = makeShow(context, identity: "i.example.com", episodes: ["i1"])
         let episode = try #require(show.episodes?.first)
         let fake = FakeAudioPlayback()
-        let player = model(fake)
+        let player = model(fake, context)
 
         player.toggle(episode)
         fake.emit(.phase(.buffering))
@@ -187,7 +187,7 @@ struct PlayerModelTests {
         let other = makeShow(context, identity: "k.example.com", episodes: ["k1"])
         let episode = try #require(playing.episodes?.first)
         let fake = FakeAudioPlayback()
-        let player = model(fake)
+        let player = model(fake, context)
 
         player.toggle(episode)
 
@@ -206,7 +206,7 @@ struct PlayerModelTests {
         let show = makeShow(context, identity: "m.example.com", episodes: ["m1"])
         let episode = try #require(show.episodes?.first)
         let fake = FakeAudioPlayback()
-        let player = model(fake)
+        let player = model(fake, context)
 
         player.toggle(episode)
         fake.emit(.phase(.playing))
@@ -223,12 +223,121 @@ struct PlayerModelTests {
 
     @Test func resumeDoesNothingWithNothingLoaded() {
         let fake = FakeAudioPlayback()
-        let player = model(fake)
+        let player = model(fake, ModelContext(TestContainer.shared))
 
         player.resume()
         player.pause()
 
         #expect(fake.commands.isEmpty)
+    }
+
+    // MARK: - Persistence
+
+    @Test func startsWhereItWasLeftOff() throws {
+        let context = ModelContext(TestContainer.shared)
+        let show = makeShow(context, identity: "n.example.com", episodes: ["n1"])
+        let episode = try #require(show.episodes?.first)
+        episode.playbackPosition = 900
+        let fake = FakeAudioPlayback()
+        let player = model(fake, context)
+
+        player.toggle(episode)
+
+        #expect(fake.loaded?.startAt == 900)
+        #expect(player.position == 900)
+    }
+
+    /// Writing on every tick would invalidate the Latest query once a second.
+    @Test func writesPositionOnTheGridRatherThanEveryTick() throws {
+        let context = ModelContext(TestContainer.shared)
+        let show = makeShow(context, identity: "o.example.com", episodes: ["o1"])
+        let episode = try #require(show.episodes?.first)
+        let fake = FakeAudioPlayback()
+        let player = model(fake, context)
+
+        player.toggle(episode)
+        for second in 1...9 { fake.emit(.time(TimeInterval(second))) }
+        #expect(episode.playbackPosition == 0)
+
+        fake.emit(.time(10))
+        #expect(episode.playbackPosition == 10)
+    }
+
+    /// Pausing is a moment worth keeping however little has moved.
+    @Test func pausingWritesThePositionImmediately() throws {
+        let context = ModelContext(TestContainer.shared)
+        let show = makeShow(context, identity: "p.example.com", episodes: ["p1"])
+        let episode = try #require(show.episodes?.first)
+        let fake = FakeAudioPlayback()
+        let player = model(fake, context)
+
+        player.toggle(episode)
+        fake.emit(.time(7))
+        #expect(episode.playbackPosition == 0)
+
+        player.pause()
+        #expect(episode.playbackPosition == 7)
+    }
+
+    @Test func switchingEpisodesKeepsWhereTheOutgoingOneGotTo() throws {
+        let context = ModelContext(TestContainer.shared)
+        let show = makeShow(context, identity: "q.example.com", episodes: ["q1", "q2"])
+        let episodes = try #require(show.episodes)
+        let first = try #require(episodes.first { $0.guid == "q1" })
+        let second = try #require(episodes.first { $0.guid == "q2" })
+        let fake = FakeAudioPlayback()
+        let player = model(fake, context)
+
+        player.toggle(first)
+        fake.emit(.time(123))
+        player.toggle(second)
+
+        #expect(first.playbackPosition == 123)
+    }
+
+    @Test func reachingTheEndMarksItPlayedAndClearsThePosition() throws {
+        let context = ModelContext(TestContainer.shared)
+        let show = makeShow(context, identity: "r.example.com", episodes: ["r1"])
+        let episode = try #require(show.episodes?.first)
+        let fake = FakeAudioPlayback()
+        let player = model(fake, context)
+
+        player.toggle(episode)
+        fake.emit(.time(1700))
+        fake.emit(.reachedEnd)
+
+        #expect(episode.isPlayed)
+        #expect(episode.playbackPosition == 0)
+    }
+
+    /// A call or an alarm can be followed by the app being killed, so the
+    /// position has to be down before control is handed back.
+    @Test func anInterruptionWritesThePosition() throws {
+        let context = ModelContext(TestContainer.shared)
+        let show = makeShow(context, identity: "s.example.com", episodes: ["s1"])
+        let episode = try #require(show.episodes?.first)
+        let fake = FakeAudioPlayback()
+        let player = model(fake, context)
+
+        player.toggle(episode)
+        fake.emit(.time(55))
+        fake.emit(.interrupted(resumable: true))
+
+        #expect(episode.playbackPosition == 55)
+    }
+
+    @Test func aFinishedEpisodePlayedAgainStartsFromTheBeginning() throws {
+        let context = ModelContext(TestContainer.shared)
+        let show = makeShow(context, identity: "t.example.com", episodes: ["t1"])
+        let episode = try #require(show.episodes?.first)
+        episode.isPlayed = true
+        episode.playbackPosition = 0
+        let fake = FakeAudioPlayback()
+        let player = model(fake, context)
+
+        player.toggle(episode)
+
+        #expect(fake.loaded?.startAt == 0)
     }
 
     @Test func refusesAnEpisodeWithNoUsableAudioURL() throws {
@@ -237,7 +346,7 @@ struct PlayerModelTests {
         let episode = try #require(show.episodes?.first)
         episode.audioURL = ""
         let fake = FakeAudioPlayback()
-        let player = model(fake)
+        let player = model(fake, context)
 
         player.toggle(episode)
 

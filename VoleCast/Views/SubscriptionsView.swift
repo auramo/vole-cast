@@ -7,6 +7,7 @@ struct SubscriptionsView: View {
     let onFindShows: () -> Void
 
     @Environment(\.modelContext) private var context
+    @Environment(PlayerModel.self) private var player
 
     @Query(sort: \Podcast.subscribedAt, order: .reverse)
     private var podcasts: [Podcast]
@@ -43,6 +44,9 @@ struct SubscriptionsView: View {
 extension SubscriptionsView {
     private func unsubscribe(at offsets: IndexSet) {
         for index in offsets {
+            // Before the delete: the cascade destroys this show's episodes, and
+            // one of them may be the episode currently loaded.
+            player.stopIfPlaying(from: podcasts[index])
             Subscriptions.unsubscribe(podcasts[index], in: context)
         }
     }
@@ -71,6 +75,8 @@ private struct PodcastRow: View {
 }
 
 #Preview {
+    let container = VoleCastModelContainer.makeInMemory()
     SubscriptionsView(path: .constant(NavigationPath()), onFindShows: {})
-        .modelContainer(VoleCastModelContainer.makeInMemory())
+        .modelContainer(container)
+        .environment(PlayerModel(playback: AVPlayerAudioEngine(), context: ModelContext(container)))
 }
