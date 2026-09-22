@@ -50,6 +50,19 @@ struct RootView: View {
         .onChange(of: scenePhase) { _, phase in
             if phase != .active { player?.flush() }
         }
+        // Presented once, from here, so it covers the tab bar and survives a
+        // tab change underneath it.
+        .sheet(
+            isPresented: Binding(
+                get: { player?.isExpanded ?? false },
+                set: { player?.isExpanded = $0 }
+            )
+        ) {
+            if let player {
+                FullPlayerView()
+                    .environment(player)
+            }
+        }
     }
 
     private func showSearch() {

@@ -34,20 +34,31 @@ struct MiniPlayerBar: View {
 
     private func content(for episode: PlayableEpisode) -> some View {
         HStack(spacing: 12) {
-            ArtworkView(url: episode.artworkURL?.absoluteString, size: 40)
+            // The same two-sibling-buttons discipline as an episode row: the
+            // artwork and text open the full player, the controls do not.
+            Button {
+                player.isExpanded = true
+            } label: {
+                HStack(spacing: 12) {
+                    ArtworkView(url: episode.artworkURL?.absoluteString, size: 40)
 
-            VStack(alignment: .leading, spacing: 1) {
-                Text(episode.title)
-                    .font(.footnote.weight(.medium))
-                    .lineLimit(1)
-                if !episode.showTitle.isEmpty {
-                    Text(episode.showTitle)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(episode.title)
+                            .font(.footnote.weight(.medium))
+                            .lineLimit(1)
+                        if !episode.showTitle.isEmpty {
+                            Text(episode.showTitle)
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
+                .contentShape(Rectangle())
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .buttonStyle(.plain)
+            .accessibilityHint("Opens the player")
 
             Button {
                 player.skip(by: -NowPlayingCentre.skipBackward)
