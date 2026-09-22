@@ -18,8 +18,8 @@ final class NowPlayingCentre {
         category: "now-playing"
     )
 
-    static let skipForward: TimeInterval = 30
-    static let skipBackward: TimeInterval = 15
+    nonisolated static let skipForward: TimeInterval = 30
+    nonisolated static let skipBackward: TimeInterval = 15
 
     var onPlay: (() -> Void)?
     var onPause: (() -> Void)?
@@ -29,6 +29,10 @@ final class NowPlayingCentre {
     /// Which episode the current info dictionary describes, so a slow artwork
     /// fetch can't overwrite metadata that has since moved on.
     private var describing: String?
+    /// What we last told the system. `MPNowPlayingInfoCenter.playbackState` is
+    /// ignored on iOS without a MediaRemote entitlement, so it cannot be read
+    /// back as the source of truth.
+    private var isPlaying = false
     private var artworkTask: Task<Void, Never>?
 
     init() {
@@ -37,51 +41,51 @@ final class NowPlayingCentre {
 
     // MARK: - Commands
 
-    private func wireCommands() {
+    /// Every handler is `@Sendable` and hops to the main actor itself.
+    /// MediaRemote does not promise to call these on the main thread, and a
+    /// closure that inherited this type's isolation would abort the process
+    /// the first time it didn't.
+    private nonisolated func wireCommands() {
         let centre = MPRemoteCommandCenter.shared()
 
-        centre.playCommand.addTarget { [weak self] _ in
-            guard let self, let onPlay else { return .commandFailed }
-            onPlay()
+        centre.playCommand.addTarget { @Sendable [weak self] _ in
+            Task { @MainActor in self?.onPlay?() }
             return .success
         }
-        centre.pauseCommand.addTarget { [weak self] _ in
-            guard let self, let onPause else { return .commandFailed }
-            onPause()
+        centre.pauseCommand.addTarget { @Sendable [weak self] _ in
+            Task { @MainActor in self?.onPause?() }
             return .success
         }
-        centre.togglePlayPauseCommand.addTarget { [weak self] _ in
-            guard let self else { return .commandFailed }
-            // The lock screen's own button; which way it goes is our business.
-            if MPNowPlayingInfoCenter.default().playbackState == .playing {
-                onPause?()
-            } else {
-                onPlay?()
+        centre.togglePlayPauseCommand.addTarget { @Sendable [weak self] _ in
+            Task { @MainActor in
+                guard let self else { return }
+                // Our own record, not `MPNowPlayingInfoCenter.playbackState`:
+                // iOS ignores writes to that without a MediaRemote entitlement,
+                // so reading it back is not a reliable answer.
+                if self.isPlaying { self.onPause?() } else { self.onPlay?() }
             }
             return .success
         }
 
         centre.skipForwardCommand.preferredIntervals = [NSNumber(value: Self.skipForward)]
-        centre.skipForwardCommand.addTarget { [weak self] _ in
-            guard let self, let onSkip else { return .commandFailed }
-            onSkip(Self.skipForward)
+        centre.skipForwardCommand.addTarget { @Sendable [weak self] _ in
+            Task { @MainActor in self?.onSkip?(Self.skipForward) }
             return .success
         }
 
         centre.skipBackwardCommand.preferredIntervals = [NSNumber(value: Self.skipBackward)]
-        centre.skipBackwardCommand.addTarget { [weak self] _ in
-            guard let self, let onSkip else { return .commandFailed }
-            onSkip(-Self.skipBackward)
+        centre.skipBackwardCommand.addTarget { @Sendable [weak self] _ in
+            Task { @MainActor in self?.onSkip?(-Self.skipBackward) }
             return .success
         }
 
         // What makes the lock screen's scrubber draggable rather than inert.
-        centre.changePlaybackPositionCommand.addTarget { [weak self] event in
-            guard let self,
-                  let onSeek,
-                  let event = event as? MPChangePlaybackPositionCommandEvent
-            else { return .commandFailed }
-            onSeek(event.positionTime)
+        centre.changePlaybackPositionCommand.addTarget { @Sendable [weak self] event in
+            guard let event = event as? MPChangePlaybackPositionCommandEvent else {
+                return .commandFailed
+            }
+            let target = event.positionTime
+            Task { @MainActor in self?.onSeek?(target) }
             return .success
         }
 
@@ -117,7 +121,7 @@ final class NowPlayingCentre {
             info[MPMediaItemPropertyPlaybackDuration] = duration
         }
         MPNowPlayingInfoCenter.default().nowPlayingInfo = info
-        MPNowPlayingInfoCenter.default().playbackState = isPlaying ? .playing : .paused
+        self.isPlaying = isPlaying
 
         if let artworkURL = episode.artworkURL {
             loadArtwork(from: artworkURL, for: episode.id)
@@ -138,7 +142,7 @@ final class NowPlayingCentre {
             info[MPMediaItemPropertyPlaybackDuration] = duration
         }
         MPNowPlayingInfoCenter.default().nowPlayingInfo = info
-        MPNowPlayingInfoCenter.default().playbackState = isPlaying ? .playing : .paused
+        self.isPlaying = isPlaying
     }
 
     func clear() {
@@ -146,10 +150,22 @@ final class NowPlayingCentre {
         artworkTask = nil
         describing = nil
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
-        MPNowPlayingInfoCenter.default().playbackState = .stopped
+        isPlaying = false
     }
 
     // MARK: - Artwork
+
+    /// Wraps an image for the lock screen.
+    ///
+    /// `nonisolated` is load-bearing, not tidiness. MediaRemote calls the
+    /// request handler on its own queue whenever it wants the image at some
+    /// size, so a handler that inherited this type's main-actor isolation —
+    /// which it does by default — aborts the process with "BUG IN CLIENT OF
+    /// LIBDISPATCH: Block was expected to execute on queue" the moment the
+    /// lock screen draws.
+    nonisolated static func artwork(for image: UIImage) -> MPMediaItemArtwork {
+        MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+    }
 
     /// `URLSession.shared`, not `AppURLSession`: that one sends an RSS `Accept`
     /// header and a feed-sized cache, neither of which suits an image.
@@ -162,7 +178,7 @@ final class NowPlayingCentre {
 
             guard let self, describing == episodeID else { return }
 
-            let artwork = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+            let artwork = Self.artwork(for: image)
             // Merge rather than replace: a newer episode may have landed while
             // this was in flight, and its title must survive.
             guard var info = MPNowPlayingInfoCenter.default().nowPlayingInfo else { return }

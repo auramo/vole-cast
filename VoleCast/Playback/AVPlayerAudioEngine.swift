@@ -146,8 +146,11 @@ final class AVPlayerAudioEngine: AudioPlayback {
             isPlaying: player.timeControlStatus == .playing
         )
 
+        // `Task { @MainActor }` rather than `assumeIsolated`: AVPlayer runs a
+        // seek completion on an arbitrary queue, so asserting main isolation
+        // here is a claim the runtime will eventually call a lie.
         player.seek(to: target, toleranceBefore: tolerance, toleranceAfter: tolerance) { [weak self] _ in
-            MainActor.assumeIsolated {
+            Task { @MainActor in
                 guard let self else { return }
                 self.seekInFlight = false
                 if let next = self.pendingSeek {
@@ -202,6 +205,8 @@ final class AVPlayerAudioEngine: AudioPlayback {
         player.actionAtItemEnd = .pause
         self.player = player
 
+        // `assumeIsolated` is sound here, and only here, because the queue is
+        // explicitly `.main` on the line above.
         let interval = CMTime(seconds: 1, preferredTimescale: 600)
         timeObserver = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
             MainActor.assumeIsolated {
