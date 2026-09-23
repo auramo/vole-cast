@@ -72,9 +72,15 @@ final class PlayerModel {
     ///
     /// Nothing is handed to the engine here: the app has just launched, quite
     /// possibly in someone's pocket, and restoring must not make a sound.
+    ///
+    /// A finished episode is the exception, and the player stays empty. There
+    /// is nothing to come back to, and it deliberately doesn't reach further
+    /// back for an older unfinished one: the last thing you did was finish
+    /// something, so nothing is waiting for you.
     func restoreLastPlayed() {
         guard current == nil else { return }
         guard let episode = try? context.fetch(ListeningHistory.descriptor(limit: 1)).first,
+              !episode.isPlayed,
               let playable = snapshot(of: episode)
         else { return }
 

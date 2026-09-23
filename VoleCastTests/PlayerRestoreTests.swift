@@ -143,17 +143,37 @@ struct PlayerRestoreTests {
         #expect(fake.loaded?.startAt == 120)
     }
 
-    /// A finished episode resumes from the start, as it would anywhere else.
-    @Test func restoringAFinishedEpisodeStartsItOver() {
+    /// The exception to "the bar stays". Something you listened all the way
+    /// through is finished business — there is nothing to come back to, so the
+    /// player goes away entirely.
+    @Test func doesNotRestoreAFinishedEpisode() {
         let context = ModelContext(VoleCastModelContainer.makeInMemory())
         _ = makeEpisode(context, guid: "done", playedAt: .now, position: 0, isPlayed: true)
         let fake = FakeAudioPlayback()
         let player = PlayerModel(playback: fake, context: context)
 
         player.restoreLastPlayed()
-        player.resume()
 
-        #expect(player.current?.title == "Episode done")
-        #expect(fake.loaded?.startAt == 0)
+        #expect(player.current == nil)
+        #expect(fake.commands.isEmpty)
+    }
+
+    /// And it does not quietly reach further back for something older either:
+    /// the most recent thing you played was finished, so there is nothing
+    /// waiting for you.
+    @Test func doesNotReachPastAFinishedEpisodeForAnOlderOne() {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        _ = makeEpisode(
+            context, guid: "half", playedAt: Date(timeIntervalSince1970: 1000), position: 900
+        )
+        _ = makeEpisode(
+            context, guid: "done", playedAt: Date(timeIntervalSince1970: 9000), isPlayed: true
+        )
+        let fake = FakeAudioPlayback()
+        let player = PlayerModel(playback: fake, context: context)
+
+        player.restoreLastPlayed()
+
+        #expect(player.current == nil)
     }
 }
