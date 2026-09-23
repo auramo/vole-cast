@@ -340,6 +340,64 @@ struct PlayerModelTests {
         #expect(fake.loaded?.startAt == 0)
     }
 
+    /// Reaching the end zeroes the position, but the player is still sitting at
+    /// the duration. A flush after that — which every backgrounding does — used
+    /// to write the duration straight back onto an episode that had just been
+    /// marked played, leaving `isPlayed` true with a position on it: exactly
+    /// the contradiction the two fields are kept in step to avoid.
+    @Test func finishingThenBackgroundingKeepsItFinished() throws {
+        let context = ModelContext(TestContainer.shared)
+        let show = makeShow(context, identity: "z.example.com", episodes: ["z1"])
+        let episode = try #require(show.episodes?.first)
+        let fake = FakeAudioPlayback()
+        let player = model(fake, context)
+
+        player.toggle(episode)
+        fake.emit(.time(1700))
+        fake.emit(.reachedEnd)
+
+        player.flush()
+
+        #expect(episode.isPlayed)
+        #expect(episode.playbackPosition == 0)
+    }
+
+    /// Scrubbing back from the end is a deliberate "actually, play me that
+    /// again", so recording has to start up once more.
+    @Test func seekingBackAfterTheEndRecordsAgain() throws {
+        let context = ModelContext(TestContainer.shared)
+        let show = makeShow(context, identity: "za.example.com", episodes: ["za1"])
+        let episode = try #require(show.episodes?.first)
+        let fake = FakeAudioPlayback()
+        let player = model(fake, context)
+
+        player.toggle(episode)
+        fake.emit(.time(1700))
+        fake.emit(.reachedEnd)
+
+        player.seek(to: 600)
+
+        #expect(episode.playbackPosition == 600)
+    }
+
+    /// Starting something else must not inherit the finished episode's silence.
+    @Test func playingAnotherEpisodeAfterOneFinishesRecordsNormally() throws {
+        let context = ModelContext(TestContainer.shared)
+        let show = makeShow(context, identity: "zb.example.com", episodes: ["zb1", "zb2"])
+        let episodes = try #require(show.episodes)
+        let first = try #require(episodes.first { $0.guid == "zb1" })
+        let second = try #require(episodes.first { $0.guid == "zb2" })
+        let fake = FakeAudioPlayback()
+        let player = model(fake, context)
+
+        player.toggle(first)
+        fake.emit(.reachedEnd)
+        player.toggle(second)
+        fake.emit(.time(30))
+
+        #expect(second.playbackPosition == 30)
+    }
+
     // MARK: - History
 
     @Test func startingPlaybackPutsTheEpisodeInHistoryAtOnce() throws {

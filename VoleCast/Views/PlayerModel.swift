@@ -30,6 +30,11 @@ final class PlayerModel {
     /// The position last written to the store, so ticks can be thinned against
     /// it rather than writing on every one.
     private var lastWritten: TimeInterval = 0
+    /// Set when an episode plays out. The player still sits at the duration
+    /// afterwards, so without this a later forced write — a backgrounding, a
+    /// stop — would put that duration back on an episode whose position
+    /// `markPlayed` had just zeroed, leaving it finished *and* part-played.
+    private var reachedEnd = false
     /// Whether this load has already been recorded as started. `.playing` is
     /// re-emitted on every resume, and stamping again would shuffle the
     /// listening history every time someone paused.
@@ -81,6 +86,7 @@ final class PlayerModel {
         duration = playable.feedDuration
         lastWritten = playable.startAt
         stampedStart = false
+        reachedEnd = false
         playback.load(playable)
     }
 
@@ -99,7 +105,13 @@ final class PlayerModel {
 
     func seek(to time: TimeInterval) {
         guard current != nil else { return }
-        playback.seek(to: min(max(time, 0), duration ?? time))
+        let target = min(max(time, 0), duration ?? time)
+        // Scrubbing away from the end is a deliberate "play me that again", so
+        // recording resumes. Position is set here rather than waiting for the
+        // engine's tick, so the write below records where we are going.
+        reachedEnd = false
+        position = target
+        playback.seek(to: target)
         writePosition(force: true)
     }
 
@@ -151,6 +163,7 @@ final class PlayerModel {
                 PlaybackProgress.markPlayed(episode, in: context)
             }
             lastWritten = 0
+            reachedEnd = true
         case .interrupted:
             phase = .paused
             writePosition(force: true)
@@ -167,6 +180,9 @@ final class PlayerModel {
     /// moved far enough — or when the moment itself matters.
     private func writePosition(force: Bool = false) {
         guard current != nil else { return }
+        // Nothing left to record: the episode finished, and `markPlayed` has
+        // already put both fields where they belong.
+        guard !reachedEnd else { return }
         guard force || PlaybackProgress.shouldWrite(position: position, lastWritten: lastWritten)
         else { return }
         guard let episode = liveEpisode() else { return }

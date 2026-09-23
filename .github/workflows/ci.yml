@@ -50,22 +50,64 @@ jobs:
           echo "udid=$udid" >> "$GITHUB_OUTPUT"
           xcrun simctl list devices | grep -F "$udid"
 
+      # The runner launches the simulator cold, and a cold launch loses a race
+      # often enough to matter: xcodebuild exits 65 with "Application failed
+      # preflight checks" while the device is still coming up. Booting it
+      # first and waiting removes most of that, and the retry below covers the
+      # rest — it retries only that specific failure, never a real test failure.
+      - name: Boot the simulator
+        run: xcrun simctl bootstatus "${{ steps.sim.outputs.udid }}" -b
+
       - name: Test
         run: |
-          set -o pipefail
-          xcodebuild \
-            -project VoleCast.xcodeproj \
-            -scheme VoleCast \
-            -destination "platform=iOS Simulator,id=${{ steps.sim.outputs.udid }}" \
-            -resultBundlePath TestResults.xcresult \
-            test
+          set -uo pipefail
+          udid="${{ steps.sim.outputs.udid }}"
+
+          for attempt in 1 2 3; do
+            rm -rf TestResults.xcresult
+            if xcodebuild \
+                 -project VoleCast.xcodeproj \
+                 -scheme VoleCast \
+                 -destination "platform=iOS Simulator,id=$udid" \
+                 -resultBundlePath TestResults.xcresult \
+                 test 2>&1 | tee xcodebuild.log; then
+              exit 0
+            fi
+
+            if grep -q "failed preflight checks" xcodebuild.log; then
+              echo "::warning::Simulator refused to launch on attempt $attempt; resetting it and retrying."
+              xcrun simctl shutdown "$udid" || true
+              sleep 10
+              xcrun simctl bootstatus "$udid" -b || true
+              continue
+            fi
+
+            # Surface the failures themselves. Without this the only thing
+            # visible outside the raw log — which needs admin rights to read —
+            # is "exit code 1", which says nothing about what broke.
+            echo "--- failures ---"
+            grep -E "^.*(✘|error:|Fatal error)" xcodebuild.log | head -40 || true
+            grep -E "✘ Test .* recorded an issue" xcodebuild.log | head -20 | while read -r line; do
+              echo "::error::${line}"
+            done
+            grep -E "^/.*error: " xcodebuild.log | head -10 | while read -r line; do
+              echo "::error::${line}"
+            done
+            echo "::error::Tests failed. See the annotations above, or the xcodebuild.log artifact."
+            exit 1
+          done
+
+          echo "::error::The simulator would not start after three attempts."
+          exit 1
 
       - name: Upload test results
         if: failure()
         uses: actions/upload-artifact@v5
         with:
           name: test-results
-          path: TestResults.xcresult
+          path: |
+            TestResults.xcresult
+            xcodebuild.log
 
   signing-values:
     name: No personal signing values
