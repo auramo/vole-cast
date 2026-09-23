@@ -2,10 +2,10 @@ import SwiftUI
 
 /// The round play control at the right edge of an episode row.
 ///
-/// Shared by every list that shows episodes, so they can't drift apart. The
-/// rows themselves are deliberately not shared — a cross-show list needs
-/// artwork and the show's name, where a single show's list would only be
-/// repeating itself.
+/// Shared by every list that shows episodes, so they can't drift apart, as is
+/// the row beside it in the cross-show lists (`EpisodeListRow`). A single
+/// show's own list keeps a smaller row of its own: under that show's header,
+/// repeating its artwork and name would only be repeating itself.
 struct EpisodePlayButton: View {
     let episode: Episode
 

@@ -340,6 +340,101 @@ struct PlayerModelTests {
         #expect(fake.loaded?.startAt == 0)
     }
 
+    // MARK: - History
+
+    @Test func startingPlaybackPutsTheEpisodeInHistoryAtOnce() throws {
+        let context = ModelContext(TestContainer.shared)
+        let show = makeShow(context, identity: "u.example.com", episodes: ["u1"])
+        let episode = try #require(show.episodes?.first)
+        let fake = FakeAudioPlayback()
+        let player = model(fake, context)
+
+        player.toggle(episode)
+        fake.emit(.phase(.playing))
+
+        #expect(episode.lastPlayedAt != nil)
+        // Stamping must not invent progress that was never listened to.
+        #expect(episode.playbackPosition == 0)
+    }
+
+    /// The bug this whole rule exists for: three seconds then switching away
+    /// used to leave no trace at all, because the position hadn't moved far
+    /// enough to cross the write interval.
+    @Test func aShortListenStillCountsWhenSwitchingAway() throws {
+        let context = ModelContext(TestContainer.shared)
+        let show = makeShow(context, identity: "v.example.com", episodes: ["v1", "v2"])
+        let episodes = try #require(show.episodes)
+        let first = try #require(episodes.first { $0.guid == "v1" })
+        let second = try #require(episodes.first { $0.guid == "v2" })
+        let fake = FakeAudioPlayback()
+        let player = model(fake, context)
+
+        player.toggle(first)
+        fake.emit(.phase(.playing))
+        fake.emit(.time(3))
+        player.toggle(second)
+        fake.emit(.phase(.playing))
+
+        let firstPlayed = try #require(first.lastPlayedAt)
+        let secondPlayed = try #require(second.lastPlayedAt)
+        // Not `<`: two reads of `Date.now` this close together can tie.
+        #expect(firstPlayed <= secondPlayed)
+    }
+
+    /// Switching away used to lose up to ten seconds of position.
+    @Test func switchingAwayKeepsAPositionBelowTheWriteGrid() throws {
+        let context = ModelContext(TestContainer.shared)
+        let show = makeShow(context, identity: "w.example.com", episodes: ["w1", "w2"])
+        let episodes = try #require(show.episodes)
+        let first = try #require(episodes.first { $0.guid == "w1" })
+        let second = try #require(episodes.first { $0.guid == "w2" })
+        let fake = FakeAudioPlayback()
+        let player = model(fake, context)
+
+        player.toggle(first)
+        fake.emit(.time(3))
+        player.toggle(second)
+
+        #expect(first.playbackPosition == 3)
+    }
+
+    /// "Played" means audio happened. A dead enclosure that never made a sound
+    /// is not something you listened to.
+    @Test func anEpisodeThatFailsToLoadStaysOutOfHistory() throws {
+        let context = ModelContext(TestContainer.shared)
+        let show = makeShow(context, identity: "x.example.com", episodes: ["x1"])
+        let episode = try #require(show.episodes?.first)
+        let fake = FakeAudioPlayback()
+        let player = model(fake, context)
+
+        player.toggle(episode)
+        fake.emit(.phase(.failed(.offline)))
+
+        #expect(episode.lastPlayedAt == nil)
+    }
+
+    /// `.playing` is re-emitted on every resume, and re-stamping there would
+    /// shuffle History every time someone paused.
+    @Test func resumingDoesNotRestampTheStart() throws {
+        let context = ModelContext(TestContainer.shared)
+        let show = makeShow(context, identity: "y.example.com", episodes: ["y1"])
+        let episode = try #require(show.episodes?.first)
+        let fake = FakeAudioPlayback()
+        let player = model(fake, context)
+
+        player.toggle(episode)
+        fake.emit(.phase(.playing))
+        let firstStamp = try #require(episode.lastPlayedAt)
+
+        fake.emit(.phase(.paused))
+        episode.lastPlayedAt = Date(timeIntervalSince1970: 0)
+        fake.emit(.phase(.playing))
+
+        // Left where the pause put it, rather than stamped a second time.
+        #expect(episode.lastPlayedAt == Date(timeIntervalSince1970: 0))
+        #expect(firstStamp > Date(timeIntervalSince1970: 0))
+    }
+
     @Test func refusesAnEpisodeWithNoUsableAudioURL() throws {
         let context = ModelContext(TestContainer.shared)
         let show = makeShow(context, identity: "l.example.com", episodes: ["l1"])

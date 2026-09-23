@@ -55,6 +55,18 @@ enum PlaybackProgress {
         episode.lastPlayedAt = .now
     }
 
+    /// An episode joins the listening history the moment audio actually flows,
+    /// rather than when its position first crosses `writeInterval`. "I started
+    /// this" is the event worth recording, and waiting ten seconds for it would
+    /// lose every short listen — which is most of the ones you want to find
+    /// again.
+    ///
+    /// The position is deliberately untouched: starting is not progress, and
+    /// writing one here would overwrite a resume point with itself at best.
+    static func markStarted(_ episode: Episode, in context: ModelContext) {
+        episode.lastPlayedAt = .now
+    }
+
     static func markPlayed(_ episode: Episode, in context: ModelContext) {
         episode.isPlayed = true
         // Zeroed together, so a replay starts clean and the fields cannot
@@ -63,6 +75,10 @@ enum PlaybackProgress {
         episode.lastPlayedAt = .now
     }
 
+    /// Note what this does *not* do: `lastPlayedAt` is left alone, so the
+    /// episode stays in the listening history. That is deliberate — you did
+    /// play it — but it is the decision to revisit if a "Mark as Unplayed"
+    /// action ever ships and people expect it to forget the episode entirely.
     static func markUnplayed(_ episode: Episode, in context: ModelContext) {
         episode.isPlayed = false
         episode.playbackPosition = 0

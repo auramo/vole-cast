@@ -13,7 +13,12 @@ enum LatestEpisodes {
         var descriptor = FetchDescriptor<Episode>(
             // Undated episodes can't be placed on a "newest first" list, and an
             // orphan with no show would have nothing to attribute it to.
-            predicate: #Predicate { $0.publishedAt != nil && $0.podcast != nil },
+            // Finished episodes have stopped being new — they live in
+            // `ListeningHistory` now. Part-played ones stay: they're still
+            // waiting for you.
+            predicate: #Predicate {
+                $0.publishedAt != nil && $0.podcast != nil && $0.isPlayed == false
+            },
             sortBy: [SortDescriptor(\.publishedAt, order: .reverse)]
         )
         descriptor.fetchLimit = limit

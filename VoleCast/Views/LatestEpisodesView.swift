@@ -30,7 +30,7 @@ struct LatestEpisodesView: View {
                             Button {
                                 path.append(episode)
                             } label: {
-                                LatestEpisodeRow(episode: episode)
+                                EpisodeListRow(episode: episode)
                             }
                             .buttonStyle(.plain)
                             .accessibilityHint("Shows episode details")
@@ -64,36 +64,6 @@ struct LatestEpisodesView: View {
                 description: Text("Your shows haven't published anything with a date on it.")
             )
         }
-    }
-}
-
-private struct LatestEpisodeRow: View {
-    let episode: Episode
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            // The show's artwork unless the episode has its own.
-            ArtworkView(url: episode.artworkURL ?? episode.podcast?.artworkURL, size: 56)
-            VStack(alignment: .leading, spacing: 2) {
-                if let show = episode.podcast?.title, !show.isEmpty {
-                    Text(show)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                }
-                Text(episode.title)
-                    .font(.subheadline.weight(.medium))
-                    .lineLimit(2)
-                Text(EpisodeSubtitle.text(published: episode.publishedAt, duration: episode.duration))
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
-            }
-            // Without this the gap between the text and the play button belongs
-            // to neither control and swallows taps.
-            Spacer(minLength: 12)
-        }
-        .padding(.vertical, 4)
-        .contentShape(Rectangle())
     }
 }
 
