@@ -39,27 +39,32 @@ struct URLSessionHTTPClientTests {
     ///
     /// Asserting the refusal is not enough — buffering the whole body and then
     /// measuring it would pass that too. What makes the cap worth having is
-    /// that the transfer stops, so the delivered count is what's checked.
+    /// that the transfer stops, so the body here never ends on its own: the
+    /// only thing that can end it is the client cancelling.
     @Test func stopsReadingAnUndeclaredBodyOnceItPassesTheCap() async throws {
-        let chunks = (0..<64).map { _ in Data(repeating: 0x41, count: 1024) }
-        StubURLProtocol.install(.init(declaredLength: nil, chunks: chunks))
+        StubURLProtocol.install(
+            .init(declaredLength: nil, endless: Data(repeating: 0x41, count: 1024))
+        )
 
         await #expect(throws: NetworkError.tooLarge) {
             try await client().data(for: URLRequest(url: url), maxBytes: 8192)
         }
-        #expect(StubURLProtocol.deliveredChunks < chunks.count)
+        #expect(await StubURLProtocol.waitForStop())
+        #expect(!StubURLProtocol.wasExhausted)
     }
 
-    /// An over-sized declared length is refused on the headers, so none of the
-    /// body should be transferred at all.
+    /// An over-sized declared length is refused on the headers, before the body
+    /// matters at all — so this one is stopped too, and sooner.
     @Test func doesNotReadTheBodyOfAnOversizedDeclaredLength() async throws {
-        let chunks = (0..<64).map { _ in Data(repeating: 0x41, count: 1024) }
-        StubURLProtocol.install(.init(declaredLength: 100 << 20, chunks: chunks))
+        StubURLProtocol.install(
+            .init(declaredLength: 100 << 20, endless: Data(repeating: 0x41, count: 1024))
+        )
 
         await #expect(throws: NetworkError.tooLarge) {
             try await client().data(for: URLRequest(url: url), maxBytes: 8192)
         }
-        #expect(StubURLProtocol.deliveredChunks < chunks.count)
+        #expect(await StubURLProtocol.waitForStop())
+        #expect(!StubURLProtocol.wasExhausted)
     }
 
     @Test func stillReportsHTTPErrorStatuses() async throws {
