@@ -39,6 +39,10 @@ final class PlayerModel {
     /// re-emitted on every resume, and stamping again would shuffle the
     /// listening history every time someone paused.
     private var stampedStart = false
+    /// True for an episode restored into the bar at launch: it is on screen,
+    /// but the engine has never been given it. Playing has to hand it over
+    /// rather than just asking for a rate change.
+    private var needsLoad = false
 
     var isPlaying: Bool { phase == .playing }
     var isBuffering: Bool { phase.isBusy }
@@ -57,6 +61,32 @@ final class PlayerModel {
         }
     }
 
+    // MARK: - Restoring
+
+    /// Puts the most recently played episode back in the player, paused.
+    ///
+    /// `PlayerModel` lives only as long as the process, and a paused app in the
+    /// background gets suspended and then terminated — a couple of hours is
+    /// plenty. Without this the mini-player simply vanishes overnight, taking
+    /// the one obvious route back to a half-finished episode with it.
+    ///
+    /// Nothing is handed to the engine here: the app has just launched, quite
+    /// possibly in someone's pocket, and restoring must not make a sound.
+    func restoreLastPlayed() {
+        guard current == nil else { return }
+        guard let episode = try? context.fetch(ListeningHistory.descriptor(limit: 1)).first,
+              let playable = snapshot(of: episode)
+        else { return }
+
+        currentID = episode.persistentModelID
+        current = playable
+        position = playable.startAt
+        duration = playable.feedDuration
+        lastWritten = playable.startAt
+        phase = .paused
+        needsLoad = true
+    }
+
     // MARK: - Intent
 
     func isCurrent(_ episode: Episode) -> Bool {
@@ -70,7 +100,7 @@ final class PlayerModel {
             play(episode)
             return
         }
-        if isPlaying { playback.pause() } else { playback.play() }
+        if isPlaying { playback.pause() } else { resume() }
     }
 
     func play(_ episode: Episode) {
@@ -87,13 +117,21 @@ final class PlayerModel {
         lastWritten = playable.startAt
         stampedStart = false
         reachedEnd = false
+        needsLoad = false
         playback.load(playable)
     }
 
     /// Acts on whatever is loaded. The bar has only the snapshot, not an
     /// `Episode`, so its controls come through here.
     func resume() {
-        guard current != nil else { return }
+        guard let current else { return }
+        guard !needsLoad else {
+            // Restored but never loaded. Start it where the bar says it is,
+            // which a scrub may have moved since launch.
+            needsLoad = false
+            playback.load(current.starting(at: position))
+            return
+        }
         playback.play()
     }
 
@@ -111,7 +149,8 @@ final class PlayerModel {
         // engine's tick, so the write below records where we are going.
         reachedEnd = false
         position = target
-        playback.seek(to: target)
+        // Nothing to seek in the engine yet; `resume` will start here instead.
+        if !needsLoad { playback.seek(to: target) }
         writePosition(force: true)
     }
 
