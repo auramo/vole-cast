@@ -4,7 +4,9 @@ An open-source podcast app for iOS.
 
 Early days. You can find a show by name, or paste an RSS feed URL, subscribe to
 it, browse its episodes and play them — streaming, with the lock-screen
-controls and resume-where-you-left-off you'd expect. Downloads come next.
+controls and resume-where-you-left-off you'd expect. A History tab lists what
+you've been listening to; finishing an episode takes it out of Latest.
+Downloads come next.
 
 Built with SwiftUI and SwiftData, with no third-party dependencies — feeds are
 parsed with Foundation's `XMLParser`.
@@ -80,7 +82,7 @@ ever point one way — parsing knows nothing about the network, and nothing belo
 | Folder | Holds | May use |
 | --- | --- | --- |
 | `Models/` | `Podcast`, `Episode` | SwiftData |
-| `Persistence/` | the container, plus `Subscriptions` and `PlaybackProgress` — the only writers to the store | SwiftData |
+| `Persistence/` | the container, the `LatestEpisodes` and `ListeningHistory` queries, plus `Subscriptions` and `PlaybackProgress` — the only writers to the store | SwiftData |
 | `FeedParsing/` | `FeedParser` and the pure helpers it needs (`RSSDate`, `EpisodeDuration`, `FeedURL`, `ParsedFeed`) | nothing but Foundation |
 | `Networking/` | `HTTPClient`, `AppURLSession`, `NetworkError` — transport, no podcast knowledge | URLSession |
 | `Catalog/` | where shows come from: `PodcastDirectory`, its iTunes implementation, and `FeedLoader` | Networking + FeedParsing |
