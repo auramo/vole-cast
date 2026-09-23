@@ -82,7 +82,18 @@ jobs:
               continue
             fi
 
-            echo "::error::Tests failed."
+            # Surface the failures themselves. Without this the only thing
+            # visible outside the raw log — which needs admin rights to read —
+            # is "exit code 1", which says nothing about what broke.
+            echo "--- failures ---"
+            grep -E "^.*(✘|error:|Fatal error)" xcodebuild.log | head -40 || true
+            grep -E "✘ Test .* recorded an issue" xcodebuild.log | head -20 | while read -r line; do
+              echo "::error::${line}"
+            done
+            grep -E "^/.*error: " xcodebuild.log | head -10 | while read -r line; do
+              echo "::error::${line}"
+            done
+            echo "::error::Tests failed. See the annotations above, or the xcodebuild.log artifact."
             exit 1
           done
 
