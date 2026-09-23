@@ -8,6 +8,7 @@ struct PodcastDetailView: View {
     @Environment(\.feedLoader) private var feedLoader
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
+    @Environment(PlayerModel.self) private var player
 
     @State private var refreshError: NetworkError?
     @State private var confirmingUnsubscribe = false
@@ -73,6 +74,7 @@ struct PodcastDetailView: View {
             titleVisibility: .visible
         ) {
             Button("Unsubscribe", role: .destructive) {
+                player.stopIfPlaying(from: podcast)
                 Subscriptions.unsubscribe(podcast, in: context)
                 dismiss()
             }

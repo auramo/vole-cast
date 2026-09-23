@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Everything Xcode can generate from INFOPLIST_KEY_* build settings still is:
+  GENERATE_INFOPLIST_FILE stays YES and merges its keys into this file.
+
+  This file exists only for keys that have no INFOPLIST_KEY_ equivalent.
+  UIBackgroundModes is one of them — `INFOPLIST_KEY_UIBackgroundModes` is not a
+  real build setting, and setting it is silently ignored rather than rejected.
+
+  It lives in Config/ rather than VoleCast/ because VoleCast/ is a
+  file-system-synchronized group, which would copy it into the bundle as a
+  stray resource.
+-->
+<plist version="1.0">
+<dict>
+	<!-- Keeps audio playing when the app is backgrounded or the phone locks.
+	     This is an Info.plist declaration, not an entitlement, so no
+	     .entitlements file is needed. -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
+</dict>
+</plist>
