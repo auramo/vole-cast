@@ -47,7 +47,11 @@ struct RootView: View {
         }
         .onAppear {
             if player == nil {
-                player = PlayerModel(playback: makeAudioPlayback(), context: modelContext)
+                let model = PlayerModel(playback: makeAudioPlayback(), context: modelContext)
+                // The app is routinely killed while paused in the background,
+                // so the bar has to be put back rather than assumed to survive.
+                model.restoreLastPlayed()
+                player = model
             }
         }
         // Autosave cannot be relied on once the app is suspended while still

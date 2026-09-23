@@ -23,6 +23,21 @@ struct PlayableEpisode: Equatable, Sendable, Identifiable {
     /// What the feed claimed. The asset's own duration wins once it resolves.
     let feedDuration: TimeInterval?
     let startAt: TimeInterval
+
+    /// The same episode, to be started somewhere else. A restored episode can
+    /// be scrubbed before it is ever handed to the engine.
+    func starting(at start: TimeInterval) -> PlayableEpisode {
+        PlayableEpisode(
+            id: id,
+            audioURL: audioURL,
+            mimeType: mimeType,
+            title: title,
+            showTitle: showTitle,
+            artworkURL: artworkURL,
+            feedDuration: feedDuration,
+            startAt: start
+        )
+    }
 }
 
 enum PlaybackPhase: Equatable, Sendable {
