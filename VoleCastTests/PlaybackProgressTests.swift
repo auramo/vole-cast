@@ -90,6 +90,31 @@ struct PlaybackProgressTests {
         #expect(episode.playbackPosition == 0)
     }
 
+    /// Starting is not progress. Writing a position here would, at best,
+    /// overwrite a resume point with itself.
+    @Test func markingStartedStampsTheTimeWithoutTouchingThePosition() {
+        let context = ModelContext(TestContainer.shared)
+        let episode = makeEpisode(context, guid: "p-started")
+        episode.playbackPosition = 900
+
+        PlaybackProgress.markStarted(episode, in: context)
+
+        #expect(episode.lastPlayedAt != nil)
+        #expect(episode.playbackPosition == 900)
+    }
+
+    /// Replaying something finished must not half-unfinish it.
+    @Test func markingStartedLeavesAFinishedEpisodeFinished() {
+        let context = ModelContext(TestContainer.shared)
+        let episode = makeEpisode(context, guid: "p-restart")
+        PlaybackProgress.markPlayed(episode, in: context)
+
+        PlaybackProgress.markStarted(episode, in: context)
+
+        #expect(episode.isPlayed)
+        #expect(episode.playbackPosition == 0)
+    }
+
     @Test func aFreshEpisodeHasNoPlaybackState() {
         let context = ModelContext(TestContainer.shared)
         let episode = makeEpisode(context, guid: "p-fresh")

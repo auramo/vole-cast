@@ -1,13 +1,14 @@
 import SwiftUI
 
-/// Three top-level tabs: what's new, the shows you follow, and finding more.
+/// Four top-level tabs: what's new, the shows you follow, what you have been
+/// listening to, and finding more.
 ///
 /// Each tab owns its navigation path so switching tabs doesn't unwind where you
 /// were, and each is inset at the bottom by the mini-player, which is why the
 /// bar survives navigating and changing tabs.
 struct RootView: View {
     enum TabSelection {
-        case latest, subscriptions, search
+        case latest, subscriptions, history, search
     }
 
     @Environment(\.makeAudioPlayback) private var makeAudioPlayback
@@ -17,6 +18,7 @@ struct RootView: View {
     @State private var selection: TabSelection = .latest
     @State private var latestPath = NavigationPath()
     @State private var subscriptionsPath = NavigationPath()
+    @State private var historyPath = NavigationPath()
     @State private var searchPath = NavigationPath()
 
     /// Built in `onAppear` rather than an initialiser so it picks up the
@@ -34,6 +36,10 @@ struct RootView: View {
                 .modifier(MiniPlayerInset(player: player))
                 .tabItem { Label("Subscriptions", systemImage: "square.stack.fill") }
                 .tag(TabSelection.subscriptions)
+            HistoryView(path: $historyPath)
+                .modifier(MiniPlayerInset(player: player))
+                .tabItem { Label("History", systemImage: "clock.arrow.circlepath") }
+                .tag(TabSelection.history)
             SearchView(path: $searchPath)
                 .modifier(MiniPlayerInset(player: player))
                 .tabItem { Label("Search", systemImage: "magnifyingglass") }

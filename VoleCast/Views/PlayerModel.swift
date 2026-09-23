@@ -30,6 +30,10 @@ final class PlayerModel {
     /// The position last written to the store, so ticks can be thinned against
     /// it rather than writing on every one.
     private var lastWritten: TimeInterval = 0
+    /// Whether this load has already been recorded as started. `.playing` is
+    /// re-emitted on every resume, and stamping again would shuffle the
+    /// listening history every time someone paused.
+    private var stampedStart = false
 
     var isPlaying: Bool { phase == .playing }
     var isBuffering: Bool { phase.isBusy }
@@ -66,14 +70,17 @@ final class PlayerModel {
 
     func play(_ episode: Episode) {
         guard let playable = snapshot(of: episode) else { return }
-        // Whatever was playing keeps where it got to before being replaced.
-        writePosition()
+        // Forced: whatever was playing keeps exactly where it got to, even if
+        // that is less than `writeInterval` in. Switching away after a few
+        // seconds used to discard those seconds entirely.
+        writePosition(force: true)
         error = nil
         currentID = episode.persistentModelID
         current = playable
         position = playable.startAt
         duration = playable.feedDuration
         lastWritten = playable.startAt
+        stampedStart = false
         playback.load(playable)
     }
 
@@ -128,6 +135,9 @@ final class PlayerModel {
         case let .phase(phase):
             self.phase = phase
             if case let .failed(error) = phase { self.error = error }
+            // `.playing` means audio is genuinely flowing, so an episode whose
+            // enclosure is dead never enters the history.
+            if phase == .playing { stampStart() }
         case let .time(seconds):
             position = seconds
             writePosition()
@@ -163,6 +173,13 @@ final class PlayerModel {
 
         PlaybackProgress.record(position: position, for: episode, in: context)
         lastWritten = position
+    }
+
+    /// Records this episode as listened to, once per load.
+    private func stampStart() {
+        guard !stampedStart, let episode = liveEpisode() else { return }
+        PlaybackProgress.markStarted(episode, in: context)
+        stampedStart = true
     }
 
     /// Writes whatever is pending and saves. For the scene leaving `.active`,
