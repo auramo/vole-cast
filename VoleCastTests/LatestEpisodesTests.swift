@@ -31,6 +31,32 @@ struct LatestEpisodesTests {
         Date(timeIntervalSince1970: 1_756_684_800 + TimeInterval(day) * 86_400)
     }
 
+    /// "Latest" means what is still waiting for you. Something you listened to
+    /// all the way through has stopped being new, and it lives in History now.
+    @Test func omitsFinishedEpisodes() throws {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let show = makeShow("Show", episodes: [("Done", day(2)), ("Waiting", day(1))], in: context)
+        let done = try #require(show.episodes?.first { $0.title == "Done" })
+        done.isPlayed = true
+
+        let episodes = try context.fetch(LatestEpisodes.descriptor())
+
+        #expect(episodes.map(\.title) == ["Waiting"])
+    }
+
+    /// Part-way through is still waiting for you.
+    @Test func keepsAnEpisodeThatWasOnlyStarted() throws {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let show = makeShow("Show", episodes: [("Started", day(1))], in: context)
+        let started = try #require(show.episodes?.first)
+        started.playbackPosition = 300
+        started.lastPlayedAt = .now
+
+        let episodes = try context.fetch(LatestEpisodes.descriptor())
+
+        #expect(episodes.map(\.title) == ["Started"])
+    }
+
     @Test func mixesShowsTogetherNewestFirst() throws {
         let context = ModelContext(VoleCastModelContainer.makeInMemory())
         _ = makeShow("alpha", episodes: [("a-old", day(1)), ("a-new", day(5))], in: context)
