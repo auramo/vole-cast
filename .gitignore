@@ -8,6 +8,8 @@ xcuserdata/
 
 # Xcode build output
 build/
+*.xcresult
+xcodebuild.log
 DerivedData/
 *.moved-aside
 *.hmap
