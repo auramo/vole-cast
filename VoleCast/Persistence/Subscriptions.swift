@@ -85,6 +85,20 @@ enum Subscriptions {
     /// Matches on `guid`, so an edited episode is updated in place rather than
     /// duplicated. Episodes that have fallen off the end of the feed are kept:
     /// dropping them would one day discard playback state and downloads.
+    /// Assigns only when the value actually differs.
+    ///
+    /// A feed re-sends every field of every episode on every refresh, and a
+    /// write marks the model dirty whether or not the value moved — which
+    /// re-runs every `@Query` watching it. The Latest list is one of those, so
+    /// an unchanged feed used to cost a full re-render for nothing.
+    private static func set<Value: Equatable>(
+        _ value: Value,
+        on keyPath: ReferenceWritableKeyPath<Episode, Value>,
+        of episode: Episode
+    ) {
+        if episode[keyPath: keyPath] != value { episode[keyPath: keyPath] = value }
+    }
+
     private static func merge(
         _ parsed: [ParsedEpisode],
         into podcast: Podcast,
@@ -104,20 +118,19 @@ enum Subscriptions {
                 return new
             }()
 
-            episode.title = incoming.title
-            episode.summary = incoming.summary
-            episode.publishedAt = incoming.publishedAt
-            episode.audioURL = incoming.audioURL
-            episode.audioMIMEType = incoming.audioMIMEType
-            episode.audioByteCount = incoming.audioByteCount
-            episode.duration = incoming.duration
-            episode.artworkURL = incoming.artworkURL
-            episode.pageURL = incoming.pageURL
+            set(incoming.title, on: \.title, of: episode)
+            set(incoming.summary, on: \.summary, of: episode)
+            set(incoming.publishedAt, on: \.publishedAt, of: episode)
+            set(incoming.audioURL, on: \.audioURL, of: episode)
+            set(incoming.audioMIMEType, on: \.audioMIMEType, of: episode)
+            set(incoming.audioByteCount, on: \.audioByteCount, of: episode)
+            set(incoming.duration, on: \.duration, of: episode)
+            set(incoming.artworkURL, on: \.artworkURL, of: episode)
+            set(incoming.pageURL, on: \.pageURL, of: episode)
         }
 
-        podcast.lastEpisodeAt = (podcast.episodes ?? [])
-            .compactMap(\.publishedAt)
-            .max()
+        let newest = (podcast.episodes ?? []).compactMap(\.publishedAt).max()
+        if podcast.lastEpisodeAt != newest { podcast.lastEpisodeAt = newest }
         podcast.lastRefreshedAt = .now
     }
 }
