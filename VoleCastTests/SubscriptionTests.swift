@@ -115,6 +115,51 @@ struct SubscriptionTests {
         #expect(podcast.orderedEpisodes.contains { $0.title == "Episode Two (remastered)" })
     }
 
+    /// A refresh used to reassign all nine fields of every episode whether or
+    /// not anything had changed, dirtying them all and re-running every query
+    /// watching them. With the Latest list driven by one of those queries, an
+    /// unchanged feed cost a full re-render for nothing.
+    @Test func refreshingAnUnchangedFeedLeavesItsEpisodesAlone() throws {
+        let context = context()
+        let podcast = try Subscriptions.subscribe(
+            to: try loaded(at: "https://nine.example.com/feed"),
+            in: context
+        )
+        try context.save()
+
+        let feed = try FeedParser.parse(try Fixtures.feed("feed-minimal"))
+        Subscriptions.refresh(
+            LoadedFeed(feed: feed, resolvedURL: URL(string: "https://nine.example.com/feed")!),
+            into: podcast,
+            in: context
+        )
+
+        let dirtied = context.changedModelsArray.compactMap { $0 as? Episode }
+        #expect(dirtied.isEmpty)
+    }
+
+    /// The other half: skipping unchanged writes must not skip real ones.
+    @Test func refreshingStillWritesAFieldThatActuallyChanged() throws {
+        let context = context()
+        let podcast = try Subscriptions.subscribe(
+            to: try loaded(at: "https://ten.example.com/feed"),
+            in: context
+        )
+        try context.save()
+
+        var feed = try FeedParser.parse(try Fixtures.feed("feed-minimal"))
+        feed.episodes[0].summary = "Rewritten show notes"
+        Subscriptions.refresh(
+            LoadedFeed(feed: feed, resolvedURL: URL(string: "https://ten.example.com/feed")!),
+            into: podcast,
+            in: context
+        )
+
+        #expect(podcast.orderedEpisodes.contains { $0.summary == "Rewritten show notes" })
+        let dirtied = context.changedModelsArray.compactMap { $0 as? Episode }
+        #expect(dirtied.count == 1)
+    }
+
     @Test func refreshKeepsEpisodesThatFellOffTheFeed() throws {
         let context = context()
         let podcast = try Subscriptions.subscribe(
