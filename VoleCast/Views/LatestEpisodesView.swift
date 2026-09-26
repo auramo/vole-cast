@@ -41,7 +41,7 @@ struct LatestEpisodesView: View {
             }
             .refreshable { await existingRefresher().refreshAll(force: true) }
             .navigationDestination(for: Episode.self) { EpisodeDetailView(episode: $0) }
-            .navigationDestination(for: Podcast.self) { PodcastDetailView(podcast: $0) }
+            .navigationDestination(for: Podcast.self) { PodcastDetailView(podcast: $0, path: $path) }
         }
         // On the stack rather than the `Group` inside it: the Group swaps
         // between the empty state and the list, and that change of identity
