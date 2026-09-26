@@ -1,34 +1,29 @@
 import SwiftUI
 
-/// The bar that sits above the tab bar whenever something is loaded.
+/// What's playing, shown as the tab view's bottom accessory.
 ///
-/// Inset into each tab's content rather than overlaid, so the last row of a
-/// list scrolls clear of it instead of hiding underneath.
+/// The system supplies the shape, material and placement, so this draws only
+/// its contents — no background, no divider, no transition of its own.
 struct MiniPlayerBar: View {
     @Environment(PlayerModel.self) private var player
 
     var body: some View {
         if let episode = player.current {
-            VStack(spacing: 0) {
-                progress
-                content(for: episode)
-            }
-            .background(.bar)
-            .overlay(alignment: .top) { Divider() }
-            .transition(.move(edge: .bottom).combined(with: .opacity))
+            content(for: episode)
+                .overlay(alignment: .bottom) { progress }
         }
     }
 
     /// A hairline rather than a control: scrubbing belongs to the full player.
     private var progress: some View {
         GeometryReader { proxy in
-            Rectangle()
+            Capsule()
                 .fill(.tint)
                 .frame(width: proxy.size.width * player.fraction)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         .frame(height: 2)
-        .background(.quaternary)
+        .padding(.horizontal, 12)
         .accessibilityHidden(true)
     }
 
@@ -79,8 +74,7 @@ struct MiniPlayerBar: View {
 
             playPause
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.horizontal, 8)
     }
 
     @ViewBuilder
