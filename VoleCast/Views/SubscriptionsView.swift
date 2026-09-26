@@ -26,7 +26,7 @@ struct SubscriptionsView: View {
                 } else {
                     List {
                         ForEach(podcasts) { podcast in
-                            NavigationLink(value: podcast) {
+                            NavigationLink(value: ShowDestination(podcast: podcast)) {
                                 PodcastRow(podcast: podcast)
                             }
                         }
@@ -36,7 +36,9 @@ struct SubscriptionsView: View {
                 }
             }
             .navigationTitle("Subscriptions")
-            .navigationDestination(for: Podcast.self) { PodcastDetailView(podcast: $0, path: $path) }
+            .navigationDestination(for: ShowDestination.self) {
+                PodcastDetailView(show: $0, path: $path)
+            }
         }
     }
 }
