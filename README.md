@@ -97,7 +97,7 @@ fakes.
 ## Requirements
 
 - Xcode 26.3 or newer
-- iOS 18.0+ (iPhone and iPad)
+- iOS 26.1+ (iPhone and iPad)
 - Swift 6
 
 ## Getting started

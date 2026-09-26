@@ -4,8 +4,8 @@ import SwiftUI
 /// listening to, and finding more.
 ///
 /// Each tab owns its navigation path so switching tabs doesn't unwind where you
-/// were, and each is inset at the bottom by the mini-player, which is why the
-/// bar survives navigating and changing tabs.
+/// were. The mini-player is the tab view's bottom accessory, which is why it
+/// survives navigating and changing tabs.
 struct RootView: View {
     enum TabSelection {
         case latest, subscriptions, history, search
@@ -29,21 +29,36 @@ struct RootView: View {
     var body: some View {
         TabView(selection: $selection) {
             LatestEpisodesView(path: $latestPath, onFindShows: showSearch)
-                .modifier(MiniPlayerInset(player: player))
+                .modifier(PlayerEnvironment(player: player))
                 .tabItem { Label("Latest", systemImage: "waveform") }
                 .tag(TabSelection.latest)
             SubscriptionsView(path: $subscriptionsPath, onFindShows: showSearch)
-                .modifier(MiniPlayerInset(player: player))
+                .modifier(PlayerEnvironment(player: player))
                 .tabItem { Label("Subscriptions", systemImage: "square.stack.fill") }
                 .tag(TabSelection.subscriptions)
             HistoryView(path: $historyPath)
-                .modifier(MiniPlayerInset(player: player))
+                .modifier(PlayerEnvironment(player: player))
                 .tabItem { Label("History", systemImage: "clock.arrow.circlepath") }
                 .tag(TabSelection.history)
             SearchView(path: $searchPath)
-                .modifier(MiniPlayerInset(player: player))
+                .modifier(PlayerEnvironment(player: player))
                 .tabItem { Label("Search", systemImage: "magnifyingglass") }
                 .tag(TabSelection.search)
+        }
+        // The system owns this one: it places the bar above the tab bar, gives
+        // it the tab bar's own material, and — the point of the change —
+        // insets the scrollable content behind it, including inside pushed
+        // views. Doing it by hand with `safeAreaInset` on each tab's root put
+        // the inset outside the `NavigationStack`, where lists never saw it and
+        // the bar simply covered the last rows.
+        // `isEnabled` matters: the space is reserved whenever the accessory
+        // exists, even if it renders nothing, which left a 56pt gap above the
+        // tab bar with nothing playing.
+        .tabViewBottomAccessory(isEnabled: player?.current != nil) {
+            if let player {
+                MiniPlayerBar()
+                    .environment(player)
+            }
         }
         .onAppear {
             if player == nil {
@@ -80,25 +95,17 @@ struct RootView: View {
     }
 }
 
-/// Puts the mini-player above the tab bar.
+/// Hands each tab the player.
 ///
-/// Applied to each tab's content rather than to the `TabView`, because an inset
-/// on the `TabView` is laid out outside it and lands *below* the tab bar. Here
-/// it also shrinks the tab's safe area, so the last row of a list scrolls clear
-/// of the bar rather than hiding under it — which an overlay would not do
-/// without hand-tuned padding. iOS 26's `.tabViewBottomAccessory` does this in
-/// one line; the deployment target is 18.0.
-private struct MiniPlayerInset: ViewModifier {
+/// Every episode row reads `PlayerModel` from the environment, so a tab without
+/// it traps as soon as a row appears. Applied per tab rather than to the
+/// `TabView`, which does not pass its environment down to tab content.
+private struct PlayerEnvironment: ViewModifier {
     let player: PlayerModel?
 
     func body(content: Content) -> some View {
         if let player {
-            content
-                .safeAreaInset(edge: .bottom, spacing: 0) {
-                    MiniPlayerBar()
-                        .environment(player)
-                }
-                .environment(player)
+            content.environment(player)
         } else {
             content
         }
