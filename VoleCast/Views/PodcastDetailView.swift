@@ -4,6 +4,9 @@ import SwiftUI
 /// A subscribed show and its episodes.
 struct PodcastDetailView: View {
     let podcast: Podcast
+    /// Needed because the rows navigate by appending rather than wrapping
+    /// themselves in a `NavigationLink` — see the episode section below.
+    @Binding var path: NavigationPath
 
     @Environment(\.feedLoader) private var feedLoader
     @Environment(\.modelContext) private var context
@@ -41,9 +44,21 @@ struct PodcastDetailView: View {
                     Text("No episodes yet.")
                         .foregroundStyle(.secondary)
                 }
+                // The same two sibling buttons as Latest and History, for the
+                // same reason: a button inside a `NavigationLink`'s label does
+                // not get its own taps in a list, so the play control would be
+                // dead. `path.append` pushes exactly what the link pushed.
                 ForEach(podcast.orderedEpisodes) { episode in
-                    NavigationLink(value: episode) {
-                        EpisodeRow(episode: episode)
+                    HStack(spacing: 8) {
+                        Button {
+                            path.append(episode)
+                        } label: {
+                            EpisodeListRow(episode: episode)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityHint("Shows episode details")
+
+                        EpisodePlayButton(episode: episode)
                     }
                 }
             }
@@ -123,21 +138,5 @@ struct PodcastDetailView: View {
             // blocking failure.
             refreshError = NetworkError(from: error)
         }
-    }
-}
-
-private struct EpisodeRow: View {
-    let episode: Episode
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
-            Text(episode.title)
-                .font(.subheadline)
-                .lineLimit(2)
-            Text(EpisodeSubtitle.text(published: episode.publishedAt, duration: episode.duration))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
-        .padding(.vertical, 2)
     }
 }

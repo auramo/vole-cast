@@ -36,7 +36,7 @@ struct HistoryView: View {
             }
             .navigationTitle("History")
             .navigationDestination(for: Episode.self) { EpisodeDetailView(episode: $0) }
-            .navigationDestination(for: Podcast.self) { PodcastDetailView(podcast: $0) }
+            .navigationDestination(for: Podcast.self) { PodcastDetailView(podcast: $0, path: $path) }
         }
     }
 }

@@ -36,7 +36,7 @@ struct SubscriptionsView: View {
                 }
             }
             .navigationTitle("Subscriptions")
-            .navigationDestination(for: Podcast.self) { PodcastDetailView(podcast: $0) }
+            .navigationDestination(for: Podcast.self) { PodcastDetailView(podcast: $0, path: $path) }
         }
     }
 }
