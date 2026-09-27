@@ -5,6 +5,10 @@ import SwiftUI
 /// Presented as a sheet, which brings drag-to-dismiss with it rather than
 /// needing a hand-written gesture.
 struct FullPlayerView: View {
+    /// Handed in rather than done here: leaving the sheet is the presenter's
+    /// business, and it knows which tab the episode should land on.
+    let onOpenEpisode: (Episode) -> Void
+
     @Environment(PlayerModel.self) private var player
     @Environment(\.dismiss) private var dismiss
 
@@ -53,6 +57,7 @@ struct FullPlayerView: View {
 
             scrubber
             transport
+            detailsLink
 
             Spacer(minLength: 0)
         }
@@ -81,6 +86,22 @@ struct FullPlayerView: View {
         }
         .foregroundStyle(.red)
         .padding(.horizontal)
+    }
+
+    /// The way back to the episode's own screen — its notes, and from there
+    /// its place in the show, which is how you find the next part of a series.
+    @ViewBuilder
+    private var detailsLink: some View {
+        if let episode = player.currentEpisode {
+            Button {
+                onOpenEpisode(episode)
+            } label: {
+                Label("Episode Details", systemImage: "text.alignleft")
+                    .font(.subheadline)
+            }
+            .buttonStyle(.bordered)
+            .buttonBorderShape(.capsule)
+        }
     }
 
     // MARK: - Scrubber
