@@ -250,8 +250,21 @@ final class PlayerModel {
         PlaybackProgress.flush(in: context)
     }
 
+    /// The stored episode being played, when it still exists.
+    ///
+    /// The player itself holds only a snapshot, which is what lets the bar
+    /// survive the episode being deleted. Opening the episode's own screen
+    /// needs the model back.
+    var currentEpisode: Episode? { liveEpisode() }
+
     /// Re-resolves the stored episode only when something must be written.
     /// Returns nil once it has been deleted, so nothing reads a dead model.
+    ///
+    /// Deliberately `registeredModel` and not `model(for:)`: the latter
+    /// fetches, and for an identifier whose row is gone it hands back a fault
+    /// rather than nothing — a deleted episode would come back looking alive.
+    /// Everything that plays an episode reached it through this context, so
+    /// the narrower question is the right one.
     private func liveEpisode() -> Episode? {
         guard let currentID else { return nil }
         guard let episode = context.registeredModel(for: currentID) as Episode?,

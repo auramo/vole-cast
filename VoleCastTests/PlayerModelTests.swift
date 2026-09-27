@@ -398,6 +398,59 @@ struct PlayerModelTests {
         #expect(second.playbackPosition == 30)
     }
 
+    // MARK: - Reaching the stored episode
+
+    /// The player holds a snapshot, not the model. Opening the episode's own
+    /// screen from the player needs the real thing back.
+    @Test func handsBackTheStoredEpisodeItIsPlaying() throws {
+        let context = ModelContext(TestContainer.shared)
+        let show = makeShow(context, identity: "zc.example.com", episodes: ["zc1"])
+        let episode = try #require(show.episodes?.first)
+        let fake = FakeAudioPlayback()
+        let player = model(fake, context)
+
+        player.toggle(episode)
+
+        #expect(player.currentEpisode?.persistentModelID == episode.persistentModelID)
+    }
+
+    @Test func hasNoStoredEpisodeWhenNothingIsLoaded() {
+        let fake = FakeAudioPlayback()
+        let player = model(fake, ModelContext(TestContainer.shared))
+
+        #expect(player.currentEpisode == nil)
+    }
+
+    @Test func hasNoStoredEpisodeAfterStopping() throws {
+        let context = ModelContext(TestContainer.shared)
+        let show = makeShow(context, identity: "zd.example.com", episodes: ["zd1"])
+        let episode = try #require(show.episodes?.first)
+        let fake = FakeAudioPlayback()
+        let player = model(fake, context)
+
+        player.toggle(episode)
+        player.stop()
+
+        #expect(player.currentEpisode == nil)
+    }
+
+    /// Unsubscribing cascades the episode away while the bar may still be
+    /// showing its snapshot. Asking for the model then must come back empty
+    /// rather than trap.
+    @Test func hasNoStoredEpisodeOnceItHasBeenDeleted() throws {
+        let context = ModelContext(TestContainer.shared)
+        let show = makeShow(context, identity: "ze.example.com", episodes: ["ze1"])
+        let episode = try #require(show.episodes?.first)
+        let fake = FakeAudioPlayback()
+        let player = model(fake, context)
+
+        player.toggle(episode)
+        context.delete(episode)
+        try context.save()
+
+        #expect(player.currentEpisode == nil)
+    }
+
     // MARK: - History
 
     @Test func startingPlaybackPutsTheEpisodeInHistoryAtOnce() throws {

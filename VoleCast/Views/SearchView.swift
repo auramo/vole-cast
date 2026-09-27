@@ -32,6 +32,12 @@ struct SearchView: View {
                     path.append(ShowPreviewSource.feedURL(url))
                 }
             }
+            // Registered here too, because the player can open an episode
+            // onto whichever tab happens to be in front.
+            .navigationDestination(for: Episode.self) { EpisodeDetailView(episode: $0, path: $path) }
+            .navigationDestination(for: ShowDestination.self) {
+                PodcastDetailView(show: $0, path: $path)
+            }
             .navigationDestination(for: ShowPreviewSource.self) { source in
                 ShowPreviewView(source: source)
             }

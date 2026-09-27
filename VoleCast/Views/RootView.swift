@@ -84,7 +84,7 @@ struct RootView: View {
             )
         ) {
             if let player {
-                FullPlayerView()
+                FullPlayerView(onOpenEpisode: openFromPlayer)
                     .environment(player)
             }
         }
@@ -92,6 +92,26 @@ struct RootView: View {
 
     private func showSearch() {
         selection = .search
+    }
+
+    /// Opens the playing episode's own screen, and closes the player to do it.
+    ///
+    /// Pushed onto whichever tab is in front rather than shown inside the
+    /// player's sheet: from the episode you can go on to its place in the
+    /// show, and a show's episode list stacked inside a modal is a dead end.
+    /// The player is a tap away on the bar the whole time.
+    private func openFromPlayer(_ episode: Episode) {
+        player?.isExpanded = false
+        activePath.wrappedValue.append(episode)
+    }
+
+    private var activePath: Binding<NavigationPath> {
+        switch selection {
+        case .latest: $latestPath
+        case .subscriptions: $subscriptionsPath
+        case .history: $historyPath
+        case .search: $searchPath
+        }
     }
 }
 
