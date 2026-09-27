@@ -1,3 +1,4 @@
+import SwiftData
 import SwiftUI
 
 /// Four top-level tabs: what's new, the shows you follow, what you have been
@@ -11,8 +12,10 @@ struct RootView: View {
         case latest, subscriptions, history, search
     }
 
-    @Environment(\.makeAudioPlayback) private var makeAudioPlayback
-    @Environment(\.modelContext) private var modelContext
+    /// Handed in rather than built here. It outlives this screen — the car is
+    /// a second scene driving the same player — so the process owns it.
+    let player: PlayerModel
+
     @Environment(\.scenePhase) private var scenePhase
 
     @State private var selection: TabSelection = .latest
@@ -21,27 +24,22 @@ struct RootView: View {
     @State private var historyPath = NavigationPath()
     @State private var searchPath = NavigationPath()
 
-    /// Built in `onAppear` rather than an initialiser so it picks up the
-    /// environment's engine, which previews and tests replace. One per app:
-    /// every screen shares this instance.
-    @State private var player: PlayerModel?
-
     var body: some View {
         TabView(selection: $selection) {
             LatestEpisodesView(path: $latestPath, onFindShows: showSearch)
-                .modifier(PlayerEnvironment(player: player))
+                .environment(player)
                 .tabItem { Label("Latest", systemImage: "waveform") }
                 .tag(TabSelection.latest)
             SubscriptionsView(path: $subscriptionsPath, onFindShows: showSearch)
-                .modifier(PlayerEnvironment(player: player))
+                .environment(player)
                 .tabItem { Label("Subscriptions", systemImage: "square.stack.fill") }
                 .tag(TabSelection.subscriptions)
             HistoryView(path: $historyPath)
-                .modifier(PlayerEnvironment(player: player))
+                .environment(player)
                 .tabItem { Label("History", systemImage: "clock.arrow.circlepath") }
                 .tag(TabSelection.history)
             SearchView(path: $searchPath)
-                .modifier(PlayerEnvironment(player: player))
+                .environment(player)
                 .tabItem { Label("Search", systemImage: "magnifyingglass") }
                 .tag(TabSelection.search)
         }
@@ -54,39 +52,26 @@ struct RootView: View {
         // `isEnabled` matters: the space is reserved whenever the accessory
         // exists, even if it renders nothing, which left a 56pt gap above the
         // tab bar with nothing playing.
-        .tabViewBottomAccessory(isEnabled: player?.current != nil) {
-            if let player {
-                MiniPlayerBar()
-                    .environment(player)
-            }
-        }
-        .onAppear {
-            if player == nil {
-                let model = PlayerModel(playback: makeAudioPlayback(), context: modelContext)
-                // The app is routinely killed while paused in the background,
-                // so the bar has to be put back rather than assumed to survive.
-                model.restoreLastPlayed()
-                player = model
-            }
+        .tabViewBottomAccessory(isEnabled: player.current != nil) {
+            MiniPlayerBar()
+                .environment(player)
         }
         // Autosave cannot be relied on once the app is suspended while still
         // playing: it can be killed without another pass of the main runloop,
         // taking the last few seconds of position with it.
         .onChange(of: scenePhase) { _, phase in
-            if phase != .active { player?.flush() }
+            if phase != .active { player.flush() }
         }
         // Presented once, from here, so it covers the tab bar and survives a
         // tab change underneath it.
         .sheet(
             isPresented: Binding(
-                get: { player?.isExpanded ?? false },
-                set: { player?.isExpanded = $0 }
+                get: { player.isExpanded },
+                set: { player.isExpanded = $0 }
             )
         ) {
-            if let player {
-                FullPlayerView(onOpenEpisode: openFromPlayer)
-                    .environment(player)
-            }
+            FullPlayerView(onOpenEpisode: openFromPlayer)
+                .environment(player)
         }
     }
 
@@ -101,7 +86,7 @@ struct RootView: View {
     /// show, and a show's episode list stacked inside a modal is a dead end.
     /// The player is a tap away on the bar the whole time.
     private func openFromPlayer(_ episode: Episode) {
-        player?.isExpanded = false
+        player.isExpanded = false
         activePath.wrappedValue.append(episode)
     }
 
@@ -115,24 +100,10 @@ struct RootView: View {
     }
 }
 
-/// Hands each tab the player.
-///
-/// Every episode row reads `PlayerModel` from the environment, so a tab without
-/// it traps as soon as a row appears. Applied per tab rather than to the
-/// `TabView`, which does not pass its environment down to tab content.
-private struct PlayerEnvironment: ViewModifier {
-    let player: PlayerModel?
-
-    func body(content: Content) -> some View {
-        if let player {
-            content.environment(player)
-        } else {
-            content
-        }
-    }
-}
-
 #Preview {
-    RootView()
-        .modelContainer(VoleCastModelContainer.makeInMemory())
+    let container = VoleCastModelContainer.makeInMemory()
+    RootView(
+        player: PlayerModel(playback: AVPlayerAudioEngine(), context: ModelContext(container))
+    )
+    .modelContainer(container)
 }
