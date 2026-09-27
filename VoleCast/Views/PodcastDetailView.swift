@@ -3,10 +3,16 @@ import SwiftUI
 
 /// A subscribed show and its episodes.
 struct PodcastDetailView: View {
-    let podcast: Podcast
+    let show: ShowDestination
     /// Needed because the rows navigate by appending rather than wrapping
     /// themselves in a `NavigationLink` — see the episode section below.
     @Binding var path: NavigationPath
+
+    private var podcast: Podcast { show.podcast }
+
+    /// Briefly marks the episode arrived at, so it can be picked out of a list
+    /// that may have scrolled a long way to reach it.
+    @State private var highlighted: PersistentIdentifier?
 
     @Environment(\.feedLoader) private var feedLoader
     @Environment(\.modelContext) private var context
@@ -21,6 +27,12 @@ struct PodcastDetailView: View {
     private static let staleAfter: TimeInterval = 30 * 60
 
     var body: some View {
+        ScrollViewReader { proxy in
+            list.onAppear { landOnFocus(proxy) }
+        }
+    }
+
+    private var list: some View {
         List {
             Section { header }
 
@@ -60,12 +72,13 @@ struct PodcastDetailView: View {
 
                         EpisodePlayButton(episode: episode)
                     }
+                    .listRowBackground(rowBackground(for: episode))
                 }
             }
         }
         .navigationTitle(podcast.title)
         .navigationBarTitleDisplayMode(.inline)
-        .navigationDestination(for: Episode.self) { EpisodeDetailView(episode: $0) }
+        .navigationDestination(for: Episode.self) { EpisodeDetailView(episode: $0, path: $path) }
         .refreshable { await refresh(revalidating: true) }
         .task { await refreshIfStale() }
         .toolbar {
@@ -123,6 +136,32 @@ struct PodcastDetailView: View {
         }
         if Date.now.timeIntervalSince(last) > Self.staleAfter {
             await refresh(revalidating: true)
+        }
+    }
+
+    /// Jumps to the episode this show was opened from.
+    ///
+    /// The point of the whole thing: a series episode from years ago is buried
+    /// hundreds of rows down, and finding its sequel by scrolling is the
+    /// problem being solved.
+    private func landOnFocus(_ proxy: ScrollViewProxy) {
+        guard let focus = show.focus else { return }
+        // After the first layout pass: scrolling to a row the list has not
+        // built yet does nothing.
+        Task { @MainActor in
+            proxy.scrollTo(focus, anchor: .center)
+            withAnimation(.easeIn(duration: 0.2)) { highlighted = focus }
+            try? await Task.sleep(for: .seconds(2))
+            withAnimation(.easeOut(duration: 0.6)) { highlighted = nil }
+        }
+    }
+
+    @ViewBuilder
+    private func rowBackground(for episode: Episode) -> some View {
+        if episode.persistentModelID == highlighted {
+            Color.accentColor.opacity(0.18)
+        } else {
+            Color.clear
         }
     }
 
