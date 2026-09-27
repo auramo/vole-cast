@@ -13,6 +13,7 @@ struct PodcastDetailView: View {
     /// Briefly marks the episode arrived at, so it can be picked out of a list
     /// that may have scrolled a long way to reach it.
     @State private var highlighted: PersistentIdentifier?
+    @State private var search = ""
 
     @Environment(\.feedLoader) private var feedLoader
     @Environment(\.modelContext) private var context
@@ -30,13 +31,27 @@ struct PodcastDetailView: View {
         ScrollViewReader { proxy in
             list.onAppear { landOnFocus(proxy) }
         }
+        .searchable(
+            text: $search,
+            placement: .navigationBarDrawer(displayMode: .always),
+            prompt: "Search \(podcast.title)"
+        )
+    }
+
+    /// Searching is a question about the episodes, so everything that is not
+    /// an episode gets out of the way — otherwise the answer starts below a
+    /// screenful of artwork and show notes.
+    private var isSearching: Bool {
+        !search.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private var list: some View {
         List {
-            Section { header }
+            if !isSearching {
+                Section { header }
+            }
 
-            if let error = refreshError {
+            if let error = refreshError, !isSearching {
                 Section {
                     Label(error.errorDescription ?? "", systemImage: error.symbolName)
                         .font(.footnote)
@@ -44,37 +59,19 @@ struct PodcastDetailView: View {
                 }
             }
 
-            if !podcast.summary.isEmpty {
+            if !podcast.summary.isEmpty, !isSearching {
                 Section("About") {
                     Text(HTMLText.plain(from: podcast.summary))
                         .font(.callout)
                 }
             }
 
-            Section("Episodes") {
-                if podcast.episodeCount == 0 {
-                    Text("No episodes yet.")
-                        .foregroundStyle(.secondary)
-                }
-                // The same two sibling buttons as Latest and History, for the
-                // same reason: a button inside a `NavigationLink`'s label does
-                // not get its own taps in a list, so the play control would be
-                // dead. `path.append` pushes exactly what the link pushed.
-                ForEach(podcast.orderedEpisodes) { episode in
-                    HStack(spacing: 8) {
-                        Button {
-                            path.append(episode)
-                        } label: {
-                            EpisodeListRow(episode: episode)
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityHint("Shows episode details")
-
-                        EpisodePlayButton(episode: episode)
-                    }
-                    .listRowBackground(rowBackground(for: episode))
-                }
-            }
+            EpisodeSection(
+                feedIdentity: podcast.feedIdentity,
+                search: search,
+                highlighted: highlighted,
+                path: $path
+            )
         }
         .navigationTitle(podcast.title)
         .navigationBarTitleDisplayMode(.inline)
@@ -156,15 +153,6 @@ struct PodcastDetailView: View {
         }
     }
 
-    @ViewBuilder
-    private func rowBackground(for episode: Episode) -> some View {
-        if episode.persistentModelID == highlighted {
-            Color.accentColor.opacity(0.18)
-        } else {
-            Color.clear
-        }
-    }
-
     private func refresh(revalidating: Bool) async {
         guard let url = FeedURL.normalize(podcast.feedURL) else { return }
         do {
@@ -176,6 +164,73 @@ struct PodcastDetailView: View {
             // The stored episodes are still there, so this is a note, not a
             // blocking failure.
             refreshError = NetworkError(from: error)
+        }
+    }
+}
+
+/// The show's episodes, fetched and filtered by the store.
+///
+/// Its own view because `@Query` takes its descriptor at initialisation: the
+/// search text arrives as a parameter, so typing rebuilds this view with a new
+/// query rather than filtering an array that was fetched in full.
+private struct EpisodeSection: View {
+    let highlighted: PersistentIdentifier?
+    @Binding var path: NavigationPath
+
+    @Query private var episodes: [Episode]
+    private let isSearching: Bool
+
+    init(
+        feedIdentity: String,
+        search: String,
+        highlighted: PersistentIdentifier?,
+        path: Binding<NavigationPath>
+    ) {
+        self.highlighted = highlighted
+        self._path = path
+        self.isSearching = !search.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        self._episodes = Query(
+            ShowEpisodes.descriptor(feedIdentity: feedIdentity, matching: search)
+        )
+    }
+
+    var body: some View {
+        Section(header) {
+            if episodes.isEmpty {
+                Text(isSearching ? "No episodes match." : "No episodes yet.")
+                    .foregroundStyle(.secondary)
+            }
+            // The same two sibling buttons as Latest and History, for the same
+            // reason: a button inside a `NavigationLink`'s label does not get
+            // its own taps in a list, so the play control would be dead.
+            // `path.append` pushes exactly what the link pushed.
+            ForEach(episodes) { episode in
+                HStack(spacing: 8) {
+                    Button {
+                        path.append(episode)
+                    } label: {
+                        EpisodeListRow(episode: episode)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityHint("Shows episode details")
+
+                    EpisodePlayButton(episode: episode)
+                }
+                .listRowBackground(background(for: episode))
+            }
+        }
+    }
+
+    private var header: String {
+        isSearching ? "\(episodes.count) Found" : "Episodes"
+    }
+
+    @ViewBuilder
+    private func background(for episode: Episode) -> some View {
+        if episode.persistentModelID == highlighted {
+            Color.accentColor.opacity(0.18)
+        } else {
+            Color.clear
         }
     }
 }

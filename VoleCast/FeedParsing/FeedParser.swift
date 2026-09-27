@@ -16,10 +16,16 @@ enum FeedParser {
 
     /// Parses a feed, keeping the `maxEpisodes` newest episodes.
     ///
+    /// The ceiling is a guard against a pathological feed, not a policy about
+    /// how much history is worth having — it used to be 300, which quietly
+    /// discarded everything older than a couple of years for any long-running
+    /// show, and there are plenty of those. `AppURLSession.feedByteLimit`
+    /// already bounds the real work at 15 MB, which is a few thousand items.
+    ///
     /// Synchronous and CPU-bound; callers on the main actor should hand it off
     /// (see `FeedLoader`). Nothing is shared — the delegate is created, used and
     /// destroyed inside this call — so only Sendable values cross the boundary.
-    static func parse(_ data: Data, maxEpisodes: Int = 300) throws -> ParsedFeed {
+    static func parse(_ data: Data, maxEpisodes: Int = 2000) throws -> ParsedFeed {
         let delegate = FeedParserDelegate()
         let parser = XMLParser(data: data)
         // Feeds routinely use the `itunes:` prefix without declaring it, which

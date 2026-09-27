@@ -109,6 +109,53 @@ struct FeedParserTests {
         #expect(line > 0)
     }
 
+    private func feed(items: Int) -> Data {
+        let entries = (0..<items).map { index in
+            """
+            <item>
+              <title>Episode \(index)</title>
+              <guid>e-\(index)</guid>
+              <pubDate>\(Self.pubDate(daysAgo: index))</pubDate>
+              <enclosure url="https://cdn.example.com/\(index).mp3" type="audio/mpeg"/>
+            </item>
+            """
+        }.joined(separator: "\n")
+        let xml = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <rss version="2.0"><channel><title>Long Show</title>
+        \(entries)
+        </channel></rss>
+        """
+        return Data(xml.utf8)
+    }
+
+    private static func pubDate(daysAgo: Int) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(identifier: "UTC")
+        formatter.dateFormat = "EEE, dd MMM yyyy HH:mm:ss Z"
+        return formatter.string(from: Date(timeIntervalSince1970: 1_700_000_000 - TimeInterval(daysAgo) * 86_400))
+    }
+
+    /// A long-running show's archive must survive the trip. The Rest Is
+    /// History alone serves over seven hundred episodes going back to 2020,
+    /// and the old ceiling of three hundred silently discarded everything
+    /// older than a couple of years.
+    @Test func keepsALongArchiveByDefault() throws {
+        let parsed = try FeedParser.parse(feed(items: 800))
+
+        #expect(parsed.episodes.count == 800)
+    }
+
+    @Test func stillHonoursAnExplicitCeiling() throws {
+        let parsed = try FeedParser.parse(feed(items: 50), maxEpisodes: 10)
+
+        #expect(parsed.episodes.count == 10)
+        // And keeps the newest end of the archive, not whichever end the feed
+        // happened to list first.
+        #expect(parsed.episodes.first?.title == "Episode 0")
+    }
+
     @Test func rejectsEmptyData() {
         #expect(throws: FeedParseError.notAFeed) {
             try FeedParser.parse(Data())

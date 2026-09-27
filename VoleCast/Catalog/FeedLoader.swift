@@ -22,9 +22,9 @@ extension FeedLoading {
 /// Fetches a feed and parses it, off the main actor.
 struct FeedLoader: FeedLoading {
     let http: any HTTPClient
-    var maxEpisodes: Int = 300
+    var maxEpisodes: Int = 2000
 
-    init(http: any HTTPClient = URLSessionHTTPClient(), maxEpisodes: Int = 300) {
+    init(http: any HTTPClient = URLSessionHTTPClient(), maxEpisodes: Int = 2000) {
         self.http = http
         self.maxEpisodes = maxEpisodes
     }
