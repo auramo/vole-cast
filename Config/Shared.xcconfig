@@ -13,6 +13,12 @@ ORG_IDENTIFIER = com.example
 // Empty by default so a fresh clone never inherits someone else's team.
 DEVELOPMENT_TEAM =
 
+// CarPlay. Kept here rather than in the project file for the reason every
+// signing value is: Xcode rewrites project.pbxproj whenever the Signing &
+// Capabilities pane is touched. The file itself holds one capability flag
+// and nothing personal.
+CODE_SIGN_ENTITLEMENTS = Config/VoleCast.entitlements
+
 // Local values win, so this include comes last. The "?" makes it a no-op
 // when the file is absent, which is what keeps a fresh clone working.
 #include? "Local.xcconfig"
