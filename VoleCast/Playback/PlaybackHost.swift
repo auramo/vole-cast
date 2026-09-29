@@ -20,13 +20,23 @@ final class PlaybackHost {
     let container: ModelContainer
     let player: PlayerModel
 
+    /// The player the app runs with, built apart from `shared` so a test can
+    /// build the same one against an in-memory store.
+    ///
+    /// It shares the store's `mainContext` with the views: the episodes it is
+    /// asked to play come from their queries, and it has to be able to resolve
+    /// them.
+    static func makePlayer(
+        for container: ModelContainer,
+        playback: any AudioPlayback = AVPlayerAudioEngine()
+    ) -> PlayerModel {
+        PlayerModel(playback: playback, context: container.mainContext)
+    }
+
     private init() {
         let container = VoleCastModelContainer.makeStore()
         self.container = container
-        self.player = PlayerModel(
-            playback: AVPlayerAudioEngine(),
-            context: ModelContext(container)
-        )
+        self.player = Self.makePlayer(for: container)
         // The app is routinely killed while paused in the background, so the
         // bar has to be put back rather than assumed to survive. Done here
         // rather than when a view appears: whichever scene comes up first —
