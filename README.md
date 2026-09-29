@@ -73,6 +73,42 @@ build setting. `INFOPLIST_KEY_UIBackgroundModes` is not a real setting —
 `xcodebuild` accepts it and then silently drops it — so that one key lives in a
 partial plist which `GENERATE_INFOPLIST_FILE` merges the generated keys into.
 
+## CarPlay
+
+The car gets the Latest list and the system Now Playing screen, and nothing
+else for now. No Subscriptions, no History, and no search — search needs a
+keyboard the car locks out while moving. The list shows what is already in the
+store; feeds are not refreshed from the car.
+
+Connecting puts a part-listened episode back in the player at its stored
+position without making a sound. Plugging in for maps should not start a
+podcast, so audio waits until it is asked for, from the car screen or the
+wheel.
+
+The car and the phone drive one player and one store, which is what
+`PlaybackHost` is for: CarPlay is a second scene, created by UIKit, which
+cannot be handed anything at construction. Two players would mean two claims on
+one audio session and a car that does not know what the phone is playing.
+
+The scene is declared in `Config/Info.plist`, and
+`INFOPLIST_KEY_UIApplicationSceneManifest_Generation` has to stay `NO`. Left at
+`YES`, Xcode generates a scene manifest of its own and the generated one wins:
+the CarPlay role is dropped from the built app without a word, and the car
+simply never offers it.
+
+`Config/VoleCast.entitlements` carries `com.apple.developer.carplay-audio`.
+That is a capability flag with nothing personal in it, but the entitlement
+itself is granted per Apple developer account, so **a device build will not
+sign without CarPlay Audio approved on your own account.** Simulator builds and
+the test suite are unaffected, since neither provisions. Apple grants it on
+request, through the CarPlay entitlement form in the developer portal.
+
+Seeing it work means a real car. The CarPlay display that older Xcodes offered
+under *I/O → External Displays* has no equivalent in Xcode 27's DeviceHub, so
+a head unit is the only place the scene can be checked. A development build is
+enough — no App Store or TestFlight — once the entitlement is on the
+provisioning profile.
+
 ## Code layout
 
 Each folder is defined by what it is allowed to touch, so the dependencies only
