@@ -88,7 +88,8 @@ ever point one way — parsing knows nothing about the network, and nothing belo
 | `Catalog/` | where shows come from: `PodcastDirectory`, its iTunes implementation, and `FeedLoader` | Networking + FeedParsing |
 | `Formatting/` | turning stored values into display strings | Foundation |
 | `Playback/` | `AudioPlayback` and its AVPlayer engine, the audio session, now-playing and remote commands. Speaks in `PlayableEpisode` values, never `Episode` | AVFoundation, MediaPlayer, UIKit |
-| `Views/` | SwiftUI screens, `SearchModel` and `PlayerModel` | everything above |
+| `Player/` | `PlayerModel` — the one thing that sees both an `Episode` and the engine, and the only code both UIs share | SwiftData, `Playback/` |
+| `Views/` | SwiftUI screens and `SearchModel` | everything above |
 
 Services reach the views through the environment (`Views/Environment+Services.swift`),
 so no view names a concrete implementation and previews and tests can substitute
