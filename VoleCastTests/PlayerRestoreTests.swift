@@ -54,28 +54,8 @@ struct PlayerRestoreTests {
 
         player.restoreLastPlayed()
 
-        // Describing the episode is not playing it: nothing is handed to the
-        // engine, so nothing can make a sound.
-        #expect(!fake.commands.contains(.play))
-        #expect(fake.loaded == nil)
+        #expect(fake.commands.isEmpty)
         #expect(!player.isPlaying)
-    }
-
-    /// The lock screen and CarPlay both read `MPNowPlayingInfoCenter`, which
-    /// only `load` fills — and restoring deliberately never loads. Without
-    /// this the restored episode is invisible everywhere except the app's own
-    /// mini-player: the car shows an empty player and its play button does
-    /// nothing.
-    @Test func restoringPublishesTheEpisodeToTheSystem() {
-        let context = ModelContext(VoleCastModelContainer.makeInMemory())
-        _ = makeEpisode(context, guid: "r5", playedAt: .now, position: 900)
-        let fake = FakeAudioPlayback()
-        let player = PlayerModel(playback: fake, context: context)
-
-        player.restoreLastPlayed()
-
-        #expect(fake.presented?.title == "Episode r5")
-        #expect(fake.presentedAt == 900)
     }
 
     /// Pressing play in the car, or on the lock screen, reaches the engine

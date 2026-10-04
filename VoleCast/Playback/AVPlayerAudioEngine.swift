@@ -120,23 +120,13 @@ final class AVPlayerAudioEngine: AudioPlayback {
         play()
     }
 
-    /// Metadata only. Nothing is fetched, no session is activated, and the
-    /// rate stays at zero, so this cannot make a sound.
-    func present(_ episode: PlayableEpisode, at position: TimeInterval) {
-        nowPlaying.describe(
-            episode,
-            position: position,
-            duration: episode.feedDuration,
-            isPlaying: false
-        )
-    }
-
     func play() {
         guard let player, player.currentItem != nil else {
-            // A play command for something never handed over — the lock
-            // screen or the car acting on what `present` published. Returning
-            // quietly would leave those buttons dead, and this layer has no
-            // episode to load: only the owner knows what it put in the player.
+            // A play command for something never handed over — a steering
+            // wheel or a lock screen acting on an episode that was restored
+            // into the player at launch. Returning quietly would leave those
+            // buttons dead, and this layer has no episode to load: only the
+            // owner knows what it put in the player.
             onEvent?(.playRequested)
             return
         }

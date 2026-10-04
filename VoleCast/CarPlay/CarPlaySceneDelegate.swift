@@ -53,18 +53,21 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
     /// is a trade this first version makes on purpose.
     private func refreshRows() {
         let host = PlaybackHost.shared
-        let episodes = (try? host.container.mainContext.fetch(LatestEpisodes.descriptor())) ?? []
-        // Asked through the player's own predicate rather than reading an
-        // identifier off it, so this cannot disagree with what the player
-        // thinks it is holding.
-        let current = episodes.first(where: host.player.isCurrent)?.persistentModelID
-        let rows = CarPlayLatestList.rows(for: episodes, current: current)
-        listTemplate.updateSections([CPListSection(items: rows.map(item(for:)))])
-        // `current` above is nil for a loaded episode that is not in this list
-        // — one restored from further back than the twenty newest. The button
-        // asks the player directly, so it appears for that episode too.
+        let latest = (try? host.container.mainContext.fetch(LatestEpisodes.descriptor())) ?? []
+        let sections = CarPlayLatestList.sections(
+            current: host.player.currentEpisode,
+            at: host.player.position,
+            latest: latest
+        )
+        listTemplate.updateSections(sections.map(section(for:)))
         listTemplate.trailingNavigationBarButtons =
             host.player.current == nil ? [] : [nowPlayingButton]
+    }
+
+    private func section(for section: CarPlaySection) -> CPListSection {
+        let items = section.rows.map(item(for:))
+        guard let title = section.title else { return CPListSection(items: items) }
+        return CPListSection(items: items, header: title, sectionIndexTitle: nil)
     }
 
     private func item(for row: CarPlayRow) -> CPListItem {
@@ -90,9 +93,16 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
               !episode.isDeleted
         else { return }
 
-        switch CarPlayLatestList.selection(isCurrent: host.player.isCurrent(episode)) {
+        switch CarPlayLatestList.selection(
+            isCurrent: host.player.isCurrent(episode),
+            isPlaying: host.player.isPlaying
+        ) {
         case .playThenShowPlayer:
             host.player.play(episode)
+        case .resumeThenShowPlayer:
+            // Carries on from the stored position, and hands the episode to
+            // the engine if launching restored it without ever loading it.
+            host.player.resume()
         case .showPlayer:
             break
         }

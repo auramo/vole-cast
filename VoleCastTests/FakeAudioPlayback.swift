@@ -12,7 +12,6 @@ final class FakeAudioPlayback: AudioPlayback {
 
     enum Command: Equatable {
         case load(PlayableEpisode)
-        case present(PlayableEpisode, TimeInterval)
         case play
         case pause
         case seek(TimeInterval)
@@ -31,27 +30,10 @@ final class FakeAudioPlayback: AudioPlayback {
         commands.reversed().compactMap { if case let .load(episode) = $0 { episode } else { nil } }.first
     }
 
-    /// The episode most recently announced through `present`, and where it was
-    /// said to be. Metadata only — nothing here was given to an engine.
-    var presented: PlayableEpisode? {
-        commands.reversed().compactMap { if case let .present(episode, _) = $0 { episode } else { nil } }.first
-    }
-
-    var presentedAt: TimeInterval? {
-        commands.reversed().compactMap { if case let .present(_, at) = $0 { at } else { nil } }.first
-    }
-
     func load(_ episode: PlayableEpisode) {
         commands.append(.load(episode))
         position = episode.startAt
         duration = episode.feedDuration
-    }
-
-    /// Deliberately leaves `position` and `duration` alone: announcing an
-    /// episode is not preparing it, and the fake must not look more loaded
-    /// than the real engine would be.
-    func present(_ episode: PlayableEpisode, at position: TimeInterval) {
-        commands.append(.present(episode, position))
     }
 
     func play() { commands.append(.play) }

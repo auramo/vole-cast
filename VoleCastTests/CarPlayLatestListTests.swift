@@ -91,13 +91,98 @@ struct CarPlayLatestListTests {
     }
 
     @Test func selectingAnotherEpisodePlaysIt() {
-        #expect(CarPlayLatestList.selection(isCurrent: false) == .playThenShowPlayer)
+        #expect(
+            CarPlayLatestList.selection(isCurrent: false, isPlaying: false) == .playThenShowPlayer
+        )
     }
 
-    /// The one that would be easy to get wrong. On connect the restored
-    /// episode sits in the list part-listened; tapping it must take the driver
-    /// to the player, not restart it from zero and not pause it.
-    @Test func selectingTheLoadedEpisodeLeavesPlaybackAlone() {
-        #expect(CarPlayLatestList.selection(isCurrent: true) == .showPlayer)
+    /// The one that would be easy to get wrong. Tapping the episode already
+    /// playing must take the driver to the player — not restart it from zero,
+    /// and not pause it, which is what reusing `toggle` would do.
+    @Test func selectingTheEpisodeAlreadyPlayingOnlyOpensThePlayer() {
+        #expect(CarPlayLatestList.selection(isCurrent: true, isPlaying: true) == .showPlayer)
+    }
+
+    /// The Continue row's whole purpose. The episode is loaded but paused —
+    /// carried over from the phone — and tapping it means carry on, from where
+    /// it was left.
+    @Test func selectingTheLoadedButPausedEpisodeResumesIt() {
+        #expect(
+            CarPlayLatestList.selection(isCurrent: true, isPlaying: false) == .resumeThenShowPlayer
+        )
+    }
+
+    // MARK: - Sections
+
+    /// CarPlay offers no route to the player from a list, and the system's own
+    /// now-playing screen stays empty until the app owns the audio session —
+    /// which a restored episode never has. So the episode has to appear in the
+    /// one place the app controls: a row of its own, above the rest.
+    @Test func theCurrentEpisodeGetsASectionOfItsOwn() {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let playing = makeEpisode(context, guid: "c1", title: "Carried Over")
+        let other = makeEpisode(context, guid: "c2", title: "Something Else")
+
+        let sections = CarPlayLatestList.sections(
+            current: playing,
+            at: 842,
+            latest: [other]
+        )
+
+        #expect(sections.count == 2)
+        #expect(sections.first?.title == "Continue")
+        #expect(sections.first?.rows.map(\.title) == ["Carried Over"])
+        #expect(sections.first?.rows.first?.isPlaying == true)
+        #expect(sections.last?.title == "Latest")
+        #expect(sections.last?.rows.map(\.title) == ["Something Else"])
+    }
+
+    /// Where it was left, so the driver knows what they are returning to.
+    @Test func theContinueRowSaysWhereTheEpisodeWasLeft() {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let playing = makeEpisode(context, guid: "c1", title: "Carried Over")
+
+        let sections = CarPlayLatestList.sections(current: playing, at: 842, latest: [])
+
+        #expect(sections.first?.rows.first?.subtitle == "Show · 42m · 14:02")
+    }
+
+    /// Barely started is not worth a reading, and "0:00" would be noise.
+    @Test func theContinueRowOmitsAPositionAtTheVeryStart() {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let playing = makeEpisode(context, guid: "c1", title: "Carried Over")
+
+        let sections = CarPlayLatestList.sections(current: playing, at: 0, latest: [])
+
+        #expect(sections.first?.rows.first?.subtitle == "Show · 42m")
+    }
+
+    /// One episode, one row. The same episode in both sections would be two
+    /// things to read and two places to tap for one outcome.
+    @Test func theCurrentEpisodeIsNotListedTwice() {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let playing = makeEpisode(context, guid: "c1", title: "Carried Over")
+        let other = makeEpisode(context, guid: "c2", title: "Something Else")
+
+        let sections = CarPlayLatestList.sections(
+            current: playing,
+            at: 842,
+            latest: [playing, other]
+        )
+
+        #expect(sections.last?.rows.map(\.title) == ["Something Else"])
+    }
+
+    /// Nothing played yet: one plain list, and no empty section heading over
+    /// it announcing a player that does not exist.
+    @Test func withNothingPlayingThereIsJustTheList() {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let episode = makeEpisode(context, guid: "c1", title: "One")
+
+        let sections = CarPlayLatestList.sections(current: nil, at: 0, latest: [episode])
+
+        #expect(sections.count == 1)
+        #expect(sections.first?.title == nil)
+        #expect(sections.first?.rows.map(\.title) == ["One"])
     }
 }

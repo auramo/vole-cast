@@ -91,10 +91,6 @@ final class PlayerModel {
         lastWritten = playable.startAt
         phase = .paused
         needsLoad = true
-        // Metadata only — see `present`. Without it the episode is in the bar
-        // and nowhere else: the lock screen is blank and the car shows an
-        // empty player, because both read what only `load` would have filled.
-        playback.present(playable, at: playable.startAt)
     }
 
     // MARK: - Intent
