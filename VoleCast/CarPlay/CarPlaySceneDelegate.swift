@@ -60,8 +60,10 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
             latest: latest
         )
         listTemplate.updateSections(sections.map(section(for:)))
-        listTemplate.trailingNavigationBarButtons =
-            host.player.current == nil ? [] : [nowPlayingButton]
+        // Only once the engine holds it. An episode restored at launch has a
+        // player but nothing to put on that screen, and a button leading to a
+        // blank one is worse than no button — the Continue row is the way in.
+        listTemplate.trailingNavigationBarButtons = host.player.isLoaded ? [nowPlayingButton] : []
     }
 
     private func section(for section: CarPlaySection) -> CPListSection {

@@ -58,6 +58,23 @@ struct PlayerRestoreTests {
         #expect(!player.isPlaying)
     }
 
+    /// A restored episode is in the player but not in the engine, and the car
+    /// draws its player screen from what only a loaded episode publishes. The
+    /// difference has to be visible, or the car offers a blank screen.
+    @Test func aRestoredEpisodeIsNotLoadedUntilItIsStarted() {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        _ = makeEpisode(context, guid: "r8", playedAt: .now, position: 900)
+        let fake = FakeAudioPlayback()
+        let player = PlayerModel(playback: fake, context: context)
+
+        player.restoreLastPlayed()
+        #expect(player.current != nil)
+        #expect(!player.isLoaded)
+
+        player.resume()
+        #expect(player.isLoaded)
+    }
+
     /// Pressing play in the car, or on the lock screen, reaches the engine
     /// while it still has nothing loaded. It asks rather than silently doing
     /// nothing, and the answer is the episode sitting in the bar.

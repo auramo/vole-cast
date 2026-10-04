@@ -47,6 +47,16 @@ final class PlayerModel {
     var isPlaying: Bool { phase == .playing }
     var isBuffering: Bool { phase.isBusy }
 
+    /// Whether the engine actually holds the current episode, rather than it
+    /// only sitting in the player waiting to be handed over.
+    ///
+    /// The difference is invisible on the phone, where the bar draws itself
+    /// from `current`. It matters in the car: the system paints that screen
+    /// from information it ignores until the app owns the audio session, which
+    /// happens when playback starts. Before then there is a player to offer
+    /// and nothing to show in it.
+    var isLoaded: Bool { current != nil && !needsLoad }
+
     /// How far through, 0...1, for the mini-bar's hairline.
     var fraction: Double {
         guard let duration, duration > 0, position.isFinite else { return 0 }
