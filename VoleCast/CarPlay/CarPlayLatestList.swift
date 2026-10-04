@@ -35,13 +35,25 @@ enum CarPlayLatestList {
             CarPlayRow(
                 id: episode.persistentModelID,
                 title: episode.title,
-                subtitle: EpisodeSubtitle.text(
-                    published: episode.publishedAt,
-                    duration: episode.duration
-                ),
+                subtitle: detail(for: episode),
                 isPlaying: episode.persistentModelID == current
             )
         }
+    }
+
+    /// A `CPListItem` has two lines where the phone's row has three, so the
+    /// show shares the second one with the date and duration. Without it the
+    /// car lists a column of episode titles and no sign of which show any of
+    /// them came from.
+    private static func detail(for episode: Episode) -> String {
+        let parts = [
+            episode.podcast?.title,
+            EpisodeSubtitle.text(published: episode.publishedAt, duration: episode.duration),
+        ]
+        // Same separator `EpisodeSubtitle` uses internally, and the same
+        // reason for dropping empties: an orphan or an undated episode must
+        // not be given a stray one.
+        return parts.compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
     }
 
     /// Selecting the episode already loaded must not disturb it. On connect it

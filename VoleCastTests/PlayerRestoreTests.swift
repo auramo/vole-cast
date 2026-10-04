@@ -54,8 +54,60 @@ struct PlayerRestoreTests {
 
         player.restoreLastPlayed()
 
-        #expect(fake.commands.isEmpty)
+        // Describing the episode is not playing it: nothing is handed to the
+        // engine, so nothing can make a sound.
+        #expect(!fake.commands.contains(.play))
+        #expect(fake.loaded == nil)
         #expect(!player.isPlaying)
+    }
+
+    /// The lock screen and CarPlay both read `MPNowPlayingInfoCenter`, which
+    /// only `load` fills — and restoring deliberately never loads. Without
+    /// this the restored episode is invisible everywhere except the app's own
+    /// mini-player: the car shows an empty player and its play button does
+    /// nothing.
+    @Test func restoringPublishesTheEpisodeToTheSystem() {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        _ = makeEpisode(context, guid: "r5", playedAt: .now, position: 900)
+        let fake = FakeAudioPlayback()
+        let player = PlayerModel(playback: fake, context: context)
+
+        player.restoreLastPlayed()
+
+        #expect(fake.presented?.title == "Episode r5")
+        #expect(fake.presentedAt == 900)
+    }
+
+    /// Pressing play in the car, or on the lock screen, reaches the engine
+    /// while it still has nothing loaded. It asks rather than silently doing
+    /// nothing, and the answer is the episode sitting in the bar.
+    @Test func aPlayRequestLoadsTheRestoredEpisodeWhereItWasLeft() {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        _ = makeEpisode(context, guid: "r6", playedAt: .now, position: 900)
+        let fake = FakeAudioPlayback()
+        let player = PlayerModel(playback: fake, context: context)
+        player.restoreLastPlayed()
+
+        fake.emit(.playRequested)
+
+        #expect(fake.loaded?.startAt == 900)
+        #expect(fake.loaded?.audioURL.absoluteString == "https://a.example.com/r6.mp3")
+    }
+
+    /// With nothing waiting to be handed over, a play request is a command for
+    /// something we do not have. Acting on it would mean reloading whatever is
+    /// already playing — and `resume` calling `play` again would be a loop.
+    @Test func aPlayRequestWithNothingRestoredIsIgnored() {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let episode = makeEpisode(context, guid: "r7", playedAt: nil)
+        let fake = FakeAudioPlayback()
+        let player = PlayerModel(playback: fake, context: context)
+        player.toggle(episode)
+        fake.forget()
+
+        fake.emit(.playRequested)
+
+        #expect(fake.commands.isEmpty)
     }
 
     /// The engine was never given the episode, so resuming has to hand it over

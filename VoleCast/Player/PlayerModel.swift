@@ -91,6 +91,10 @@ final class PlayerModel {
         lastWritten = playable.startAt
         phase = .paused
         needsLoad = true
+        // Metadata only — see `present`. Without it the episode is in the bar
+        // and nowhere else: the lock screen is blank and the car shows an
+        // empty player, because both read what only `load` would have filled.
+        playback.present(playable, at: playable.startAt)
     }
 
     // MARK: - Intent
@@ -209,6 +213,13 @@ final class PlayerModel {
             }
             lastWritten = 0
             reachedEnd = true
+        case .playRequested:
+            // Only ever meaningful for an episode restored into the bar and
+            // never handed over. Anything else is a play command for audio the
+            // engine should already have, and answering it with `resume` —
+            // which calls `play` — would be a loop.
+            guard needsLoad else { break }
+            resume()
         case .interrupted:
             phase = .paused
             writePosition(force: true)

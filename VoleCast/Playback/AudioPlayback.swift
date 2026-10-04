@@ -96,6 +96,11 @@ enum PlaybackEvent: Equatable, Sendable {
     /// Resolved from the asset; may contradict what the feed claimed.
     case duration(TimeInterval)
     case reachedEnd
+    /// Something outside the app asked for playback while the engine had
+    /// nothing loaded — the lock screen or the car, after an episode was
+    /// restored into the player but never handed over. The engine cannot
+    /// answer it alone, so it asks whoever owns the episode.
+    case playRequested
     /// A phone call or similar. `resumable` is the system's opinion, not ours.
     case interrupted(resumable: Bool)
     /// Headphones or AirPods pulled out.
@@ -118,6 +123,14 @@ protocol AudioPlayback: AnyObject, Sendable {
 
     /// Loads and begins playing. Idempotent for the episode already loaded.
     func load(_ episode: PlayableEpisode)
+    /// Announces an episode as the current one without preparing any audio.
+    ///
+    /// Restoring at launch leaves an episode in the player that the engine has
+    /// never been given, because `load` would start playing it. The lock
+    /// screen and CarPlay read the system's now-playing information, which
+    /// only `load` fills, so without this a restored episode exists for the
+    /// app's own UI and for nothing else.
+    func present(_ episode: PlayableEpisode, at position: TimeInterval)
     func play()
     func pause()
     func seek(to time: TimeInterval)

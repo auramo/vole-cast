@@ -36,7 +36,31 @@ struct CarPlayLatestListTests {
 
         #expect(rows.count == 1)
         #expect(rows.first?.title == "Episode One")
-        // The same line the phone shows, from `EpisodeSubtitle`.
+        // The show, then the same line the phone shows from `EpisodeSubtitle`.
+        #expect(rows.first?.subtitle == "Show · 42m")
+    }
+
+    /// Two lines is all a `CPListItem` has, where the phone's row has three.
+    /// The show name has to share the second one, or the car lists a column of
+    /// episode titles with no clue which show any of them belongs to.
+    @Test func aRowNamesTheShowItBelongsTo() {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let episode = makeEpisode(context, guid: "c1", title: "Episode One")
+
+        let rows = CarPlayLatestList.rows(for: [episode], current: nil)
+
+        #expect(rows.first?.subtitle == "Show · 42m")
+    }
+
+    /// An orphan has no show to name, and must not be given a stray separator.
+    @Test func aRowWithoutAShowSaysOnlyWhatItKnows() {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let episode = Episode(guid: "c9", title: "Orphan", audioURL: "https://c.example.com/c9.mp3")
+        episode.duration = 2520
+        context.insert(episode)
+
+        let rows = CarPlayLatestList.rows(for: [episode], current: nil)
+
         #expect(rows.first?.subtitle == "42m")
     }
 
