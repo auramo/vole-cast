@@ -18,6 +18,17 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
     private var interfaceController: CPInterfaceController?
     private let listTemplate = CPListTemplate(title: "Latest", sections: [])
 
+    /// The car's answer to the mini-player bar. CarPlay puts no route to the
+    /// player on a list of its own, so without this the only way to reach one
+    /// is to start something — and an episode carried over from the phone,
+    /// which is the thing you most want in a car, would be unreachable.
+    ///
+    /// Shown only while an episode is loaded, which is exactly when the phone
+    /// shows its bar.
+    private lazy var nowPlayingButton = CPBarButton(title: "Now Playing") { [weak self] _ in
+        self?.showPlayer()
+    }
+
     func templateApplicationScene(
         _ scene: CPTemplateApplicationScene,
         didConnect interfaceController: CPInterfaceController
@@ -49,6 +60,11 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
         let current = episodes.first(where: host.player.isCurrent)?.persistentModelID
         let rows = CarPlayLatestList.rows(for: episodes, current: current)
         listTemplate.updateSections([CPListSection(items: rows.map(item(for:)))])
+        // `current` above is nil for a loaded episode that is not in this list
+        // — one restored from further back than the twenty newest. The button
+        // asks the player directly, so it appears for that episode too.
+        listTemplate.trailingNavigationBarButtons =
+            host.player.current == nil ? [] : [nowPlayingButton]
     }
 
     private func item(for row: CarPlayRow) -> CPListItem {
@@ -82,6 +98,13 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
         }
 
         refreshRows()
+        showPlayer()
+    }
+
+    /// Pushing a template that is already on top is an error rather than a
+    /// no-op, and both the button and a row selection lead here.
+    private func showPlayer() {
+        guard interfaceController?.topTemplate !== CPNowPlayingTemplate.shared else { return }
         interfaceController?.pushTemplate(
             CPNowPlayingTemplate.shared,
             animated: true,
