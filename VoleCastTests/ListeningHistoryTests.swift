@@ -104,9 +104,9 @@ struct ListeningHistoryTests {
         #expect(episodes.last?.title == "Episode 11")
     }
 
-    @Test func defaultsToTwenty() {
-        #expect(ListeningHistory.defaultLimit == 20)
-        #expect(ListeningHistory.descriptor().fetchLimit == 20)
+    @Test func defaultsToOneHundred() {
+        #expect(ListeningHistory.defaultLimit == 100)
+        #expect(ListeningHistory.descriptor().fetchLimit == 100)
     }
 
     /// The one way an entry leaves History, and not by design: `Podcast` cascades

@@ -103,8 +103,8 @@ struct LatestEpisodesTests {
         #expect(latest.map(\.title) == ["stays"])
     }
 
-    @Test func defaultsToTwenty() {
-        #expect(LatestEpisodes.defaultLimit == 20)
-        #expect(LatestEpisodes.descriptor().fetchLimit == 20)
+    @Test func defaultsToOneHundred() {
+        #expect(LatestEpisodes.defaultLimit == 100)
+        #expect(LatestEpisodes.descriptor().fetchLimit == 100)
     }
 }
