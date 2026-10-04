@@ -18,17 +18,6 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
     private var interfaceController: CPInterfaceController?
     private let listTemplate = CPListTemplate(title: "Latest", sections: [])
 
-    /// The car's answer to the mini-player bar. CarPlay puts no route to the
-    /// player on a list of its own, so without this the only way to reach one
-    /// is to start something — and an episode carried over from the phone,
-    /// which is the thing you most want in a car, would be unreachable.
-    ///
-    /// Shown only while an episode is loaded, which is exactly when the phone
-    /// shows its bar.
-    private lazy var nowPlayingButton = CPBarButton(title: "Now Playing") { [weak self] _ in
-        self?.showPlayer()
-    }
-
     func templateApplicationScene(
         _ scene: CPTemplateApplicationScene,
         didConnect interfaceController: CPInterfaceController
@@ -60,10 +49,6 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
             latest: latest
         )
         listTemplate.updateSections(sections.map(section(for:)))
-        // Only once the engine holds it. An episode restored at launch has a
-        // player but nothing to put on that screen, and a button leading to a
-        // blank one is worse than no button — the Continue row is the way in.
-        listTemplate.trailingNavigationBarButtons = host.player.isLoaded ? [nowPlayingButton] : []
     }
 
     private func section(for section: CarPlaySection) -> CPListSection {
@@ -122,7 +107,7 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
     }
 
     /// Pushing a template that is already on top is an error rather than a
-    /// no-op, and both the button and a row selection lead here.
+    /// no-op, and a second tap on the row already playing leads here.
     private func showPlayer() {
         guard interfaceController?.topTemplate !== CPNowPlayingTemplate.shared else { return }
         interfaceController?.pushTemplate(
