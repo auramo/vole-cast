@@ -7,7 +7,7 @@ import SwiftData
 /// real store, and the limit is applied by the store instead of by fetching
 /// every episode and throwing most of them away.
 enum LatestEpisodes {
-    static let defaultLimit = 20
+    static let defaultLimit = 100
 
     static func descriptor(limit: Int = defaultLimit) -> FetchDescriptor<Episode> {
         var descriptor = FetchDescriptor<Episode>(

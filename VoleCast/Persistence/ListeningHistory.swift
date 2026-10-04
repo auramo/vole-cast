@@ -14,7 +14,7 @@ import SwiftData
 /// that would need play events recorded separately from the episodes they point
 /// at, which is a schema of its own.
 enum ListeningHistory {
-    static let defaultLimit = 20
+    static let defaultLimit = 100
 
     static func descriptor(limit: Int = defaultLimit) -> FetchDescriptor<Episode> {
         var descriptor = FetchDescriptor<Episode>(
