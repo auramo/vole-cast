@@ -76,8 +76,13 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
         let item = CPListItem(text: row.title, detailText: row.subtitle)
         item.isPlaying = row.isPlaying
         item.handler = { [weak self] _, completion in
-            self?.select(row.id)
+            // Answered first. CarPlay holds the row in a selected state until
+            // this is called, and everything `select` does happens to the
+            // template that row belongs to — rebuilding its sections, pushing
+            // on top of it. Doing that with the selection still in flight is
+            // how a tap ends up looking like nothing happened.
             completion()
+            self?.select(row.id)
         }
         return item
     }
@@ -109,8 +114,11 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
             break
         }
 
-        refreshRows()
+        // Player first, list second. Rebuilding the list replaces every row in
+        // it, including the one just tapped, so it happens once that row has
+        // finished being the thing the driver is interacting with.
         showPlayer()
+        refreshRows()
     }
 
     /// Pushing a template that is already on top is an error rather than a
