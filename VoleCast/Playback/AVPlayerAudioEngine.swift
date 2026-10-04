@@ -121,7 +121,15 @@ final class AVPlayerAudioEngine: AudioPlayback {
     }
 
     func play() {
-        guard let player, player.currentItem != nil else { return }
+        guard let player, player.currentItem != nil else {
+            // A play command for something never handed over — a steering
+            // wheel or a lock screen acting on an episode that was restored
+            // into the player at launch. Returning quietly would leave those
+            // buttons dead, and this layer has no episode to load: only the
+            // owner knows what it put in the player.
+            onEvent?(.playRequested)
+            return
+        }
         session.activate()
         player.play()
     }

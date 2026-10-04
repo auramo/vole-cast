@@ -209,6 +209,13 @@ final class PlayerModel {
             }
             lastWritten = 0
             reachedEnd = true
+        case .playRequested:
+            // Only ever meaningful for an episode restored into the bar and
+            // never handed over. Anything else is a play command for audio the
+            // engine should already have, and answering it with `resume` —
+            // which calls `play` — would be a loop.
+            guard needsLoad else { break }
+            resume()
         case .interrupted:
             phase = .paused
             writePosition(force: true)

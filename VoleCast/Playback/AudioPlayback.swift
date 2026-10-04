@@ -96,6 +96,11 @@ enum PlaybackEvent: Equatable, Sendable {
     /// Resolved from the asset; may contradict what the feed claimed.
     case duration(TimeInterval)
     case reachedEnd
+    /// Something outside the app asked for playback while the engine had
+    /// nothing loaded — the lock screen or the car, after an episode was
+    /// restored into the player but never handed over. The engine cannot
+    /// answer it alone, so it asks whoever owns the episode.
+    case playRequested
     /// A phone call or similar. `resumable` is the system's opinion, not ours.
     case interrupted(resumable: Bool)
     /// Headphones or AirPods pulled out.

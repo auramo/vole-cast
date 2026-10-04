@@ -21,5 +21,35 @@
 	<array>
 		<string>audio</string>
 	</array>
+
+	<!-- The car is a second scene, created by UIKit rather than by SwiftUI.
+	     Only the CarPlay role is declared: SwiftUI goes on providing the
+	     window scene from the App's WindowGroup.
+
+	     This needs INFOPLIST_KEY_UIApplicationSceneManifest_Generation set
+	     to NO, which it is. Left at YES, Xcode generates a manifest of its
+	     own with an empty UISceneConfigurations, and the generated one wins
+	     — the CarPlay role below is dropped from the built plist without a
+	     word, and the car simply never offers the app. The failure looks
+	     exactly like a delegate that was never called. -->
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<true/>
+		<key>UISceneConfigurations</key>
+		<dict>
+			<key>CPTemplateApplicationSceneSessionRoleApplication</key>
+			<array>
+				<dict>
+					<key>UISceneClassName</key>
+					<string>CPTemplateApplicationScene</string>
+					<key>UISceneConfigurationName</key>
+					<string>CarPlay</string>
+					<key>UISceneDelegateClassName</key>
+					<string>$(PRODUCT_MODULE_NAME).CarPlaySceneDelegate</string>
+				</dict>
+			</array>
+		</dict>
+	</dict>
 </dict>
 </plist>

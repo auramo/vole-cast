@@ -58,6 +58,38 @@ struct PlayerRestoreTests {
         #expect(!player.isPlaying)
     }
 
+    /// Pressing play in the car, or on the lock screen, reaches the engine
+    /// while it still has nothing loaded. It asks rather than silently doing
+    /// nothing, and the answer is the episode sitting in the bar.
+    @Test func aPlayRequestLoadsTheRestoredEpisodeWhereItWasLeft() {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        _ = makeEpisode(context, guid: "r6", playedAt: .now, position: 900)
+        let fake = FakeAudioPlayback()
+        let player = PlayerModel(playback: fake, context: context)
+        player.restoreLastPlayed()
+
+        fake.emit(.playRequested)
+
+        #expect(fake.loaded?.startAt == 900)
+        #expect(fake.loaded?.audioURL.absoluteString == "https://a.example.com/r6.mp3")
+    }
+
+    /// With nothing waiting to be handed over, a play request is a command for
+    /// something we do not have. Acting on it would mean reloading whatever is
+    /// already playing — and `resume` calling `play` again would be a loop.
+    @Test func aPlayRequestWithNothingRestoredIsIgnored() {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let episode = makeEpisode(context, guid: "r7", playedAt: nil)
+        let fake = FakeAudioPlayback()
+        let player = PlayerModel(playback: fake, context: context)
+        player.toggle(episode)
+        fake.forget()
+
+        fake.emit(.playRequested)
+
+        #expect(fake.commands.isEmpty)
+    }
+
     /// The engine was never given the episode, so resuming has to hand it over
     /// rather than just asking it to play.
     @Test func resumingARestoredEpisodeLoadsItWhereItWasLeft() {
