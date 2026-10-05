@@ -5,6 +5,18 @@ import SwiftUI
 /// The system supplies the shape, material and placement, so this draws only
 /// its contents — no background, no divider, no transition of its own.
 struct MiniPlayerBar: View {
+    private enum Layout {
+        /// Smaller than it was. The accessory's height follows the artwork, and
+        /// at 40 the picture filled it corner to corner — no room above or
+        /// below, and its edges running into the rounded ends of the bar.
+        static let artwork: CGFloat = 32
+        /// Clear of the rounded ends, which eat into the corners at 8.
+        static let horizontalInset: CGFloat = 14
+        /// Lifts the artwork off the top and bottom edges, and leaves the band
+        /// the progress line sits in.
+        static let verticalInset: CGFloat = 8
+    }
+
     @Environment(PlayerModel.self) private var player
 
     var body: some View {
@@ -15,6 +27,10 @@ struct MiniPlayerBar: View {
     }
 
     /// A hairline rather than a control: scrubbing belongs to the full player.
+    ///
+    /// It lives in the band of padding below the contents, which is why that
+    /// padding exists. Drawn against an unpadded row it lands across the
+    /// bottom of the artwork and reads as part of the picture.
     private var progress: some View {
         GeometryReader { proxy in
             Capsule()
@@ -23,7 +39,8 @@ struct MiniPlayerBar: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         .frame(height: 2)
-        .padding(.horizontal, 12)
+        .padding(.horizontal, Layout.horizontalInset)
+        .padding(.bottom, 5)
         .accessibilityHidden(true)
     }
 
@@ -35,7 +52,7 @@ struct MiniPlayerBar: View {
                 player.isExpanded = true
             } label: {
                 HStack(spacing: 12) {
-                    ArtworkView(url: episode.artworkURL?.absoluteString, size: 40)
+                    ArtworkView(url: episode.artworkURL?.absoluteString, size: Layout.artwork)
 
                     VStack(alignment: .leading, spacing: 1) {
                         Text(episode.title)
@@ -74,7 +91,8 @@ struct MiniPlayerBar: View {
 
             playPause
         }
-        .padding(.horizontal, 8)
+        .padding(.horizontal, Layout.horizontalInset)
+        .padding(.vertical, Layout.verticalInset)
     }
 
     @ViewBuilder
