@@ -18,6 +18,18 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
     private var interfaceController: CPInterfaceController?
     private let listTemplate = CPListTemplate(title: "Latest", sections: [])
 
+    /// The episodes the rows on screen stand for, kept for as long as those
+    /// rows are.
+    ///
+    /// A row carries only a `PersistentIdentifier`, and a `ModelContext`
+    /// registers its models weakly — so once the fetch that built the list
+    /// returns, nothing holds the episodes and resolving a tap finds nothing.
+    /// A screen's `@Query` hides this on the phone by holding its results;
+    /// here the list is the only thing that can. Left undone, taps do nothing
+    /// at all, and intermittently so: whether the phone happens to have a
+    /// screen alive holding the same episodes decides it.
+    private var shown: [PersistentIdentifier: Episode] = [:]
+
     func templateApplicationScene(
         _ scene: CPTemplateApplicationScene,
         didConnect interfaceController: CPInterfaceController
@@ -43,11 +55,18 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
     private func refreshRows() {
         let host = PlaybackHost.shared
         let latest = (try? host.container.mainContext.fetch(LatestEpisodes.descriptor())) ?? []
+        let current = host.player.currentEpisode
         let sections = CarPlayLatestList.sections(
-            current: host.player.currentEpisode,
+            current: current,
             at: host.player.position,
             latest: latest
         )
+        // Rebuilt wholesale alongside the rows, so it holds exactly what is on
+        // screen and an episode that has left the list is let go with its row.
+        // The current episode is usually in `latest` as well, so the keys
+        // collide by design — last one wins rather than trapping.
+        shown = (latest + [current].compactMap { $0 })
+            .reduce(into: [:]) { $0[$1.persistentModelID] = $1 }
         listTemplate.updateSections(sections.map(section(for:)))
     }
 
@@ -75,15 +94,11 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
     // MARK: - Selecting
 
     /// The identifier is carried rather than the `Episode`, and resolved again
-    /// here: a row can outlive the episode it describes, and reading a deleted
-    /// `@Model` traps. `registeredModel` and not `model(for:)` for the reason
-    /// `PlayerModel` gives — the latter hands back a fault for a row that is
-    /// gone, so a deleted episode would come back looking alive.
+    /// here from what the list is holding: a row can outlive the episode it
+    /// describes, and reading a deleted `@Model` traps.
     private func select(_ id: PersistentIdentifier) {
         let host = PlaybackHost.shared
-        guard let episode = host.container.mainContext.registeredModel(for: id) as Episode?,
-              !episode.isDeleted
-        else { return }
+        guard let episode = shown[id], !episode.isDeleted else { return }
 
         switch CarPlayLatestList.selection(
             isCurrent: host.player.isCurrent(episode),

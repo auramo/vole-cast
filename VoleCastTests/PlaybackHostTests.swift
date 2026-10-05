@@ -67,6 +67,54 @@ struct PlaybackHostTests {
         #expect(episode.playbackPosition == 300)
     }
 
+    /// The context registers models weakly. A view holds its `@Query` results
+    /// for as long as it is on screen, which hides this everywhere on the
+    /// phone — but the car fetches a list, builds rows from identifiers and
+    /// lets the episodes go, and an app launched straight into CarPlay has no
+    /// view holding anything. Whatever the player is told to play has to stay
+    /// resolvable after the fetch that produced it is gone.
+    @Test func keepsRecordingWhenNothingElseHoldsTheEpisode() throws {
+        let container = VoleCastModelContainer.makeInMemory()
+        let context = container.mainContext
+        // Built inside a scope that ends, so this test holds nothing either —
+        // a local `let` here would retain the episode and hide the bug.
+        try {
+            let show = Podcast(
+                feedURL: "https://h2.example.com/feed",
+                feedIdentity: "h2",
+                title: "Show"
+            )
+            context.insert(show)
+            let episode = Episode(
+                guid: "h2",
+                title: "Episode h2",
+                audioURL: "https://h2.example.com/h2.mp3"
+            )
+            episode.duration = 1800
+            episode.podcast = show
+            context.insert(episode)
+            try context.save()
+        }()
+
+        let fake = FakeAudioPlayback()
+        let player = PlaybackHost.makePlayer(for: container, playback: fake)
+
+        // Fetched, handed over, and released — exactly what the car does.
+        try {
+            let fetched = try context.fetch(FetchDescriptor<Episode>())
+            player.play(try #require(fetched.first { $0.guid == "h2" }))
+        }()
+
+        fake.emit(.phase(.playing))
+        fake.emit(.time(300))
+
+        let after = try #require(
+            try context.fetch(FetchDescriptor<Episode>()).first { $0.guid == "h2" }
+        )
+        #expect(after.lastPlayedAt != nil)
+        #expect(after.playbackPosition == 300)
+    }
+
     @Test func finishingAnEpisodeFromAViewMarksItPlayed() throws {
         let container = VoleCastModelContainer.makeInMemory()
         let episode = try episodeFromAView(in: container)

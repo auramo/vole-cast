@@ -85,6 +85,7 @@ final class PlayerModel {
         else { return }
 
         currentID = episode.persistentModelID
+        heldEpisode = episode
         current = playable
         position = playable.startAt
         duration = playable.feedDuration
@@ -117,6 +118,7 @@ final class PlayerModel {
         writePosition(force: true)
         error = nil
         currentID = episode.persistentModelID
+        heldEpisode = episode
         current = playable
         position = playable.startAt
         duration = playable.feedDuration
@@ -180,6 +182,7 @@ final class PlayerModel {
         playback.stop()
         current = nil
         currentID = nil
+        heldEpisode = nil
         position = 0
         duration = nil
         phase = .idle
@@ -264,14 +267,26 @@ final class PlayerModel {
     /// needs the model back.
     var currentEpisode: Episode? { liveEpisode() }
 
-    /// Re-resolves the stored episode only when something must be written.
-    /// Returns nil once it has been deleted, so nothing reads a dead model.
+    /// Keeps the episode being played alive. Never read — `liveEpisode` asks
+    /// the context, not this.
     ///
-    /// Deliberately `registeredModel` and not `model(for:)`: the latter
-    /// fetches, and for an identifier whose row is gone it hands back a fault
-    /// rather than nothing — a deleted episode would come back looking alive.
-    /// Everything that plays an episode reached it through this context, so
-    /// the narrower question is the right one.
+    /// A `ModelContext` registers its models weakly, so an episode nothing
+    /// else holds is deregistered and the lookup below comes back empty. On
+    /// the phone that never showed: a screen's `@Query` holds its results for
+    /// as long as it is on screen. The car fetches a list, builds rows from
+    /// identifiers and lets the episodes go, and an app launched straight into
+    /// CarPlay has no screen holding anything — so every write was skipped in
+    /// silence, and a drive recorded nothing at all.
+    private var heldEpisode: Episode?
+
+    /// Nil once the episode has been deleted, so nothing reads a dead model.
+    ///
+    /// Still asked of the context rather than answered from `heldEpisode`:
+    /// holding a model does not stop it being deleted, and a deleted one is
+    /// deregistered while the reference to it lives on. `registeredModel` and
+    /// not `model(for:)` for the older reason — the latter fetches, and for a
+    /// row that is gone it hands back a fault rather than nothing, so a
+    /// deleted episode would come back looking alive.
     private func liveEpisode() -> Episode? {
         guard let currentID else { return nil }
         guard let episode = context.registeredModel(for: currentID) as Episode?,
