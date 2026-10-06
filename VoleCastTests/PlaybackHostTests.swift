@@ -115,6 +115,41 @@ struct PlaybackHostTests {
         #expect(after.playbackPosition == 300)
     }
 
+    /// The full player's Episode Details button is drawn only when
+    /// `currentEpisode` answers, so the same weak registration that silenced
+    /// the car's taps made that button come and go — present when some screen
+    /// happened to be holding the episode, absent when none was.
+    @Test func theEpisodeStaysReachableOnceNothingElseHoldsIt() throws {
+        let container = VoleCastModelContainer.makeInMemory()
+        let context = container.mainContext
+        try {
+            let show = Podcast(
+                feedURL: "https://h3.example.com/feed",
+                feedIdentity: "h3",
+                title: "Show"
+            )
+            context.insert(show)
+            let episode = Episode(
+                guid: "h3",
+                title: "Episode h3",
+                audioURL: "https://h3.example.com/h3.mp3"
+            )
+            episode.duration = 1800
+            episode.podcast = show
+            context.insert(episode)
+            try context.save()
+        }()
+
+        let fake = FakeAudioPlayback()
+        let player = PlaybackHost.makePlayer(for: container, playback: fake)
+        try {
+            let fetched = try context.fetch(FetchDescriptor<Episode>())
+            player.play(try #require(fetched.first { $0.guid == "h3" }))
+        }()
+
+        #expect(player.currentEpisode?.guid == "h3")
+    }
+
     @Test func finishingAnEpisodeFromAViewMarksItPlayed() throws {
         let container = VoleCastModelContainer.makeInMemory()
         let episode = try episodeFromAView(in: container)
