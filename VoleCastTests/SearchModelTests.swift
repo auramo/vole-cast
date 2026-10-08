@@ -35,6 +35,46 @@ struct SearchModelTests {
         SearchModel(directory: directory, debounce: .zero)
     }
 
+    /// A pasted feed URL is not a show name, and asking Apple to find a show
+    /// called "https://feeds.npr.org/510289/podcast.xml" can only come back
+    /// empty — which then replaced the Open feed row with "No results".
+    ///
+    /// It must not be sent at all, either: a private feed from Patreon or
+    /// Supercast carries a per-user token in its query string, and a search
+    /// hands that straight to Apple.
+    @Test func doesNotSearchForAPastedFeedURL() async {
+        let directory = StubDirectory(results: [result("Something")])
+        let model = model(directory)
+
+        await model.search("https://feeds.npr.org/510289/podcast.xml")
+
+        #expect(directory.calls.current == 0)
+        // Idle, not empty: the view shows the Open feed row in this state.
+        #expect(model.state == .idle)
+    }
+
+    @Test func doesNotSearchForAURLWithoutItsScheme() async {
+        let directory = StubDirectory(results: [result("Something")])
+        let model = model(directory)
+
+        await model.search("feeds.npr.org/510289/podcast.xml")
+
+        #expect(directory.calls.current == 0)
+    }
+
+    /// The other half: a bare dotted name is a plausible show name — "ev.news"
+    /// is a real subscription — and must still be searched for, even though it
+    /// also parses as a host.
+    @Test func stillSearchesForANameThatHappensToHaveADot() async {
+        let directory = StubDirectory(results: [result("ev.news Daily")])
+        let model = model(directory)
+
+        await model.search("ev.news")
+
+        #expect(directory.calls.current == 1)
+        #expect(model.state == .results([result("ev.news Daily")]))
+    }
+
     @Test func showsResults() async {
         let directory = StubDirectory(results: [result("Directory Show")])
         let model = model(directory)

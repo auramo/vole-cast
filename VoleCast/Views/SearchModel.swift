@@ -36,9 +36,33 @@ final class SearchModel {
     /// Runs a search. Intended to be driven by `.task(id:)`, which cancels and
     /// restarts this on every keystroke — that's what makes the sleep below a
     /// debounce rather than a delay.
+    /// Whether the text is plainly a URL rather than something that merely
+    /// parses as one.
+    ///
+    /// A scheme or a path says so; a bare dotted word does not. "ev.news" is a
+    /// real show name and normalises to a perfectly good host, so looking like
+    /// a URL cannot be the test — only looking like nothing else.
+    private static func isPlainlyAURL(_ text: String) -> Bool {
+        guard FeedURL.normalize(text) != nil else { return false }
+        return text.contains("://") || text.contains("/")
+    }
+
     func search(_ raw: String) async {
         let term = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         guard term.count >= 2 else {
+            state = .idle
+            return
+        }
+
+        // A feed URL is not a show name. Asking the directory to find a show
+        // called "https://feeds.npr.org/510289/podcast.xml" can only come back
+        // empty, and that emptiness replaced the one row that could actually
+        // open it. Idle is what the view draws the Open feed row in.
+        //
+        // It must not be sent at all, either: a private feed from Patreon or
+        // Supercast carries a per-user token in its query string, and a search
+        // would hand that to Apple.
+        guard !Self.isPlainlyAURL(term) else {
             state = .idle
             return
         }

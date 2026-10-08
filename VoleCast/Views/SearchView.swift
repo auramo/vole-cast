@@ -51,21 +51,30 @@ struct SearchView: View {
 
     @ViewBuilder
     private func content(_ model: SearchModel) -> some View {
-        switch model.state {
-        case .idle where model.typedFeedURL == nil:
-            ContentUnavailableView {
-                Label("Find a Show", systemImage: "magnifyingglass")
-            } description: {
-                Text("Search by name, or paste an RSS feed URL.")
-            }
-        case .searching:
-            ProgressView().controlSize(.large)
-        case .failed(let error):
-            ErrorView(error: error) { await model.search(model.query) }
-        case .empty:
-            ContentUnavailableView.search(text: model.query)
-        case .idle, .results:
+        // Anything that parses as a feed URL keeps its Open feed row, whatever
+        // the directory is doing. A term can be both — "ev.news" is a show
+        // name and a host — and for those the directory is still asked, but
+        // its answer must not take the row away: "no matches" and a throttled
+        // 403 are both reasons to want the URL more, not less.
+        if model.typedFeedURL != nil {
             resultsList(model)
+        } else {
+            switch model.state {
+            case .idle:
+                ContentUnavailableView {
+                    Label("Find a Show", systemImage: "magnifyingglass")
+                } description: {
+                    Text("Search by name, or paste an RSS feed URL.")
+                }
+            case .searching:
+                ProgressView().controlSize(.large)
+            case .failed(let error):
+                ErrorView(error: error) { await model.search(model.query) }
+            case .empty:
+                ContentUnavailableView.search(text: model.query)
+            case .results:
+                resultsList(model)
+            }
         }
     }
 
