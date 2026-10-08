@@ -89,10 +89,25 @@ final class NowPlayingCentre {
             return .success
         }
 
-        // There is no queue. Left enabled, Control Centre shows track-skip
-        // arrows that do nothing when pressed.
-        centre.nextTrackCommand.isEnabled = false
-        centre.previousTrackCommand.isEnabled = false
+        // Steering wheels and head units send track-skip, not skip-by-interval
+        // — the buttons are wired for music, where the next thing is a track.
+        // These used to be disabled, on the grounds that a podcast has no
+        // queue to move through, which left those buttons dead in the car
+        // while every other podcast app answered them.
+        //
+        // So they mean here what the driver means by them: the same jump
+        // forward and back as the on-screen controls, rather than nothing at
+        // all. A steering wheel has no way to say "thirty seconds" otherwise.
+        centre.nextTrackCommand.isEnabled = true
+        centre.nextTrackCommand.addTarget { @Sendable [weak self] _ in
+            Task { @MainActor in self?.onSkip?(Self.skipForward) }
+            return .success
+        }
+        centre.previousTrackCommand.isEnabled = true
+        centre.previousTrackCommand.addTarget { @Sendable [weak self] _ in
+            Task { @MainActor in self?.onSkip?(-Self.skipBackward) }
+            return .success
+        }
     }
 
     // MARK: - Metadata
@@ -195,6 +210,8 @@ final class NowPlayingCentre {
         centre.togglePlayPauseCommand.removeTarget(nil)
         centre.skipForwardCommand.removeTarget(nil)
         centre.skipBackwardCommand.removeTarget(nil)
+        centre.nextTrackCommand.removeTarget(nil)
+        centre.previousTrackCommand.removeTarget(nil)
         centre.changePlaybackPositionCommand.removeTarget(nil)
         clear()
     }
