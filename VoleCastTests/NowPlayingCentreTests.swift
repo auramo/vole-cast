@@ -1,4 +1,5 @@
 import Testing
+import MediaPlayer
 import UIKit
 @testable import VoleCast
 
@@ -24,5 +25,21 @@ struct NowPlayingCentreTests {
         }.value
 
         #expect(size != nil)
+    }
+
+    /// A steering wheel's skip buttons send track-skip, not skip-by-interval:
+    /// they were built for music, where the next thing is a track. Disabled —
+    /// which they were, since a podcast has no queue — they do nothing in the
+    /// car, and there is no other way to jump from the wheel.
+    ///
+    /// Only that they answer at all. What they do with the press is a closure
+    /// `MPRemoteCommand` gives no public way to fire.
+    @MainActor
+    @Test func theWheelsTrackButtonsAreAnswered() {
+        let centre = NowPlayingCentre()
+        defer { centre.tearDown() }
+
+        #expect(MPRemoteCommandCenter.shared().nextTrackCommand.isEnabled)
+        #expect(MPRemoteCommandCenter.shared().previousTrackCommand.isEnabled)
     }
 }
