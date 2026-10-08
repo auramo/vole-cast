@@ -67,7 +67,15 @@ struct FullPlayerView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
-                Button("Done") { dismiss() }
+                // A chevron rather than "Done": nothing here is being
+                // confirmed or finished — the sheet is just being put away,
+                // and the arrow points where it goes.
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "chevron.down")
+                }
+                .accessibilityLabel("Close Player")
             }
         }
     }
