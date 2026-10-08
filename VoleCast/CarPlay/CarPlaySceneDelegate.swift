@@ -16,7 +16,10 @@ import UIKit
 @MainActor
 final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegate {
     private var interfaceController: CPInterfaceController?
-    private let listTemplate = CPListTemplate(title: "Latest", sections: [])
+    /// Untitled on purpose. The sections name themselves — Continue, then
+    /// Latest — and a template title above them put "Latest" on screen twice,
+    /// once as a heading for a list that is only partly Latest.
+    private let listTemplate = CPListTemplate(title: nil, sections: [])
 
     /// The episodes the rows on screen stand for, kept for as long as those
     /// rows are.

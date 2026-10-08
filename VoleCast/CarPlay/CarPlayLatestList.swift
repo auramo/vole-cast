@@ -55,7 +55,9 @@ enum CarPlayLatestList {
         latest: [Episode]
     ) -> [CarPlaySection] {
         guard let current else {
-            return [CarPlaySection(title: nil, rows: rows(for: latest, current: nil))]
+            // Still titled with nothing playing: the template above carries no
+            // title, so this is the only thing naming the list.
+            return [CarPlaySection(title: latestTitle, rows: rows(for: latest, current: nil))]
         }
 
         let id = current.persistentModelID

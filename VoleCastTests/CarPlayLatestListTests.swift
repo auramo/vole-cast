@@ -173,8 +173,9 @@ struct CarPlayLatestListTests {
         #expect(sections.last?.rows.map(\.title) == ["Something Else"])
     }
 
-    /// Nothing played yet: one plain list, and no empty section heading over
-    /// it announcing a player that does not exist.
+    /// Nothing played yet: one section, with no Continue heading announcing a
+    /// player that does not exist. It keeps its own title — the template above
+    /// it has none, so this is the only thing naming the list.
     @Test func withNothingPlayingThereIsJustTheList() {
         let context = ModelContext(VoleCastModelContainer.makeInMemory())
         let episode = makeEpisode(context, guid: "c1", title: "One")
@@ -182,7 +183,7 @@ struct CarPlayLatestListTests {
         let sections = CarPlayLatestList.sections(current: nil, at: 0, latest: [episode])
 
         #expect(sections.count == 1)
-        #expect(sections.first?.title == nil)
+        #expect(sections.first?.title == "Latest")
         #expect(sections.first?.rows.map(\.title) == ["One"])
     }
 }
