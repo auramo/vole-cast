@@ -1,15 +1,15 @@
 import SwiftData
 import SwiftUI
 
-/// Four top-level tabs: what's new, the shows you follow, what you have been
-/// listening to, and finding more.
+/// Four top-level tabs: what's new, what you have been listening to, the shows
+/// you follow, and finding more.
 ///
 /// Each tab owns its navigation path so switching tabs doesn't unwind where you
 /// were. The mini-player is the tab view's bottom accessory, which is why it
 /// survives navigating and changing tabs.
 struct RootView: View {
     enum TabSelection {
-        case latest, subscriptions, history, search
+        case latest, history, subscriptions, search
     }
 
     /// Handed in rather than built here. It outlives this screen — the car is
@@ -20,8 +20,8 @@ struct RootView: View {
 
     @State private var selection: TabSelection = .latest
     @State private var latestPath = NavigationPath()
-    @State private var subscriptionsPath = NavigationPath()
     @State private var historyPath = NavigationPath()
+    @State private var subscriptionsPath = NavigationPath()
     @State private var searchPath = NavigationPath()
 
     var body: some View {
@@ -30,14 +30,14 @@ struct RootView: View {
                 .environment(player)
                 .tabItem { Label("Latest", systemImage: "waveform") }
                 .tag(TabSelection.latest)
-            SubscriptionsView(path: $subscriptionsPath, onFindShows: showSearch)
-                .environment(player)
-                .tabItem { Label("Subscriptions", systemImage: "square.stack.fill") }
-                .tag(TabSelection.subscriptions)
             HistoryView(path: $historyPath)
                 .environment(player)
                 .tabItem { Label("History", systemImage: "clock.arrow.circlepath") }
                 .tag(TabSelection.history)
+            SubscriptionsView(path: $subscriptionsPath, onFindShows: showSearch)
+                .environment(player)
+                .tabItem { Label("Subscriptions", systemImage: "square.stack.fill") }
+                .tag(TabSelection.subscriptions)
             SearchView(path: $searchPath)
                 .environment(player)
                 .tabItem { Label("Search", systemImage: "magnifyingglass") }
@@ -93,8 +93,8 @@ struct RootView: View {
     private var activePath: Binding<NavigationPath> {
         switch selection {
         case .latest: $latestPath
-        case .subscriptions: $subscriptionsPath
         case .history: $historyPath
+        case .subscriptions: $subscriptionsPath
         case .search: $searchPath
         }
     }
