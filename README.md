@@ -2,11 +2,31 @@
 
 An open-source podcast app for iOS.
 
-Early days. You can find a show by name, or paste an RSS feed URL, subscribe to
-it, browse its episodes and play them — streaming, with the lock-screen
-controls and resume-where-you-left-off you'd expect. A History tab lists what
-you've been listening to; finishing an episode takes it out of Latest.
-Downloads come next.
+The main idea is to give you the latest episodes of your subscribed
+podcasts via streaming, no downloaded garbage left behind to fill your
+phone.
+
+There is no "continuing the next episode"-feature, which in some
+podcast applications just means the end jingles or ads of previously
+listened episodes appear endlessly :(
+In fact: no concept of next episode at all. You pick one form the
+latest view, and when it's done and nothing plays after you select
+something else.
+
+If you want to pick up an unfinished episode, you can find it in the
+history view which shows the last 100 listened episodes whether they
+are fully played or not.
+
+There is also a possibility to jump to the episode in the podcast's
+feed to find the next episode in case you want to continue to the next
+episode. It doesn't matter how far past the episode is in the
+podcast's feed. This way you can play related episodes which could
+have been originally released years ago.
+
+There is no trending podcasts or other view to suggest podcasts. Just
+plain search:  you can find a show by name, or paste an RSS feed URL, subscribe to
+it, browse its episodes and play them , with the lock-screen
+controls and resume-where-you-left-off you'd expect.
 
 Built with SwiftUI and SwiftData, with no third-party dependencies — feeds are
 parsed with Foundation's `XMLParser`.
