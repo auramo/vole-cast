@@ -16,10 +16,15 @@ import UIKit
 @MainActor
 final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegate {
     private var interfaceController: CPInterfaceController?
-    /// Untitled on purpose. The sections name themselves — Continue, then
-    /// Latest — and a template title above them put "Latest" on screen twice,
-    /// once as a heading for a list that is only partly Latest.
-    private let listTemplate = CPListTemplate(title: nil, sections: [])
+    /// Titled "Episodes" rather than "Latest", which the section below already
+    /// says, or nothing, which costs more than it looks like it should.
+    ///
+    /// The title *is* the navigation bar — drop it and CarPlay has nothing to
+    /// draw there, so the bar collapses, taking the system's now-playing
+    /// button with it and leaving the list pressed against the top of the
+    /// screen. That button is the only route back to the player once
+    /// something is playing, so the bar has to stay.
+    private let listTemplate = CPListTemplate(title: "Episodes", sections: [])
 
     /// The episodes the rows on screen stand for, kept for as long as those
     /// rows are.
