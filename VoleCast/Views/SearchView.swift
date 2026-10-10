@@ -123,10 +123,12 @@ struct SearchView: View {
             .textInputAutocapitalization(.never)
             .autocorrectionDisabled()
             .focused($typing)
-            // "Done", not "Search". Results arrive as you type, so by the
-            // time the key is reachable the search it offers has already
-            // happened — the only thing left to want is the keyboard gone.
-            .submitLabel(.done)
+            // The plain return arrow. Not "Search", which by the time the key
+            // is reachable has already happened — results arrive as you type —
+            // and not "Done", which iOS draws as a checkmark that reads like
+            // confirming something rather than finishing typing. Pressing it
+            // dismisses either way; the label is only what it looks like.
+            .submitLabel(.return)
             .onSubmit { typing = false }
             if !model.query.isEmpty {
                 Button("Clear", systemImage: "xmark.circle.fill") { model.query = "" }
