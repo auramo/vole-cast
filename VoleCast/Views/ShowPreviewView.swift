@@ -1,22 +1,44 @@
 import SwiftData
 import SwiftUI
 
-/// Where a show comes from before you subscribe: a directory hit, or a feed URL.
+/// Where a show comes from before you subscribe: a directory hit, a feed URL,
+/// or a row in a chart.
+///
+/// The chart case is the odd one. A chart names a show by an iTunes collection
+/// id and nothing else, so unlike the other two it arrives without the feed
+/// URL this screen exists to load — that has to be looked up first.
 enum ShowPreviewSource: Hashable {
     case directory(PodcastSearchResult)
     case feedURL(URL)
+    case chart(ChartEntry)
 
-    var url: URL {
+    /// nil for a chart entry, whose URL is not known until it is resolved.
+    var url: URL? {
         switch self {
         case .directory(let result): result.feedURL
         case .feedURL(let url): url
+        case .chart: nil
         }
     }
 
     var directoryResult: PodcastSearchResult? {
         switch self {
         case .directory(let result): result
-        case .feedURL: nil
+        case .feedURL, .chart: nil
+        }
+    }
+
+    /// What to draw before anything has loaded. A chart row already knows the
+    /// title, author and artwork, so arriving from Discover shows the show
+    /// rather than a placeholder — same as arriving from search.
+    var placeholder: (title: String, author: String, artworkURL: String?)? {
+        switch self {
+        case .directory(let result):
+            (result.title, result.author, result.artworkURL?.absoluteString)
+        case .chart(let entry):
+            (entry.title, entry.author, entry.artworkURL?.absoluteString)
+        case .feedURL:
+            nil
         }
     }
 }
@@ -29,13 +51,26 @@ struct ShowPreviewView: View {
     @Environment(\.feedLoader) private var feedLoader
     @Environment(\.modelContext) private var context
 
+    @Environment(\.podcastLookup) private var lookup
+
     @State private var phase: Phase = .loading
     @State private var subscribed = false
     @State private var subscribeError: NetworkError?
+    /// Set once a chart entry has been resolved, so subscribing records the
+    /// collection id exactly as it would arriving from search.
+    @State private var resolved: PodcastSearchResult?
 
     private enum Phase {
+        /// Looking a chart entry's feed up. Draws the same spinner as
+        /// `loading`; separate so the state machine does not lie about which
+        /// request is in flight.
+        case resolving
         case loading
         case loaded(LoadedFeed)
+        /// The show has no feed anyone else can play. Not a failure, and
+        /// deliberately not `failed`: there is no Try Again, because trying
+        /// again would never produce a different answer.
+        case unavailable
         case failed(NetworkError)
     }
 
@@ -45,13 +80,23 @@ struct ShowPreviewView: View {
                 header
             }
             switch phase {
-            case .loading:
+            case .resolving, .loading:
                 Section {
                     HStack {
                         Spacer()
                         ProgressView()
                         Spacer()
                     }
+                }
+            case .unavailable:
+                Section {
+                    ContentUnavailableView(
+                        "Not Available as a Podcast Feed",
+                        systemImage: "lock.circle",
+                        description: Text(
+                            "This show is exclusive to Apple Podcasts, so no other app can play it."
+                        )
+                    )
                 }
             case .failed(let error):
                 Section {
@@ -88,7 +133,7 @@ struct ShowPreviewView: View {
         if case .loaded(let loaded) = phase, !loaded.feed.title.isEmpty {
             return loaded.feed.title
         }
-        return source.directoryResult?.title ?? "Show"
+        return source.placeholder?.title ?? "Show"
     }
 
     /// Drawn from the directory result while the feed loads, so arriving here
@@ -126,18 +171,19 @@ struct ShowPreviewView: View {
 
     private var artworkURL: String? {
         if case .loaded(let loaded) = phase, let art = loaded.feed.artworkURL { return art }
-        return source.directoryResult?.artworkURL?.absoluteString
+        return resolved?.artworkURL?.absoluteString ?? source.placeholder?.artworkURL
     }
 
     private var author: String? {
         if case .loaded(let loaded) = phase, !loaded.feed.author.isEmpty { return loaded.feed.author }
-        return source.directoryResult?.author
+        return resolved?.author ?? source.placeholder?.author
     }
 
     private func load() async {
-        phase = .loading
         do {
-            let loaded = try await feedLoader.load(source.url)
+            guard let url = try await feedURL() else { return }
+            phase = .loading
+            let loaded = try await feedLoader.load(url)
             phase = .loaded(loaded)
             subscribed = Subscriptions.existing(identity: loaded.identityKey, in: context) != nil
         } catch is CancellationError {
@@ -146,11 +192,39 @@ struct ShowPreviewView: View {
         }
     }
 
+    /// The feed to load, looking it up first when all we have is a chart
+    /// entry's collection id.
+    ///
+    /// Returns nil having already set the phase, for the one case that is not
+    /// an error: a show with no public feed, which cannot be loaded now or
+    /// ever.
+    private func feedURL() async throws -> URL? {
+        if let known = source.url { return known }
+        guard case .chart(let entry) = source else { return nil }
+
+        phase = .resolving
+        // Asked of the store the show charted in, not the device's. A show is
+        // only in the stores that carry it, and asking the wrong one comes
+        // back empty — indistinguishable here from having no feed at all.
+        guard let result = try await lookup.podcast(
+            collectionID: entry.collectionID,
+            storefront: entry.storefront
+        ) else {
+            phase = .unavailable
+            return nil
+        }
+        resolved = result
+        return result.feedURL
+    }
+
     private func subscribe(_ loaded: LoadedFeed) {
         do {
             try Subscriptions.subscribe(
                 to: loaded,
-                directoryResult: source.directoryResult,
+                // A chart entry resolves into the same kind of result a search
+                // hit is, so a show subscribed to from Discover records its
+                // collection id just as one found by name does.
+                directoryResult: resolved ?? source.directoryResult,
                 in: context
             )
             subscribed = true

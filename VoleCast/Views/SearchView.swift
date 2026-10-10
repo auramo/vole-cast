@@ -1,30 +1,58 @@
 import SwiftUI
 
-/// Finding a show by name, or by pasting a feed URL.
+/// Finding a show: by name, by pasting a feed URL, or by browsing a chart.
+///
+/// The two halves share this stack and its destinations but nothing else. The
+/// search half talks only to the directory and the charts half only to the
+/// charts, so an endpoint Apple might retire cannot take down the two ways of
+/// finding a show that people actually depend on. Search is also what the tab
+/// opens on, so a broken Discover is never the first thing anyone meets.
 struct SearchView: View {
     @Binding var path: NavigationPath
 
+    private enum Half: Hashable { case search, discover }
+
     @Environment(\.podcastDirectory) private var directory
+    @Environment(\.podcastCharts) private var charts
     @State private var model: SearchModel?
+    @State private var discover: DiscoverModel?
+    @State private var half: Half = .search
     @State private var showingAddByURL = false
+    /// Remembered across launches, because someone who browses another
+    /// country's charts generally means it.
+    @AppStorage("discoverStorefront") private var storefront = Storefront.device
 
     var body: some View {
         NavigationStack(path: $path) {
-            Group {
-                if let model {
-                    content(model)
-                        .searchable(
-                            text: Binding(get: { model.query }, set: { model.query = $0 }),
-                            placement: .navigationBarDrawer(displayMode: .always),
-                            prompt: Text("Shows or RSS URL")
-                        )
-                        .task(id: model.query) { await model.search(model.query) }
+            VStack(spacing: 0) {
+                Picker("Find shows by", selection: $half) {
+                    Text("Search").tag(Half.search)
+                    Text("Discover").tag(Half.discover)
                 }
+                .pickerStyle(.segmented)
+                .padding(.horizontal)
+                .padding(.bottom, 8)
+
+                // Pushed to fill what is left, so the picker above stays
+                // pinned under the title. Without it the stack centres itself
+                // and the control floats down the screen whenever the half
+                // below it draws something small, like a spinner.
+                Group {
+                    switch half {
+                    case .search:
+                        searchHalf
+                    case .discover:
+                        discoverHalf
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             .navigationTitle("Search")
             .toolbar {
-                Button("Add by RSS URL…", systemImage: "link.badge.plus") {
-                    showingAddByURL = true
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Add by RSS URL…", systemImage: "link.badge.plus") {
+                        showingAddByURL = true
+                    }
                 }
             }
             .sheet(isPresented: $showingAddByURL) {
@@ -43,11 +71,39 @@ struct SearchView: View {
             }
         }
         .onAppear {
-            // Built here rather than in an initialiser so it picks up the
-            // environment's directory, which previews and tests replace.
+            // Built here rather than in an initialiser so they pick up the
+            // environment's services, which previews and tests replace. Owned
+            // by this shell rather than by each half, so switching between
+            // them does not throw away a chart already fetched.
             if model == nil { model = SearchModel(directory: directory) }
+            if discover == nil {
+                discover = DiscoverModel(charts: charts, storefront: storefront)
+            }
         }
     }
+
+    // MARK: - The two halves
+
+    @ViewBuilder
+    private var searchHalf: some View {
+        if let model {
+            content(model)
+                .searchable(
+                    text: Binding(get: { model.query }, set: { model.query = $0 }),
+                    placement: .navigationBarDrawer(displayMode: .always),
+                    prompt: Text("Shows or RSS URL")
+                )
+                .task(id: model.query) { await model.search(model.query) }
+        }
+    }
+
+    @ViewBuilder
+    private var discoverHalf: some View {
+        if let discover {
+            DiscoverList(model: discover, storefront: $storefront)
+        }
+    }
+
 
     @ViewBuilder
     private func content(_ model: SearchModel) -> some View {
@@ -103,7 +159,14 @@ struct SearchView: View {
                 Section {
                     ForEach(results) { result in
                         NavigationLink(value: ShowPreviewSource.directory(result)) {
-                            SearchResultRow(result: result)
+                            ShowRow(
+                                artworkURL: result.artworkURL?.absoluteString,
+                                title: result.title,
+                                author: result.author,
+                                detail: result.episodeCount.map {
+                                    String(localized: "^[\($0) episode](inflect: true)")
+                                }
+                            )
                         }
                     }
                 } header: {
@@ -112,33 +175,6 @@ struct SearchView: View {
             }
         }
         .listStyle(.plain)
-    }
-}
-
-private struct SearchResultRow: View {
-    let result: PodcastSearchResult
-
-    var body: some View {
-        HStack(spacing: 12) {
-            ArtworkView(url: result.artworkURL?.absoluteString, size: 56)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(result.title)
-                    .font(.headline)
-                    .lineLimit(2)
-                if !result.author.isEmpty {
-                    Text(result.author)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                }
-                if let count = result.episodeCount {
-                    Text("^[\(count) episode](inflect: true)")
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
-                }
-            }
-        }
-        .padding(.vertical, 4)
     }
 }
 
