@@ -1,0 +1,67 @@
+{
+  "feed": {
+    "title": "Top Shows",
+    "id": "https://rss.marketingtools.apple.com/api/v2/fi/podcasts/top/100/podcasts.json",
+    "author": {
+      "name": "Apple",
+      "url": "https://www.apple.com/"
+    },
+    "links": [
+      {
+        "self": "https://rss.marketingtools.apple.com/api/v2/fi/podcasts/top/100/podcasts.json"
+      }
+    ],
+    "copyright": "Copyright © 2026 Apple Inc. All rights reserved.",
+    "country": "fi",
+    "icon": "https://www.apple.com/favicon.ico",
+    "updated": "Sat, 10 Oct 2026 12:11:38 +0000",
+    "results": [
+      {
+        "artistName": "Teemu Liila ja Kevin van Dessel",
+        "id": "1521917708",
+        "name": "Sijoituskästi",
+        "kind": "podcasts",
+        "artworkUrl100": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/2b/b2/70/2bb2706b-c5a4-ccf2-289f-d8738054fcf0/mza_1312564494745307759.jpg/100x100bb.png",
+        "genres": [
+          {
+            "genreId": "1321",
+            "name": "Business",
+            "url": "https://itunes.apple.com/fi/genre/id1321"
+          }
+        ],
+        "url": "https://podcasts.apple.com/fi/podcast/sijoitusk%C3%A4sti/id1521917708"
+      },
+      {
+        "artistName": "Helsingin Sanomat",
+        "id": "1147969773",
+        "name": "Uutisraportti podcast",
+        "kind": "podcasts",
+        "contentAdvisoryRating": "Explict",
+        "artworkUrl100": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/9a/66/3b/9a663bf5-aab9-5b66-1d19-44d21c36c4db/mza_16565062250356549543.jpg/100x100bb.png",
+        "genres": [
+          {
+            "genreId": "1489",
+            "name": "News",
+            "url": "https://itunes.apple.com/fi/genre/id1489"
+          }
+        ],
+        "url": "https://podcasts.apple.com/fi/podcast/uutisraportti-podcast/id1147969773"
+      },
+      {
+        "artistName": "Iltalehti",
+        "id": "1565309768",
+        "name": "Politiikan puskaradio",
+        "kind": "podcasts",
+        "artworkUrl100": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/5b/5a/d5/5b5ad5ff-9c05-9c1a-564f-3024aa5f3c2a/mza_1851243846318435847.jpg/100x100bb.png",
+        "genres": [
+          {
+            "genreId": "1489",
+            "name": "News",
+            "url": "https://itunes.apple.com/fi/genre/id1489"
+          }
+        ],
+        "url": "https://podcasts.apple.com/fi/podcast/politiikan-puskaradio/id1565309768"
+      }
+    ]
+  }
+}

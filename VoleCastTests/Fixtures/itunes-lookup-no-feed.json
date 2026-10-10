@@ -1,0 +1,46 @@
+{
+  "resultCount": 1,
+  "results": [
+    {
+      "wrapperType": "track",
+      "kind": "podcast",
+      "collectionId": 1147969773,
+      "trackId": 1147969773,
+      "artistName": "Helsingin Sanomat",
+      "collectionName": "Uutisraportti podcast",
+      "trackName": "Uutisraportti podcast",
+      "collectionCensoredName": "Uutisraportti podcast",
+      "trackCensoredName": "Uutisraportti podcast",
+      "collectionViewUrl": "https://podcasts.apple.com/us/podcast/uutisraportti-podcast/id1147969773?uo=4",
+      "trackViewUrl": "https://podcasts.apple.com/us/podcast/uutisraportti-podcast/id1147969773?uo=4",
+      "artworkUrl30": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/9a/66/3b/9a663bf5-aab9-5b66-1d19-44d21c36c4db/mza_16565062250356549543.jpg/30x30bb.jpg",
+      "artworkUrl60": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/9a/66/3b/9a663bf5-aab9-5b66-1d19-44d21c36c4db/mza_16565062250356549543.jpg/60x60bb.jpg",
+      "artworkUrl100": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/9a/66/3b/9a663bf5-aab9-5b66-1d19-44d21c36c4db/mza_16565062250356549543.jpg/100x100bb.jpg",
+      "collectionPrice": 0.0,
+      "trackPrice": 0.0,
+      "collectionHdPrice": 0,
+      "releaseDate": "2026-10-01T13:45:00Z",
+      "collectionExplicitness": "notExplicit",
+      "trackExplicitness": "explicit",
+      "trackCount": 453,
+      "trackTimeMillis": 4984,
+      "country": "USA",
+      "currency": "USD",
+      "primaryGenreName": "News Commentary",
+      "contentAdvisoryRating": "Explicit",
+      "artworkUrl600": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/9a/66/3b/9a663bf5-aab9-5b66-1d19-44d21c36c4db/mza_16565062250356549543.jpg/600x600bb.jpg",
+      "genreIds": [
+        "1530",
+        "26",
+        "1489",
+        "1527"
+      ],
+      "genres": [
+        "News Commentary",
+        "Podcasts",
+        "News",
+        "Politics"
+      ]
+    }
+  ]
+}

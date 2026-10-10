@@ -1,0 +1,515 @@
+{
+  "feed": {
+    "author": {
+      "name": {
+        "label": "iTunes Store"
+      },
+      "uri": {
+        "label": "http://www.apple.com/uk/itunes/"
+      }
+    },
+    "entry": [
+      {
+        "im:name": {
+          "label": "Conan O’Brien Needs A Friend"
+        },
+        "im:image": [
+          {
+            "label": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/c6/02/8a/c6028ab7-bffd-db83-53e4-34a4ea9bef21/mza_16944101310108746053.jpg/55x55bb.png",
+            "attributes": {
+              "height": "55"
+            }
+          },
+          {
+            "label": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/c6/02/8a/c6028ab7-bffd-db83-53e4-34a4ea9bef21/mza_16944101310108746053.jpg/60x60bb.png",
+            "attributes": {
+              "height": "60"
+            }
+          },
+          {
+            "label": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/c6/02/8a/c6028ab7-bffd-db83-53e4-34a4ea9bef21/mza_16944101310108746053.jpg/170x170bb.png",
+            "attributes": {
+              "height": "170"
+            }
+          }
+        ],
+        "summary": {
+          "label": "After 25 years at the Late Night desk, Conan realized that the only people at his holiday party are the men and women who work for him. Over the years and despite thousands of interviews, Conan has never made a real and lasting friendship with any of his celebrity guests. So, he started a podcast to do just that. Deeper, unboundedly playful, and free from FCC regulations, Conan O’Brien Needs a Friend is a weekly opportunity for Conan to hang out with the people he enjoys most and perhaps find some real friendship along the way.\n\nSubscribe to SiriusXM Podcasts+ to listen to new episodes of Conan O'Brien Needs a Friend ad-free and a whole week early.\nStart a free trial now on Apple Podcasts or by visiting siriusxm.com/podcastsplus."
+        },
+        "im:price": {
+          "label": "Get",
+          "attributes": {
+            "amount": "0",
+            "currency": "EUR"
+          }
+        },
+        "im:contentType": {
+          "attributes": {
+            "term": "Podcast",
+            "label": "Podcast"
+          }
+        },
+        "rights": {
+          "label": "© 2024 Team Coco & Earwolf"
+        },
+        "title": {
+          "label": "Conan O’Brien Needs A Friend - Team Coco & Earwolf"
+        },
+        "link": {
+          "attributes": {
+            "rel": "alternate",
+            "type": "text/html",
+            "href": "https://podcasts.apple.com/fi/podcast/conan-obrien-needs-a-friend/id1438054347?uo=2"
+          }
+        },
+        "id": {
+          "label": "https://podcasts.apple.com/fi/podcast/conan-obrien-needs-a-friend/id1438054347?uo=2",
+          "attributes": {
+            "im:id": "1438054347"
+          }
+        },
+        "im:artist": {
+          "label": "Team Coco & Earwolf",
+          "attributes": {
+            "href": "https://podcasts.apple.com/fi/artist/earwolf/407542375?uo=2"
+          }
+        },
+        "category": {
+          "attributes": {
+            "im:id": "1303",
+            "term": "Comedy",
+            "scheme": "https://podcasts.apple.com/fi/genre/podcasts-comedy/id1303?uo=2",
+            "label": "Comedy"
+          }
+        },
+        "im:releaseDate": {
+          "label": "2026-10-14T21:05:00-07:00",
+          "attributes": {
+            "label": "14 October 2026"
+          }
+        }
+      },
+      {
+        "im:name": {
+          "label": "Elä viitti!"
+        },
+        "im:image": [
+          {
+            "label": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/88/ea/27/88ea2745-2bc2-83e6-42e5-e8801617c39a/mza_2640701978588643885.jpg/55x55bb.png",
+            "attributes": {
+              "height": "55"
+            }
+          },
+          {
+            "label": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/88/ea/27/88ea2745-2bc2-83e6-42e5-e8801617c39a/mza_2640701978588643885.jpg/60x60bb.png",
+            "attributes": {
+              "height": "60"
+            }
+          },
+          {
+            "label": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts211/v4/88/ea/27/88ea2745-2bc2-83e6-42e5-e8801617c39a/mza_2640701978588643885.jpg/170x170bb.png",
+            "attributes": {
+              "height": "170"
+            }
+          }
+        ],
+        "summary": {
+          "label": "Podcastin juontajat Olli, Aleksi ja Konsta tuovat joka viikko keskustelun aiheiksi heidän mielestään kummallisimman tai kiinnostavimman Wikipedia-artikkelin, ja opettavat sen juontopareilleen. Tiedätkö, mikä on neljäs ulottuvuus, Sentinelit tai Tarrare? Usko tai älä, mutta kohta tiedät! Uusi jakso joka keskiviikko klo 5.00\n\nTilaa maksulliset bonusjaksot: https://creators.spotify.com/pod/profile/ela-viitti/subscribe"
+        },
+        "im:price": {
+          "label": "Get",
+          "attributes": {
+            "amount": "0",
+            "currency": "EUR"
+          }
+        },
+        "im:contentType": {
+          "attributes": {
+            "term": "Podcast",
+            "label": "Podcast"
+          }
+        },
+        "rights": {
+          "label": "© Iha Just Imus"
+        },
+        "title": {
+          "label": "Elä viitti! - Iha Just Imus"
+        },
+        "link": {
+          "attributes": {
+            "rel": "alternate",
+            "type": "text/html",
+            "href": "https://podcasts.apple.com/fi/podcast/el%C3%A4-viitti/id1711780293?uo=2"
+          }
+        },
+        "id": {
+          "label": "https://podcasts.apple.com/fi/podcast/el%C3%A4-viitti/id1711780293?uo=2",
+          "attributes": {
+            "im:id": "1711780293"
+          }
+        },
+        "im:artist": {
+          "label": "Iha Just Imus"
+        },
+        "category": {
+          "attributes": {
+            "im:id": "1303",
+            "term": "Comedy",
+            "scheme": "https://podcasts.apple.com/fi/genre/podcasts-comedy/id1303?uo=2",
+            "label": "Comedy"
+          }
+        },
+        "im:releaseDate": {
+          "label": "2026-10-07T19:00:00-07:00",
+          "attributes": {
+            "label": "07 October 2026"
+          }
+        }
+      },
+      {
+        "im:name": {
+          "label": "Wahlgren & Wistam"
+        },
+        "im:image": [
+          {
+            "label": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/8d/81/b8/8d81b855-fe3b-5afd-6f76-522eeb4b094b/mza_13592371131028013293.jpg/55x55bb.png",
+            "attributes": {
+              "height": "55"
+            }
+          },
+          {
+            "label": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/8d/81/b8/8d81b855-fe3b-5afd-6f76-522eeb4b094b/mza_13592371131028013293.jpg/60x60bb.png",
+            "attributes": {
+              "height": "60"
+            }
+          },
+          {
+            "label": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/8d/81/b8/8d81b855-fe3b-5afd-6f76-522eeb4b094b/mza_13592371131028013293.jpg/170x170bb.png",
+            "attributes": {
+              "height": "170"
+            }
+          }
+        ],
+        "summary": {
+          "label": "En sångerska och en tv-personlighet slår sig ihop för att varje vecka fundera över små och stora saker i denna glamour/vardags-podd. Ex-män, barnuppfostran, kärlek och misslyckanden avhandlas med en stor portion humor. Livet blir inte alltid som man har tänkt sig. Kanske blir det roligare. I Bikten har man chansen att bli förlåten för sina synder. Pernilla och Sofia tar med glädje sig an lyssnarnas historier och kontrar även med sina egna synder och upplevelser. I veckans Aha får vi lära oss något nytt och i momentet Telefonboken går ingen säker. Det blir självklart även tips på enkla goda maträtter från Pernilla. Tveka inte att vara med och påverka vår podd. Nytt avsnitt varje fredag. Wahlgren och Wistam"
+        },
+        "im:price": {
+          "label": "Get",
+          "attributes": {
+            "amount": "0",
+            "currency": "EUR"
+          }
+        },
+        "im:contentType": {
+          "attributes": {
+            "term": "Podcast",
+            "label": "Podcast"
+          }
+        },
+        "rights": {
+          "label": "© Wahlgren & Wistam"
+        },
+        "title": {
+          "label": "Wahlgren & Wistam - Wahlgren & Wistam"
+        },
+        "link": {
+          "attributes": {
+            "rel": "alternate",
+            "type": "text/html",
+            "href": "https://podcasts.apple.com/fi/podcast/wahlgren-wistam/id973949360?uo=2"
+          }
+        },
+        "id": {
+          "label": "https://podcasts.apple.com/fi/podcast/wahlgren-wistam/id973949360?uo=2",
+          "attributes": {
+            "im:id": "973949360"
+          }
+        },
+        "im:artist": {
+          "label": "Wahlgren & Wistam",
+          "attributes": {
+            "href": "https://podcasts.apple.com/fi/artist/acast/1046028598?uo=2"
+          }
+        },
+        "category": {
+          "attributes": {
+            "im:id": "1303",
+            "term": "Comedy",
+            "scheme": "https://podcasts.apple.com/fi/genre/podcasts-comedy/id1303?uo=2",
+            "label": "Comedy"
+          }
+        },
+        "im:releaseDate": {
+          "label": "2026-10-09T03:23:00-07:00",
+          "attributes": {
+            "label": "09 October 2026"
+          }
+        }
+      },
+      {
+        "im:name": {
+          "label": "No Artist Show"
+        },
+        "im:image": [
+          {
+            "label": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/c6/02/8a/c6028ab7-bffd-db83-53e4-34a4ea9bef21/mza_16944101310108746053.jpg/55x55bb.png",
+            "attributes": {
+              "height": "55"
+            }
+          },
+          {
+            "label": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/c6/02/8a/c6028ab7-bffd-db83-53e4-34a4ea9bef21/mza_16944101310108746053.jpg/60x60bb.png",
+            "attributes": {
+              "height": "60"
+            }
+          },
+          {
+            "label": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/c6/02/8a/c6028ab7-bffd-db83-53e4-34a4ea9bef21/mza_16944101310108746053.jpg/170x170bb.png",
+            "attributes": {
+              "height": "170"
+            }
+          }
+        ],
+        "summary": {
+          "label": "After 25 years at the Late Night desk, Conan realized that the only people at his holiday party are the men and women who work for him. Over the years and despite thousands of interviews, Conan has never made a real and lasting friendship with any of his celebrity guests. So, he started a podcast to do just that. Deeper, unboundedly playful, and free from FCC regulations, Conan O’Brien Needs a Friend is a weekly opportunity for Conan to hang out with the people he enjoys most and perhaps find some real friendship along the way.\n\nSubscribe to SiriusXM Podcasts+ to listen to new episodes of Conan O'Brien Needs a Friend ad-free and a whole week early.\nStart a free trial now on Apple Podcasts or by visiting siriusxm.com/podcastsplus."
+        },
+        "im:price": {
+          "label": "Get",
+          "attributes": {
+            "amount": "0",
+            "currency": "EUR"
+          }
+        },
+        "im:contentType": {
+          "attributes": {
+            "term": "Podcast",
+            "label": "Podcast"
+          }
+        },
+        "rights": {
+          "label": "© 2024 Team Coco & Earwolf"
+        },
+        "title": {
+          "label": "Conan O’Brien Needs A Friend - Team Coco & Earwolf"
+        },
+        "link": {
+          "attributes": {
+            "rel": "alternate",
+            "type": "text/html",
+            "href": "https://podcasts.apple.com/fi/podcast/conan-obrien-needs-a-friend/id1438054347?uo=2"
+          }
+        },
+        "id": {
+          "label": "https://podcasts.apple.com/fi/podcast/conan-obrien-needs-a-friend/id1438054347?uo=2",
+          "attributes": {
+            "im:id": "999000111"
+          }
+        },
+        "category": {
+          "attributes": {
+            "im:id": "1303",
+            "term": "Comedy",
+            "scheme": "https://podcasts.apple.com/fi/genre/podcasts-comedy/id1303?uo=2",
+            "label": "Comedy"
+          }
+        },
+        "im:releaseDate": {
+          "label": "2026-10-14T21:05:00-07:00",
+          "attributes": {
+            "label": "14 October 2026"
+          }
+        }
+      },
+      {
+        "im:name": {
+          "label": "Unresolvable Show"
+        },
+        "im:image": [
+          {
+            "label": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/c6/02/8a/c6028ab7-bffd-db83-53e4-34a4ea9bef21/mza_16944101310108746053.jpg/55x55bb.png",
+            "attributes": {
+              "height": "55"
+            }
+          },
+          {
+            "label": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/c6/02/8a/c6028ab7-bffd-db83-53e4-34a4ea9bef21/mza_16944101310108746053.jpg/60x60bb.png",
+            "attributes": {
+              "height": "60"
+            }
+          },
+          {
+            "label": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/c6/02/8a/c6028ab7-bffd-db83-53e4-34a4ea9bef21/mza_16944101310108746053.jpg/170x170bb.png",
+            "attributes": {
+              "height": "170"
+            }
+          }
+        ],
+        "summary": {
+          "label": "After 25 years at the Late Night desk, Conan realized that the only people at his holiday party are the men and women who work for him. Over the years and despite thousands of interviews, Conan has never made a real and lasting friendship with any of his celebrity guests. So, he started a podcast to do just that. Deeper, unboundedly playful, and free from FCC regulations, Conan O’Brien Needs a Friend is a weekly opportunity for Conan to hang out with the people he enjoys most and perhaps find some real friendship along the way.\n\nSubscribe to SiriusXM Podcasts+ to listen to new episodes of Conan O'Brien Needs a Friend ad-free and a whole week early.\nStart a free trial now on Apple Podcasts or by visiting siriusxm.com/podcastsplus."
+        },
+        "im:price": {
+          "label": "Get",
+          "attributes": {
+            "amount": "0",
+            "currency": "EUR"
+          }
+        },
+        "im:contentType": {
+          "attributes": {
+            "term": "Podcast",
+            "label": "Podcast"
+          }
+        },
+        "rights": {
+          "label": "© 2024 Team Coco & Earwolf"
+        },
+        "title": {
+          "label": "Conan O’Brien Needs A Friend - Team Coco & Earwolf"
+        },
+        "link": {
+          "attributes": {
+            "rel": "alternate",
+            "type": "text/html",
+            "href": "https://podcasts.apple.com/fi/podcast/conan-obrien-needs-a-friend/id1438054347?uo=2"
+          }
+        },
+        "id": {
+          "label": "https://podcasts.apple.com/fi/podcast/conan-obrien-needs-a-friend/id1438054347?uo=2",
+          "attributes": {
+            "im:id": "not-a-number"
+          }
+        },
+        "im:artist": {
+          "label": "Team Coco & Earwolf",
+          "attributes": {
+            "href": "https://podcasts.apple.com/fi/artist/earwolf/407542375?uo=2"
+          }
+        },
+        "category": {
+          "attributes": {
+            "im:id": "1303",
+            "term": "Comedy",
+            "scheme": "https://podcasts.apple.com/fi/genre/podcasts-comedy/id1303?uo=2",
+            "label": "Comedy"
+          }
+        },
+        "im:releaseDate": {
+          "label": "2026-10-14T21:05:00-07:00",
+          "attributes": {
+            "label": "14 October 2026"
+          }
+        }
+      },
+      {
+        "im:name": {
+          "label": ""
+        },
+        "im:image": [
+          {
+            "label": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/c6/02/8a/c6028ab7-bffd-db83-53e4-34a4ea9bef21/mza_16944101310108746053.jpg/55x55bb.png",
+            "attributes": {
+              "height": "55"
+            }
+          },
+          {
+            "label": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/c6/02/8a/c6028ab7-bffd-db83-53e4-34a4ea9bef21/mza_16944101310108746053.jpg/60x60bb.png",
+            "attributes": {
+              "height": "60"
+            }
+          },
+          {
+            "label": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/c6/02/8a/c6028ab7-bffd-db83-53e4-34a4ea9bef21/mza_16944101310108746053.jpg/170x170bb.png",
+            "attributes": {
+              "height": "170"
+            }
+          }
+        ],
+        "summary": {
+          "label": "After 25 years at the Late Night desk, Conan realized that the only people at his holiday party are the men and women who work for him. Over the years and despite thousands of interviews, Conan has never made a real and lasting friendship with any of his celebrity guests. So, he started a podcast to do just that. Deeper, unboundedly playful, and free from FCC regulations, Conan O’Brien Needs a Friend is a weekly opportunity for Conan to hang out with the people he enjoys most and perhaps find some real friendship along the way.\n\nSubscribe to SiriusXM Podcasts+ to listen to new episodes of Conan O'Brien Needs a Friend ad-free and a whole week early.\nStart a free trial now on Apple Podcasts or by visiting siriusxm.com/podcastsplus."
+        },
+        "im:price": {
+          "label": "Get",
+          "attributes": {
+            "amount": "0",
+            "currency": "EUR"
+          }
+        },
+        "im:contentType": {
+          "attributes": {
+            "term": "Podcast",
+            "label": "Podcast"
+          }
+        },
+        "rights": {
+          "label": "© 2024 Team Coco & Earwolf"
+        },
+        "title": {
+          "label": "Conan O’Brien Needs A Friend - Team Coco & Earwolf"
+        },
+        "link": {
+          "attributes": {
+            "rel": "alternate",
+            "type": "text/html",
+            "href": "https://podcasts.apple.com/fi/podcast/conan-obrien-needs-a-friend/id1438054347?uo=2"
+          }
+        },
+        "id": {
+          "label": "https://podcasts.apple.com/fi/podcast/conan-obrien-needs-a-friend/id1438054347?uo=2",
+          "attributes": {
+            "im:id": "999000222"
+          }
+        },
+        "im:artist": {
+          "label": "Team Coco & Earwolf",
+          "attributes": {
+            "href": "https://podcasts.apple.com/fi/artist/earwolf/407542375?uo=2"
+          }
+        },
+        "category": {
+          "attributes": {
+            "im:id": "1303",
+            "term": "Comedy",
+            "scheme": "https://podcasts.apple.com/fi/genre/podcasts-comedy/id1303?uo=2",
+            "label": "Comedy"
+          }
+        },
+        "im:releaseDate": {
+          "label": "2026-10-14T21:05:00-07:00",
+          "attributes": {
+            "label": "14 October 2026"
+          }
+        }
+      }
+    ],
+    "updated": {
+      "label": "2026-10-10T05:03:08-07:00"
+    },
+    "rights": {
+      "label": "Copyright 2008 Apple Inc."
+    },
+    "title": {
+      "label": "iTunes Store: Top Podcasts in Comedy"
+    },
+    "icon": {
+      "label": "http://itunes.apple.com/favicon.ico"
+    },
+    "link": [
+      {
+        "attributes": {
+          "rel": "alternate",
+          "type": "text/html",
+          "href": "https://podcasts.apple.com/WebObjects/MZStore.woa/wa/viewTop?cc=fi&id=179541&popId=3"
+        }
+      },
+      {
+        "attributes": {
+          "rel": "self",
+          "href": "https://itunes.apple.com/fi/rss/toppodcasts/limit=5/genre=1303/json"
+        }
+      }
+    ],
+    "id": {
+      "label": "https://itunes.apple.com/fi/rss/toppodcasts/limit=5/genre=1303/json"
+    }
+  }
+}

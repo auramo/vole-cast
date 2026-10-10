@@ -1,0 +1,42 @@
+{
+  "feed": {
+    "author": {
+      "name": {
+        "label": "iTunes Store"
+      },
+      "uri": {
+        "label": "http://www.apple.com/uk/itunes/"
+      }
+    },
+    "updated": {
+      "label": "2026-10-10T05:03:08-07:00"
+    },
+    "rights": {
+      "label": "Copyright 2008 Apple Inc."
+    },
+    "title": {
+      "label": "iTunes Store: Top Podcasts in Comedy"
+    },
+    "icon": {
+      "label": "http://itunes.apple.com/favicon.ico"
+    },
+    "link": [
+      {
+        "attributes": {
+          "rel": "alternate",
+          "type": "text/html",
+          "href": "https://podcasts.apple.com/WebObjects/MZStore.woa/wa/viewTop?cc=fi&id=179541&popId=3"
+        }
+      },
+      {
+        "attributes": {
+          "rel": "self",
+          "href": "https://itunes.apple.com/fi/rss/toppodcasts/limit=5/genre=1303/json"
+        }
+      }
+    ],
+    "id": {
+      "label": "https://itunes.apple.com/fi/rss/toppodcasts/limit=5/genre=1303/json"
+    }
+  }
+}
