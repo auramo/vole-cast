@@ -23,10 +23,12 @@ episode. It doesn't matter how far past the episode is in the
 podcast's feed. This way you can play related episodes which could
 have been originally released years ago.
 
-There is no trending podcasts or other view to suggest podcasts. Just
-plain search:  you can find a show by name, or paste an RSS feed URL, subscribe to
-it, browse its episodes and play them , with the lock-screen
-controls and resume-where-you-left-off you'd expect.
+You can find a show by name, or paste an RSS feed URL, subscribe to it, browse
+its episodes and play them, with the lock-screen controls and
+resume-where-you-left-off you'd expect. Alongside the search there is a
+Discover list: Apple's top podcasts for a country you choose, overall or by
+genre. Search and pasting a URL are the paths that matter, and they are built
+so that Discover failing cannot touch them.
 
 Built with SwiftUI and SwiftData, with no third-party dependencies — feeds are
 parsed with Foundation's `XMLParser`.
@@ -141,15 +143,50 @@ ever point one way — parsing knows nothing about the network, and nothing belo
 | `Persistence/` | the container, the `LatestEpisodes` and `ListeningHistory` queries, plus `Subscriptions` and `PlaybackProgress` — the only writers to the store | SwiftData |
 | `FeedParsing/` | `FeedParser` and the pure helpers it needs (`RSSDate`, `EpisodeDuration`, `FeedURL`, `ParsedFeed`) | nothing but Foundation |
 | `Networking/` | `HTTPClient`, `AppURLSession`, `NetworkError` — transport, no podcast knowledge | URLSession |
-| `Catalog/` | where shows come from: `PodcastDirectory`, its iTunes implementation, and `FeedLoader` | Networking + FeedParsing |
+| `Catalog/` | where shows come from: `PodcastDirectory` and `PodcastCharts` with their Apple implementations, `PodcastLookup`, `PodcastGenre`, `Storefront`, and `FeedLoader` | Networking + FeedParsing |
 | `Formatting/` | turning stored values into display strings | Foundation |
 | `Playback/` | `AudioPlayback` and its AVPlayer engine, the audio session, now-playing and remote commands. Speaks in `PlayableEpisode` values, never `Episode` | AVFoundation, MediaPlayer, UIKit |
 | `Player/` | `PlayerModel` — the one thing that sees both an `Episode` and the engine, and the only code both UIs share | SwiftData, `Playback/` |
-| `Views/` | SwiftUI screens and `SearchModel` | everything above |
+| `Views/` | SwiftUI screens, `SearchModel` and `DiscoverModel` | everything above |
 
 Services reach the views through the environment (`Views/Environment+Services.swift`),
 so no view names a concrete implementation and previews and tests can substitute
 fakes.
+
+### Browsing the charts
+
+Discover is a second way in for people who don't already have a show in mind.
+It asks Apple for a chart of up to a hundred shows, for the device's own
+country by default and any other you pick.
+
+It takes two endpoints to do that, and the reason is worth writing down because
+all of it was found by trying them rather than by reading documentation that
+does not exist:
+
+- `rss.itunes.apple.com/api/v1/…`, the URL usually suggested for this, is dead.
+  It answers 503 with a DNS failure.
+- `rss.marketingtools.apple.com/api/v2/…` replaced it and is the one Apple
+  documents. It serves the overall chart, and it *silently ignores* any genre
+  you ask it for — request Comedy and it returns the same shows as the
+  unfiltered chart, with no error to notice.
+- The legacy `itunes.apple.com/{country}/rss/toppodcasts/limit={n}/genre={id}/json`
+  endpoint genuinely filters. It is undocumented and its sibling host has
+  already been retired, so it is the fragile half.
+
+So the overall chart comes from the supported endpoint and genre charts from
+the fragile one. If the legacy endpoint goes the way of its sibling, genre
+browsing fails on its own: the overall chart, the search and pasting a feed URL
+all keep working. `ApplePodcastCharts` is the only place that would need
+changing.
+
+Neither chart carries a feed URL — only an iTunes collection id — so tapping a
+row looks the show up through `itunes.apple.com/lookup` before its feed can be
+loaded. Some shows are exclusive to Apple Podcasts and have no public feed at
+all; those say so rather than offering a retry that could never succeed.
+
+The country list is every region the device can name, not Apple's own roughly
+175 storefronts, which are published nowhere stable. Picking one Apple does not
+serve is recoverable; a country missing from a hardcoded table is not.
 
 ## Requirements
 
