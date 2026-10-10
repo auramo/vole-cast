@@ -133,7 +133,7 @@ struct ShowPreviewView: View {
         if case .loaded(let loaded) = phase, !loaded.feed.title.isEmpty {
             return loaded.feed.title
         }
-        return source.placeholder?.title ?? "Show"
+        return source.placeholder?.title ?? String(localized: "Show")
     }
 
     /// Drawn from the directory result while the feed loads, so arriving here

@@ -85,9 +85,14 @@ struct EpisodePlayButton: View {
         return fraction
     }
 
+    /// Spelled out through `String(localized:)` for the reason the header in
+    /// `PodcastDetailView` is: this is a `String`, so a literal here would be
+    /// read aloud in English whatever language the phone is in.
     private var label: String {
-        if isPlayingThis { return "Pause" }
-        if episode.playbackPosition > 0 { return "Resume \(episode.title)" }
-        return "Play \(episode.title)"
+        if isPlayingThis { return String(localized: "Pause") }
+        if episode.playbackPosition > 0 {
+            return String(localized: "Resume \(episode.title)")
+        }
+        return String(localized: "Play \(episode.title)")
     }
 }

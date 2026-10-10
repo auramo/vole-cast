@@ -221,8 +221,14 @@ private struct EpisodeSection: View {
         }
     }
 
+    /// `String(localized:)` rather than a bare literal, because this is typed
+    /// `String` and a `String` is handed to SwiftUI verbatim — no key, no
+    /// lookup, no translation, and nothing to notice because it still reads
+    /// correctly in English.
     private var header: String {
-        isSearching ? "\(episodes.count) Found" : "Episodes"
+        isSearching
+            ? String(localized: "\(episodes.count) Found")
+            : String(localized: "Episodes")
     }
 
     @ViewBuilder

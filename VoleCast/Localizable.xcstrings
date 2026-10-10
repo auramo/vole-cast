@@ -4,6 +4,28 @@
     "%lld": {
       "comment": "A chart position. The number is the entire label, so there is nothing to translate."
     },
+    "%lld Found": {
+      "localizations": {
+        "fi": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld osuma"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld osumaa"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld shows couldn't be refreshed": {
       "localizations": {
         "fi": {
@@ -210,6 +232,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Jakson tiedot"
+          }
+        }
+      }
+    },
+    "Episodes": {
+      "localizations": {
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jaksot"
           }
         }
       }
@@ -614,6 +646,16 @@
         }
       }
     },
+    "Play %@": {
+      "localizations": {
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toista: %@"
+          }
+        }
+      }
+    },
     "Playback Stopped": {
       "localizations": {
         "fi": {
@@ -654,6 +696,16 @@
         }
       }
     },
+    "Resume %@": {
+      "localizations": {
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jatka: %@"
+          }
+        }
+      }
+    },
     "Science": {
       "localizations": {
         "fi": {
@@ -690,6 +742,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hae nimellä tai liitä RSS-syötteen osoite."
+          }
+        }
+      }
+    },
+    "Show": {
+      "localizations": {
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ohjelma"
           }
         }
       }
@@ -955,6 +1017,7 @@
       }
     },
     "True Crime": {
+      "comment": "A podcast genre. Finnish uses the English term, so this is deliberately untranslated.",
       "localizations": {
         "fi": {
           "stringUnit": {
@@ -962,8 +1025,7 @@
             "value": "True Crime"
           }
         }
-      },
-      "comment": "A podcast genre. Finnish uses the English term, so this is deliberately untranslated."
+      }
     },
     "Try Again": {
       "localizations": {
