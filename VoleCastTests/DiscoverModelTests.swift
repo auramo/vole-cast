@@ -112,10 +112,8 @@ struct DiscoverModelTests {
         #expect(model.state == .failed(.offline))
     }
 
-    /// A country Apple has no store for is not a fault to retry. The two chart
-    /// endpoints refuse one differently — the legacy one with 400, the newer
-    /// one with 500 — so both have to land in the same place.
-    @Test(arguments: [NetworkError.invalidResponse, .serverError(500), .notFound])
+    /// A country Apple has no store for is not a fault to retry.
+    @Test(arguments: [NetworkError.invalidResponse, .notFound])
     func treatsARefusedStoreAsAChoiceToChange(_ error: NetworkError) async {
         let charts = StubCharts(error: error)
         let model = DiscoverModel(charts: charts, storefront: "ax")
@@ -123,6 +121,22 @@ struct DiscoverModelTests {
         await model.load()
 
         #expect(model.state == .unavailableCountry("ax"))
+    }
+
+    /// A server error must not be read as a missing storefront, however
+    /// tempting — an unknown country does provoke one from the newer endpoint,
+    /// but so does Apple having a bad minute, and that host has been seen
+    /// erring on a country that plainly has a store. Saying "Finland has no
+    /// Apple podcast store" to someone in Helsinki is wrong and unarguable;
+    /// offering Try Again is neither.
+    @Test(arguments: [NetworkError.serverError(500), .timedOut, .offline, .rateLimited])
+    func keepsATryAgainForEverythingThatMightPass(_ error: NetworkError) async {
+        let charts = StubCharts(error: error)
+        let model = DiscoverModel(charts: charts, storefront: "fi")
+
+        await model.load()
+
+        #expect(model.state == .failed(error))
     }
 
     /// The guarantee the whole feature is arranged around: browsing charts is

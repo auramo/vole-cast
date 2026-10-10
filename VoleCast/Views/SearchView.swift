@@ -51,7 +51,7 @@ struct SearchView: View {
             .toolbar {
                 if half == .discover, let discover {
                     ToolbarItem(placement: .topBarLeading) {
-                        chartPickers(discover)
+                        countryPicker(discover)
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
@@ -112,20 +112,13 @@ struct SearchView: View {
         }
     }
 
-    /// Both chart choices in one menu. A row of genre chips would cost
-    /// permanent vertical space under an already-pinned segmented control, and
-    /// put a sideways scroll directly above a list that scrolls the other way.
-    private func chartPickers(_ discover: DiscoverModel) -> some View {
+    /// Country only. The genre is a row of chips under the segmented control,
+    /// where it is visible — it is the thing people change, and it belongs on
+    /// screen rather than behind an icon. Which country you are browsing
+    /// changes rarely enough to live here, and the label says which it is
+    /// rather than leaving it to be guessed.
+    private func countryPicker(_ discover: DiscoverModel) -> some View {
         Menu {
-            Picker("Genre", selection: Binding(
-                get: { discover.genre?.id ?? 0 },
-                set: { id in discover.genre = PodcastGenre.all.first { $0.id == id } }
-            )) {
-                Text("Top Podcasts").tag(0)
-                ForEach(PodcastGenre.all) { genre in
-                    Text(genre.name).tag(genre.id)
-                }
-            }
             Picker("Country", selection: Binding(
                 get: { storefront },
                 set: { storefront = $0; discover.storefront = $0 }
@@ -135,7 +128,11 @@ struct SearchView: View {
                 }
             }
         } label: {
-            Label("Chart", systemImage: "line.3.horizontal.decrease.circle")
+            Label(
+                Locale.current.localizedString(forRegionCode: storefront)
+                    ?? storefront.uppercased(),
+                systemImage: "globe"
+            )
         }
     }
 

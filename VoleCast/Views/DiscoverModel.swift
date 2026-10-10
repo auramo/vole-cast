@@ -88,14 +88,23 @@ final class DiscoverModel {
         }
     }
 
-    /// The two chart endpoints disagree about how they refuse a country they
-    /// do not have — the legacy one answers 400, the newer one 500 — and
-    /// neither says why. A genuine Apple outage looks the same as asking for
-    /// Åland, so this cannot be certain, and the screen it leads to is worded
-    /// as a possibility with a way out rather than as a diagnosis.
+    /// Only a refusal counts as "no store here".
+    ///
+    /// A 5xx deliberately does not, though an unknown country does provoke one
+    /// from the newer endpoint. Apple's chart host has been seen timing out
+    /// and erring on a country that plainly does have a store — read as a
+    /// missing storefront, that becomes the app telling someone in Helsinki
+    /// that Finland has no Apple podcast store, which is both wrong and
+    /// unarguable. A server error is far more often a bad minute than a bad
+    /// country, so it keeps its Try Again and says nothing it cannot support.
+    ///
+    /// The cost is that choosing a country Apple really does not serve reads
+    /// as a plain failure on the overall chart, and only the genre charts —
+    /// whose endpoint answers 400 — name the actual problem. Being vague
+    /// sometimes beats being confidently wrong.
     private static func state(for error: NetworkError, storefront: String) -> State {
         switch error {
-        case .invalidResponse, .serverError, .notFound:
+        case .invalidResponse, .notFound:
             .unavailableCountry(storefront)
         default:
             .failed(error)
