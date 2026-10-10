@@ -1,24 +1,27 @@
 {
-  "sourceLanguage": "en",
-  "strings": {
-    "%lld": {
-      "comment": "A chart position. The number is the entire label, so there is nothing to translate."
+  "sourceLanguage" : "en",
+  "strings" : {
+    "" : {
+
     },
-    "%lld Found": {
-      "localizations": {
-        "fi": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld osuma"
+    "%lld" : {
+      "comment" : "A chart position. The number is the entire label, so there is nothing to translate."
+    },
+    "%lld Found" : {
+      "localizations" : {
+        "fi" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld osuma"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld osumaa"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld osumaa"
                 }
               }
             }
@@ -26,1109 +29,1109 @@
         }
       }
     },
-    "%lld shows couldn't be refreshed": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld podcastia ei voitu päivittää"
-          }
-        }
-      }
-    },
-    "1 show couldn't be refreshed": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Yhtä podcastia ei voitu päivittää"
-          }
-        }
-      }
-    },
-    "About": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tietoja"
-          }
-        }
-      }
-    },
-    "Apple may not have a podcast store in %@.": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Applella ei ehkä ole podcast-kauppaa tässä maassa: %@."
-          }
-        }
-      }
-    },
-    "Apple published nothing for this selection.": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Apple ei julkaissut tälle valinnalle mitään."
-          }
-        }
-      }
-    },
-    "Arts": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Taide"
-          }
-        }
-      }
-    },
-    "Business": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Yritysmaailma"
-          }
-        }
-      }
-    },
-    "Can't Play This Episode": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jaksoa ei voi toistaa"
-          }
-        }
-      }
-    },
-    "Charts from %@": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Listat maasta: %@"
-          }
-        }
-      }
-    },
-    "Check the address and try again.": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tarkista osoite ja yritä uudelleen."
-          }
-        }
-      }
-    },
-    "Check your connection and try again.": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tarkista yhteytesi ja yritä uudelleen."
-          }
-        }
-      }
-    },
-    "Clear": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tyhjennä"
-          }
-        }
-      }
-    },
-    "Close Player": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sulje soitin"
-          }
-        }
-      }
-    },
-    "Comedy": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Komedia"
-          }
-        }
-      }
-    },
-    "Copy Feed URL": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kopioi syötteen osoite"
-          }
-        }
-      }
-    },
-    "Couldn't Subscribe": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tilaaminen ei onnistunut"
-          }
-        }
-      }
-    },
-    "Country": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Maa"
-          }
-        }
-      }
-    },
-    "Discover": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Selaa"
-          }
-        }
-      }
-    },
-    "Education": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Koulutus"
-          }
-        }
-      }
-    },
-    "Episode": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jakso"
-          }
-        }
-      }
-    },
-    "Episode Details": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jakson tiedot"
-          }
-        }
-      }
-    },
-    "Episodes": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jaksot"
-          }
-        }
-      }
-    },
-    "Episodes from shows you subscribe to appear here.": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tilaamiesi podcastien jaksot näkyvät täällä."
-          }
-        }
-      }
-    },
-    "Episodes you play show up here, finished or not.": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Toistamasi jaksot näkyvät täällä, kuuntelitpa ne loppuun tai et."
-          }
-        }
-      }
-    },
-    "Fiction": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fiktio"
-          }
-        }
-      }
-    },
-    "Find Shows": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Etsi podcasteja"
-          }
-        }
-      }
-    },
-    "Find a Show": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Etsi podcast"
-          }
-        }
-      }
-    },
-    "Find shows by": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Etsi podcasteja"
-          }
-        }
-      }
-    },
-    "Government": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Julkishallinto"
-          }
-        }
-      }
-    },
-    "Health & Fitness": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Terveys ja kunto"
-          }
-        }
-      }
-    },
-    "Hide Keyboard": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Piilota näppäimistö"
-          }
-        }
-      }
-    },
-    "History": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Historia"
-          }
-        }
-      }
-    },
-    "Insecure Connection": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Suojaamaton yhteys"
-          }
-        }
-      }
-    },
-    "It's too large to load on a phone.": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Se on liian suuri ladattavaksi puhelimeen."
-          }
-        }
-      }
-    },
-    "Its episodes will be removed from your library.": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sen jaksot poistetaan kirjastostasi."
-          }
-        }
-      }
-    },
-    "Kids & Family": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lapset ja perhe"
-          }
-        }
-      }
-    },
-    "Latest": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Uusimmat"
-          }
-        }
-      }
-    },
-    "Latest Episodes": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Uusimmat jaksot"
-          }
-        }
-      }
-    },
-    "Leisure": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vapaa-aika"
-          }
-        }
-      }
-    },
-    "Music": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Musiikki"
-          }
-        }
-      }
-    },
-    "News": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Uutiset"
-          }
-        }
-      }
-    },
-    "No Chart": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ei listaa"
-          }
-        }
-      }
-    },
-    "No Charts for This Country": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tälle maalle ei ole listoja"
-          }
-        }
-      }
-    },
-    "No Dated Episodes": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ei päivättyjä jaksoja"
-          }
-        }
-      }
-    },
-    "No Internet Connection": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ei internetyhteyttä"
-          }
-        }
-      }
-    },
-    "No Subscriptions": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ei tilauksia"
-          }
-        }
-      }
-    },
-    "No episodes match.": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Yksikään jakso ei täsmää."
-          }
-        }
-      }
-    },
-    "No episodes yet.": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ei vielä jaksoja."
-          }
-        }
-      }
-    },
-    "Not Available as a Podcast Feed": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ei saatavilla podcast-syötteenä"
-          }
-        }
-      }
-    },
-    "Not Found": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ei löytynyt"
-          }
-        }
-      }
-    },
-    "Not a Podcast Feed": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ei ole podcast-syöte"
-          }
-        }
-      }
-    },
-    "Nothing Played Yet": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mitään ei ole vielä toistettu"
-          }
-        }
-      }
-    },
-    "Nothing Playing": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mitään ei toisteta"
-          }
-        }
-      }
-    },
-    "Nothing Yet": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ei vielä mitään"
-          }
-        }
-      }
-    },
-    "OK": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "OK"
-          }
-        }
-      }
-    },
-    "Open Episode Page": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Avaa jakson sivu"
-          }
-        }
-      }
-    },
-    "Open Website": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Avaa verkkosivu"
-          }
-        }
-      }
-    },
-    "Open feed": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Avaa syöte"
-          }
-        }
-      }
-    },
-    "Opens the player": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Avaa soittimen"
-          }
-        }
-      }
-    },
-    "Opens the show at this episode": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Avaa podcastin tämän jakson kohdalta"
-          }
-        }
-      }
-    },
-    "Pause": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Keskeytä"
-          }
-        }
-      }
-    },
-    "Play": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Toista"
-          }
-        }
-      }
-    },
-    "Play %@": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Toista: %@"
-          }
-        }
-      }
-    },
-    "Playback Stopped": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Toisto pysähtyi"
-          }
-        }
-      }
-    },
-    "Played": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Toistettu"
-          }
-        }
-      }
-    },
-    "Refresh": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Päivitä"
-          }
-        }
-      }
-    },
-    "Religion & Spirituality": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Uskonto ja henkisyys"
-          }
-        }
-      }
-    },
-    "Resume %@": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jatka: %@"
-          }
-        }
-      }
-    },
-    "Science": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tiede"
-          }
-        }
-      }
-    },
-    "Search": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Haku"
-          }
-        }
-      }
-    },
-    "Search %@": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hae podcastista %@"
-          }
-        }
-      }
-    },
-    "Search by name, or paste an RSS feed URL.": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hae nimellä tai liitä RSS-syötteen osoite."
-          }
-        }
-      }
-    },
-    "Show": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Podcast"
-          }
-        }
-      }
-    },
-    "Show Options": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Podcastin valinnat"
-          }
-        }
-      }
-    },
-    "Show all episodes of %@": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Näytä kaikki podcastin %@ jaksot"
-          }
-        }
-      }
-    },
-    "Show name or RSS URL": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Podcastin nimi tai RSS-osoite"
-          }
-        }
-      }
-    },
-    "Shows": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Podcastit"
-          }
-        }
-      }
-    },
-    "Shows episode details": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Näyttää jakson tiedot"
-          }
-        }
-      }
-    },
-    "Shows you subscribe to appear here.": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tilaamasi podcastit näkyvät täällä."
-          }
-        }
-      }
-    },
-    "Skip back 15 seconds": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Siirry 15 sekuntia taaksepäin"
-          }
-        }
-      }
-    },
-    "Skip forward 30 seconds": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Siirry 30 sekuntia eteenpäin"
-          }
-        }
-      }
-    },
-    "Society & Culture": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Yhteiskunta ja kulttuuri"
-          }
-        }
-      }
-    },
-    "Sport": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Urheilu"
-          }
-        }
-      }
-    },
-    "Subscribe": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tilaa"
-          }
-        }
-      }
-    },
-    "Subscribed": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tilattu"
-          }
-        }
-      }
-    },
-    "Subscriptions": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tilaukset"
-          }
-        }
-      }
-    },
-    "TV & Film": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "TV ja elokuvat"
-          }
-        }
-      }
-    },
-    "Technology": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Teknologia"
-          }
-        }
-      }
-    },
-    "That Feed Is Too Big": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Syöte on liian suuri"
-          }
-        }
-      }
-    },
-    "That Isn't a Web Address": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tuo ei ole verkko-osoite"
-          }
-        }
-      }
-    },
-    "That address is a web page, not a feed. Look for an RSS link on the site.": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Osoite on verkkosivu, ei syöte. Etsi sivustolta RSS-linkkiä."
-          }
-        }
-      }
-    },
-    "The Connection Timed Out": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Yhteys aikakatkaistiin"
-          }
-        }
-      }
-    },
-    "The Server Had a Problem": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Palvelimella oli ongelma"
-          }
-        }
-      }
-    },
-    "The feed may have moved or been taken down.": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Syöte on ehkä siirretty tai poistettu."
-          }
-        }
-      }
-    },
-    "The show's host may have moved or removed the audio.": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Podcastin julkaisija on ehkä siirtänyt tai poistanut äänitiedoston."
-          }
-        }
-      }
-    },
-    "This feed is served over an unencrypted connection, which iOS blocks.": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Syöte tarjoillaan salaamattomalla yhteydellä, jonka iOS estää."
-          }
-        }
-      }
-    },
-    "This show is exclusive to Apple Podcasts, so no other app can play it.": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Podcast on vain Apple Podcastsissa, joten mikään muu sovellus ei voi toistaa sitä."
-          }
-        }
-      }
-    },
-    "Too Many Requests Right Now": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Liikaa pyyntöjä juuri nyt"
-          }
-        }
-      }
-    },
-    "Top Podcasts": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Suosituimmat"
-          }
-        }
-      }
-    },
-    "True Crime": {
-      "comment": "A podcast genre. Finnish uses the English term, so this is deliberately untranslated.",
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "True Crime"
-          }
-        }
-      }
-    },
-    "Try Again": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Yritä uudelleen"
-          }
-        }
-      }
-    },
-    "Try again in a moment.": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Yritä hetken kuluttua uudelleen."
-          }
-        }
-      }
-    },
-    "Unexpected Response": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Odottamaton vastaus"
-          }
-        }
-      }
-    },
-    "Unsubscribe": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lopeta tilaus"
-          }
-        }
-      }
-    },
-    "Unsubscribe from %@?": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lopetetaanko podcastin %@ tilaus?"
-          }
-        }
-      }
-    },
-    "Use My Country": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Käytä omaa maatani"
-          }
-        }
-      }
-    },
-    "Wait a few seconds and try again.": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Odota muutama sekunti ja yritä uudelleen."
-          }
-        }
-      }
-    },
-    "Your shows haven't published anything with a date on it.": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Podcastisi eivät ole julkaisseet mitään päivämäärällä varustettua."
-          }
-        }
-      }
-    },
-    "^[%lld episode](inflect: true)": {
-      "localizations": {
-        "fi": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld jakso"
+    "%lld shows couldn't be refreshed" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld podcastia ei voitu päivittää"
+          }
+        }
+      }
+    },
+    "^[%lld episode](inflect: true)" : {
+      "localizations" : {
+        "fi" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld jakso"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld jaksoa"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld jaksoa"
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "1 show couldn't be refreshed" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yhtä podcastia ei voitu päivittää"
+          }
+        }
+      }
+    },
+    "About" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tietoja"
+          }
+        }
+      }
+    },
+    "Apple may not have a podcast store in %@." : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Applella ei ehkä ole podcast-kauppaa tässä maassa: %@."
+          }
+        }
+      }
+    },
+    "Apple published nothing for this selection." : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple ei julkaissut tälle valinnalle mitään."
+          }
+        }
+      }
+    },
+    "Arts" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taide"
+          }
+        }
+      }
+    },
+    "Business" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yritysmaailma"
+          }
+        }
+      }
+    },
+    "Can't Play This Episode" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jaksoa ei voi toistaa"
+          }
+        }
+      }
+    },
+    "Charts from %@" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listat maasta: %@"
+          }
+        }
+      }
+    },
+    "Check the address and try again." : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tarkista osoite ja yritä uudelleen."
+          }
+        }
+      }
+    },
+    "Check your connection and try again." : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tarkista yhteytesi ja yritä uudelleen."
+          }
+        }
+      }
+    },
+    "Clear" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tyhjennä"
+          }
+        }
+      }
+    },
+    "Close Player" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sulje soitin"
+          }
+        }
+      }
+    },
+    "Comedy" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Komedia"
+          }
+        }
+      }
+    },
+    "Copy Feed URL" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopioi syötteen osoite"
+          }
+        }
+      }
+    },
+    "Couldn't Subscribe" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilaaminen ei onnistunut"
+          }
+        }
+      }
+    },
+    "Country" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maa"
+          }
+        }
+      }
+    },
+    "Discover" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selaa"
+          }
+        }
+      }
+    },
+    "Education" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Koulutus"
+          }
+        }
+      }
+    },
+    "Episode" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jakso"
+          }
+        }
+      }
+    },
+    "Episode Details" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jakson tiedot"
+          }
+        }
+      }
+    },
+    "Episodes" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jaksot"
+          }
+        }
+      }
+    },
+    "Episodes from shows you subscribe to appear here." : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilaamiesi podcastien jaksot näkyvät täällä."
+          }
+        }
+      }
+    },
+    "Episodes you play show up here, finished or not." : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toistamasi jaksot näkyvät täällä, kuuntelitpa ne loppuun tai et."
+          }
+        }
+      }
+    },
+    "Fiction" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fiktio"
+          }
+        }
+      }
+    },
+    "Find a Show" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Etsi podcast"
+          }
+        }
+      }
+    },
+    "Find Shows" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Etsi podcasteja"
+          }
+        }
+      }
+    },
+    "Find shows by" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Etsi podcasteja"
+          }
+        }
+      }
+    },
+    "Government" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Julkishallinto"
+          }
+        }
+      }
+    },
+    "Health & Fitness" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terveys ja kunto"
+          }
+        }
+      }
+    },
+    "Hide Keyboard" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Piilota näppäimistö"
+          }
+        }
+      }
+    },
+    "History" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historia"
+          }
+        }
+      }
+    },
+    "Insecure Connection" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suojaamaton yhteys"
+          }
+        }
+      }
+    },
+    "It's too large to load on a phone." : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se on liian suuri ladattavaksi puhelimeen."
+          }
+        }
+      }
+    },
+    "Its episodes will be removed from your library." : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sen jaksot poistetaan kirjastostasi."
+          }
+        }
+      }
+    },
+    "Kids & Family" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lapset ja perhe"
+          }
+        }
+      }
+    },
+    "Latest" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uusimmat"
+          }
+        }
+      }
+    },
+    "Latest Episodes" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uusimmat jaksot"
+          }
+        }
+      }
+    },
+    "Leisure" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vapaa-aika"
+          }
+        }
+      }
+    },
+    "Music" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Musiikki"
+          }
+        }
+      }
+    },
+    "News" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uutiset"
+          }
+        }
+      }
+    },
+    "No Chart" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ei listaa"
+          }
+        }
+      }
+    },
+    "No Charts for This Country" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tälle maalle ei ole listoja"
+          }
+        }
+      }
+    },
+    "No Dated Episodes" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ei päivättyjä jaksoja"
+          }
+        }
+      }
+    },
+    "No episodes match." : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yksikään jakso ei täsmää."
+          }
+        }
+      }
+    },
+    "No episodes yet." : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ei vielä jaksoja."
+          }
+        }
+      }
+    },
+    "No Internet Connection" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ei internetyhteyttä"
+          }
+        }
+      }
+    },
+    "No Subscriptions" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ei tilauksia"
+          }
+        }
+      }
+    },
+    "Not a Podcast Feed" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ei ole podcast-syöte"
+          }
+        }
+      }
+    },
+    "Not Available as a Podcast Feed" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ei saatavilla podcast-syötteenä"
+          }
+        }
+      }
+    },
+    "Not Found" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ei löytynyt"
+          }
+        }
+      }
+    },
+    "Nothing Played Yet" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mitään ei ole vielä toistettu"
+          }
+        }
+      }
+    },
+    "Nothing Playing" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mitään ei toisteta"
+          }
+        }
+      }
+    },
+    "Nothing Yet" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ei vielä mitään"
+          }
+        }
+      }
+    },
+    "OK" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        }
+      }
+    },
+    "Open Episode Page" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avaa jakson sivu"
+          }
+        }
+      }
+    },
+    "Open feed" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avaa syöte"
+          }
+        }
+      }
+    },
+    "Open Website" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avaa verkkosivu"
+          }
+        }
+      }
+    },
+    "Opens the player" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avaa soittimen"
+          }
+        }
+      }
+    },
+    "Opens the show at this episode" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avaa podcastin tämän jakson kohdalta"
+          }
+        }
+      }
+    },
+    "Pause" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keskeytä"
+          }
+        }
+      }
+    },
+    "Play" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toista"
+          }
+        }
+      }
+    },
+    "Play %@" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toista: %@"
+          }
+        }
+      }
+    },
+    "Playback Stopped" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toisto pysähtyi"
+          }
+        }
+      }
+    },
+    "Played" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toistettu"
+          }
+        }
+      }
+    },
+    "Refresh" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Päivitä"
+          }
+        }
+      }
+    },
+    "Religion & Spirituality" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uskonto ja henkisyys"
+          }
+        }
+      }
+    },
+    "Resume %@" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jatka: %@"
+          }
+        }
+      }
+    },
+    "Science" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiede"
+          }
+        }
+      }
+    },
+    "Search" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Haku"
+          }
+        }
+      }
+    },
+    "Search %@" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hae podcastista %@"
+          }
+        }
+      }
+    },
+    "Search by name, or paste an RSS feed URL." : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hae nimellä tai liitä RSS-syötteen osoite."
+          }
+        }
+      }
+    },
+    "Show" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Podcast"
+          }
+        }
+      }
+    },
+    "Show all episodes of %@" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Näytä kaikki podcastin %@ jaksot"
+          }
+        }
+      }
+    },
+    "Show name or RSS URL" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Podcastin nimi tai RSS-osoite"
+          }
+        }
+      }
+    },
+    "Show Options" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Podcastin valinnat"
+          }
+        }
+      }
+    },
+    "Shows" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Podcastit"
+          }
+        }
+      }
+    },
+    "Shows episode details" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Näyttää jakson tiedot"
+          }
+        }
+      }
+    },
+    "Shows you subscribe to appear here." : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilaamasi podcastit näkyvät täällä."
+          }
+        }
+      }
+    },
+    "Skip back 15 seconds" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siirry 15 sekuntia taaksepäin"
+          }
+        }
+      }
+    },
+    "Skip forward 30 seconds" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siirry 30 sekuntia eteenpäin"
+          }
+        }
+      }
+    },
+    "Society & Culture" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yhteiskunta ja kulttuuri"
+          }
+        }
+      }
+    },
+    "Sport" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Urheilu"
+          }
+        }
+      }
+    },
+    "Subscribe" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilaa"
+          }
+        }
+      }
+    },
+    "Subscribed" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilattu"
+          }
+        }
+      }
+    },
+    "Subscriptions" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilaukset"
+          }
+        }
+      }
+    },
+    "Technology" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teknologia"
+          }
+        }
+      }
+    },
+    "That address is a web page, not a feed. Look for an RSS link on the site." : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Osoite on verkkosivu, ei syöte. Etsi sivustolta RSS-linkkiä."
+          }
+        }
+      }
+    },
+    "That Feed Is Too Big" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Syöte on liian suuri"
+          }
+        }
+      }
+    },
+    "That Isn't a Web Address" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tuo ei ole verkko-osoite"
+          }
+        }
+      }
+    },
+    "The Connection Timed Out" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yhteys aikakatkaistiin"
+          }
+        }
+      }
+    },
+    "The feed may have moved or been taken down." : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Syöte on ehkä siirretty tai poistettu."
+          }
+        }
+      }
+    },
+    "The Server Had a Problem" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Palvelimella oli ongelma"
+          }
+        }
+      }
+    },
+    "The show's host may have moved or removed the audio." : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Podcastin julkaisija on ehkä siirtänyt tai poistanut äänitiedoston."
+          }
+        }
+      }
+    },
+    "This feed is served over an unencrypted connection, which iOS blocks." : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Syöte tarjoillaan salaamattomalla yhteydellä, jonka iOS estää."
+          }
+        }
+      }
+    },
+    "This show is exclusive to Apple Podcasts, so no other app can play it." : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Podcast on vain Apple Podcastsissa, joten mikään muu sovellus ei voi toistaa sitä."
+          }
+        }
+      }
+    },
+    "Too Many Requests Right Now" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Liikaa pyyntöjä juuri nyt"
+          }
+        }
+      }
+    },
+    "Top Podcasts" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suosituimmat"
+          }
+        }
+      }
+    },
+    "True Crime" : {
+      "comment" : "A podcast genre. Finnish uses the English term, so this is deliberately untranslated.",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "True Crime"
+          }
+        }
+      }
+    },
+    "Try Again" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yritä uudelleen"
+          }
+        }
+      }
+    },
+    "Try again in a moment." : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yritä hetken kuluttua uudelleen."
+          }
+        }
+      }
+    },
+    "TV & Film" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV ja elokuvat"
+          }
+        }
+      }
+    },
+    "Unexpected Response" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odottamaton vastaus"
+          }
+        }
+      }
+    },
+    "Unsubscribe" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lopeta tilaus"
+          }
+        }
+      }
+    },
+    "Unsubscribe from %@?" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lopetetaanko podcastin %@ tilaus?"
+          }
+        }
+      }
+    },
+    "Use My Country" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Käytä omaa maatani"
+          }
+        }
+      }
+    },
+    "Wait a few seconds and try again." : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odota muutama sekunti ja yritä uudelleen."
+          }
+        }
+      }
+    },
+    "Your shows haven't published anything with a date on it." : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Podcastisi eivät ole julkaisseet mitään päivämäärällä varustettua."
           }
         }
       }
     }
   },
-  "version": "1.1"
+  "version" : "1.1"
 }
