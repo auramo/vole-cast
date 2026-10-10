@@ -20,6 +20,10 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>
+		<!-- CloudKit mirroring needs this to hear that another device changed
+		     something while the app is open. Without it, a show subscribed to
+		     on the phone appears on the iPad only at its next launch. -->
+		<string>remote-notification</string>
 	</array>
 
 	<!-- The car is a second scene, created by UIKit rather than by SwiftUI.

@@ -15,5 +15,24 @@
 <dict>
 	<key>com.apple.developer.carplay-audio</key>
 	<true/>
+
+	<!-- CloudKit, which mirrors the SwiftData store to the listener's own
+	     private database. The identifier is parameterised: the pre-commit
+	     hook rewrites it back whenever Xcode writes it out in full, which it
+	     does every time the Signing & Capabilities pane is touched.
+
+	     aps-environment is "development" here; distribution signing rewrites
+	     it to production. CloudKit needs push to tell a device that another
+	     one changed something. -->
+	<key>aps-environment</key>
+	<string>development</string>
+	<key>com.apple.developer.icloud-container-identifiers</key>
+	<array>
+		<string>iCloud.$(ORG_IDENTIFIER).VoleCast</string>
+	</array>
+	<key>com.apple.developer.icloud-services</key>
+	<array>
+		<string>CloudKit</string>
+	</array>
 </dict>
 </plist>
