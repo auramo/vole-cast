@@ -3,15 +3,23 @@ import Foundation
 /// The "3 days ago · 42 min" line under an episode title, shared by the
 /// preview, detail and episode screens so they can't drift apart.
 enum EpisodeSubtitle {
-    static func text(published: Date?, duration: TimeInterval?) -> String {
+    /// `locale` is a parameter only so tests can pin one. Both formats below
+    /// follow the device otherwise, and both answer differently per language —
+    /// "42m" in English, "42 min" in Finnish — so a test asserting on the
+    /// English wording passes or fails according to where it is run.
+    static func text(
+        published: Date?,
+        duration: TimeInterval?,
+        locale: Locale = .current
+    ) -> String {
         var parts: [String] = []
         if let published {
-            parts.append(published.formatted(.relative(presentation: .named)))
+            parts.append(published.formatted(.relative(presentation: .named).locale(locale)))
         }
         if let duration, isFormattable(duration) {
             parts.append(
                 Duration.seconds(duration)
-                    .formatted(.units(allowed: [.hours, .minutes], width: .narrow))
+                    .formatted(.units(allowed: [.hours, .minutes], width: .narrow).locale(locale))
             )
         }
         return parts.joined(separator: " · ")

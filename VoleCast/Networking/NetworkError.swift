@@ -68,7 +68,7 @@ enum NetworkError: Error, Equatable, LocalizedError {
         switch self {
         case .offline: String(localized: "No Internet Connection")
         case .timedOut: String(localized: "The Connection Timed Out")
-        case .rateLimited: String(localized: "Too Many Searches Right Now")
+        case .rateLimited: String(localized: "Too Many Requests Right Now")
         case .notFound: String(localized: "Not Found")
         case .serverError: String(localized: "The Server Had a Problem")
         case .insecureConnection: String(localized: "Insecure Connection")

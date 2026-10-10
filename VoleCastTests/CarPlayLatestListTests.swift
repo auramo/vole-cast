@@ -37,7 +37,10 @@ struct CarPlayLatestListTests {
         #expect(rows.count == 1)
         #expect(rows.first?.title == "Episode One")
         // The show, then the same line the phone shows from `EpisodeSubtitle`.
-        #expect(rows.first?.subtitle == "Show · 42m")
+        // Asserted by shape rather than by the exact duration: how "42m" is
+        // written is that type's business, and it is written differently in
+        // every language. `EpisodeSubtitleTests` pins the wording.
+        #expect(rows.first?.subtitle.hasPrefix("Show · ") == true)
     }
 
     /// Two lines is all a `CPListItem` has, where the phone's row has three.
@@ -49,7 +52,7 @@ struct CarPlayLatestListTests {
 
         let rows = CarPlayLatestList.rows(for: [episode], current: nil)
 
-        #expect(rows.first?.subtitle == "Show · 42m")
+        #expect(rows.first?.subtitle.hasPrefix("Show · ") == true)
     }
 
     /// An orphan has no show to name, and must not be given a stray separator.
@@ -61,7 +64,9 @@ struct CarPlayLatestListTests {
 
         let rows = CarPlayLatestList.rows(for: [episode], current: nil)
 
-        #expect(rows.first?.subtitle == "42m")
+        // One part and no separator: nothing was named that it does not know.
+        #expect(rows.first?.subtitle.contains("·") == false)
+        #expect(rows.first?.subtitle.isEmpty == false)
     }
 
     @Test func marksTheLoadedEpisodeAndNoOther() {
@@ -144,7 +149,8 @@ struct CarPlayLatestListTests {
 
         let sections = CarPlayLatestList.sections(current: playing, at: 842, latest: [])
 
-        #expect(sections.first?.rows.first?.subtitle == "Show · 42m · 14:02")
+        #expect(sections.first?.rows.first?.subtitle.hasPrefix("Show · ") == true)
+        #expect(sections.first?.rows.first?.subtitle.hasSuffix(" · 14:02") == true)
     }
 
     /// Barely started is not worth a reading, and "0:00" would be noise.
@@ -154,7 +160,8 @@ struct CarPlayLatestListTests {
 
         let sections = CarPlayLatestList.sections(current: playing, at: 0, latest: [])
 
-        #expect(sections.first?.rows.first?.subtitle == "Show · 42m")
+        // A clock is the only part with a colon in it, in any language.
+        #expect(sections.first?.rows.first?.subtitle.contains(":") == false)
     }
 
     /// One episode, one row. The same episode in both sections would be two
