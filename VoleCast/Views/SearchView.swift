@@ -17,6 +17,7 @@ struct SearchView: View {
     @State private var model: SearchModel?
     @State private var discover: DiscoverModel?
     @State private var half: Half = .search
+    @FocusState private var typing: Bool
     /// Remembered across launches, because someone who browses another
     /// country's charts generally means it.
     @AppStorage("discoverStorefront") private var storefront = Storefront.device
@@ -54,6 +55,19 @@ struct SearchView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                // The chevron above the keyboard, which is what iOS uses
+                // everywhere else for "put this away". Return does the same,
+                // but only while you are still on the key — this stays reachable
+                // once a thumb has moved on to the results.
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Hide Keyboard", systemImage: "keyboard.chevron.compact.down") {
+                        typing = false
+                    }
+                    .labelStyle(.iconOnly)
+                }
+            }
             // Registered here too, because the player can open an episode
             // onto whichever tab happens to be in front.
             .navigationDestination(for: Episode.self) { EpisodeDetailView(episode: $0, path: $path) }
@@ -108,7 +122,12 @@ struct SearchView: View {
             )
             .textInputAutocapitalization(.never)
             .autocorrectionDisabled()
-            .submitLabel(.search)
+            .focused($typing)
+            // "Done", not "Search". Results arrive as you type, so by the
+            // time the key is reachable the search it offers has already
+            // happened — the only thing left to want is the keyboard gone.
+            .submitLabel(.done)
+            .onSubmit { typing = false }
             if !model.query.isEmpty {
                 Button("Clear", systemImage: "xmark.circle.fill") { model.query = "" }
                     .labelStyle(.iconOnly)
