@@ -5,4 +5,6 @@ import SwiftUI
 extension EnvironmentValues {
     @Entry var podcastDirectory: any PodcastDirectory = ITunesPodcastDirectory()
     @Entry var feedLoader: any FeedLoading = FeedLoader()
+    @Entry var podcastCharts: any PodcastCharts = ApplePodcastCharts()
+    @Entry var podcastLookup: any PodcastLookup = ITunesPodcastLookup()
 }
