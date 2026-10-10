@@ -117,7 +117,7 @@ struct SearchView: View {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(.secondary)
             TextField(
-                "Shows or RSS URL",
+                "Show name or RSS URL",
                 text: Binding(get: { model.query }, set: { model.query = $0 })
             )
             .textInputAutocapitalization(.never)

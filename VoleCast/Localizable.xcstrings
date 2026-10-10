@@ -776,6 +776,16 @@
         }
       }
     },
+    "Show name or RSS URL": {
+      "localizations": {
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Podcastin nimi tai RSS-osoite"
+          }
+        }
+      }
+    },
     "Shows": {
       "localizations": {
         "fi": {
@@ -792,16 +802,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Näyttää jakson tiedot"
-          }
-        }
-      }
-    },
-    "Shows or RSS URL": {
-      "localizations": {
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Podcastin nimi tai RSS-osoite"
           }
         }
       }
