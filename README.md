@@ -188,6 +188,31 @@ The country list is every region the device can name, not Apple's own roughly
 175 storefronts, which are published nowhere stable. Picking one Apple does not
 serve is recoverable; a country missing from a hardcoded table is not.
 
+## Languages
+
+English and Finnish. Strings live in one catalog, `VoleCast/Localizable.xcstrings`,
+with the English text itself as the key — so a string with no translation yet
+falls back to something readable rather than to an identifier.
+
+The catalog sits at the top of the synchronized `VoleCast/` folder, which is the
+whole of its wiring: nothing lists it as a resource, and `knownRegions` naming
+`fi` is the only project change localization needed.
+
+Two things are deliberately left in English: the app's own name, which is not a
+word in either language, and anything only a developer reads — log messages and
+the `fatalError` text in `VoleCastModelContainer` among them.
+
+Finnish cannot inflect an interpolated proper noun, so strings that would need
+to are phrased around it. "Charts from %@" is `Listat: %@` rather than anything
+that would ask *Suomi* to become *Suomesta*.
+
+To see it: run with the scheme's language set to Finnish, or from the command
+line
+
+```sh
+xcrun simctl launch <udid> <bundle-id> -AppleLanguages "(fi)" -AppleLocale fi_FI
+```
+
 ## Requirements
 
 - Xcode 26.3 or newer

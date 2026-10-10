@@ -21,11 +21,19 @@ struct PodcastGenreTests {
         #expect(PodcastGenre.all.allSatisfy { !$0.name.isEmpty })
     }
 
-    /// Spot-checks against the ids Apple's genre service actually returns, so
-    /// a typo in the table is caught rather than silently fetching the wrong
-    /// chart — a wrong id returns a perfectly valid chart of something else.
-    @Test(arguments: [(1303, "Comedy"), (1488, "True Crime"), (1489, "News"), (1321, "Business")])
-    func carriesApplesOwnIdentifiers(_ id: Int, _ name: String) {
-        #expect(PodcastGenre.all.first { $0.id == id }?.name == name)
+    /// The ids Apple's genre service actually returns. A typo here is not an
+    /// error anywhere — a wrong id fetches a perfectly valid chart of
+    /// something else — so the table is checked against the real list.
+    ///
+    /// Ids rather than names on purpose: the names are localized, so asserting
+    /// on them would make this suite pass or fail according to the language of
+    /// whoever runs it.
+    @Test func carriesApplesOwnIdentifiers() {
+        let apple: Set<Int> = [
+            1301, 1303, 1304, 1305, 1309, 1310, 1314, 1318, 1321, 1324,
+            1483, 1487, 1488, 1489, 1502, 1511, 1512, 1533, 1545,
+        ]
+
+        #expect(Set(PodcastGenre.all.map(\.id)) == apple)
     }
 }
