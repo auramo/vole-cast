@@ -18,7 +18,7 @@ struct ITunesPodcastDirectory: PodcastDirectory {
 
     init(
         http: any HTTPClient = URLSessionHTTPClient(),
-        storefront: String = Locale.current.region?.identifier.lowercased() ?? "us"
+        storefront: String = Storefront.device
     ) {
         self.http = http
         self.storefront = storefront
