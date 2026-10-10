@@ -103,7 +103,14 @@ struct SearchView: View {
                 Section {
                     ForEach(results) { result in
                         NavigationLink(value: ShowPreviewSource.directory(result)) {
-                            SearchResultRow(result: result)
+                            ShowRow(
+                                artworkURL: result.artworkURL?.absoluteString,
+                                title: result.title,
+                                author: result.author,
+                                detail: result.episodeCount.map {
+                                    String(localized: "^[\($0) episode](inflect: true)")
+                                }
+                            )
                         }
                     }
                 } header: {
@@ -112,33 +119,6 @@ struct SearchView: View {
             }
         }
         .listStyle(.plain)
-    }
-}
-
-private struct SearchResultRow: View {
-    let result: PodcastSearchResult
-
-    var body: some View {
-        HStack(spacing: 12) {
-            ArtworkView(url: result.artworkURL?.absoluteString, size: 56)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(result.title)
-                    .font(.headline)
-                    .lineLimit(2)
-                if !result.author.isEmpty {
-                    Text(result.author)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                }
-                if let count = result.episodeCount {
-                    Text("^[\(count) episode](inflect: true)")
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
-                }
-            }
-        }
-        .padding(.vertical, 4)
     }
 }
 
