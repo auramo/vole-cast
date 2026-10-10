@@ -15,5 +15,11 @@ protocol PodcastLookup: Sendable {
     /// nothing to subscribe to, and the difference matters at the other end —
     /// an error gets a "Try Again" button, and retrying a show that will never
     /// have a feed is a promise the app cannot keep.
-    func podcast(collectionID: Int) async throws -> PodcastSearchResult?
+    ///
+    /// `storefront` has no default on purpose. A show is only in the stores
+    /// that carry it, so asking the wrong one finds nothing — which here means
+    /// "no feed anywhere" and gets said out loud. A quietly defaulted region
+    /// is exactly how a show charting in another country came to be reported
+    /// as Apple-exclusive, so the caller has to say which store it means.
+    func podcast(collectionID: Int, storefront: String) async throws -> PodcastSearchResult?
 }

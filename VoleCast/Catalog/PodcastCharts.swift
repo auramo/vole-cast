@@ -20,6 +20,14 @@ struct ChartEntry: Identifiable, Hashable, Sendable {
     let title: String
     let author: String
     let artworkURL: URL?
+    /// Which country's chart this came from.
+    ///
+    /// Carried by the entry rather than left on the page, because the entry is
+    /// what outlives it: a row sits in a navigation stack long after the page
+    /// is gone, and looking the show up in a different store than it charted
+    /// in finds nothing — which this app would otherwise report as the show
+    /// having no feed at all.
+    let storefront: String
 }
 
 /// A chart, and which store actually answered.

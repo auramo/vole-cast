@@ -203,7 +203,13 @@ struct ShowPreviewView: View {
         guard case .chart(let entry) = source else { return nil }
 
         phase = .resolving
-        guard let result = try await lookup.podcast(collectionID: entry.collectionID) else {
+        // Asked of the store the show charted in, not the device's. A show is
+        // only in the stores that carry it, and asking the wrong one comes
+        // back empty — indistinguishable here from having no feed at all.
+        guard let result = try await lookup.podcast(
+            collectionID: entry.collectionID,
+            storefront: entry.storefront
+        ) else {
             phase = .unavailable
             return nil
         }

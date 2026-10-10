@@ -13,11 +13,10 @@ struct ITunesPodcastLookupTests {
             http: FakeHTTPClient { request in
                 _ = seen.exchange(request.url)
                 return (try Fixtures.json("itunes-search"), HTTPURLResponse())
-            },
-            storefront: "fi"
+            }
         )
 
-        _ = try await lookup.podcast(collectionID: 1_000_000_001)
+        _ = try await lookup.podcast(collectionID: 1_000_000_001, storefront: "fi")
 
         let url = try #require(seen.current)
         let query = try #require(URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems)
@@ -32,11 +31,12 @@ struct ITunesPodcastLookupTests {
     /// whole reason this shares that decoder.
     @Test func readsAShowTheSearchDecoderAlreadyUnderstands() async throws {
         let lookup = ITunesPodcastLookup(
-            http: FakeHTTPClient.ok(try Fixtures.json("itunes-search")),
-            storefront: "fi"
+            http: FakeHTTPClient.ok(try Fixtures.json("itunes-search"))
         )
 
-        let result = try #require(try await lookup.podcast(collectionID: 1_000_000_001))
+        let result = try #require(
+            try await lookup.podcast(collectionID: 1_000_000_001, storefront: "fi")
+        )
 
         #expect(result.title == "Directory Show")
         #expect(result.feedURL.absoluteString == "https://feeds.example.com/directory-show.xml")
@@ -48,39 +48,59 @@ struct ITunesPodcastLookupTests {
     /// as a throw, because the two get different screens.
     @Test func answersNilForAShowWithNoPublicFeed() async throws {
         let lookup = ITunesPodcastLookup(
-            http: FakeHTTPClient.ok(try Fixtures.json("itunes-lookup-no-feed")),
-            storefront: "fi"
+            http: FakeHTTPClient.ok(try Fixtures.json("itunes-lookup-no-feed"))
         )
 
-        #expect(try await lookup.podcast(collectionID: 1_147_969_773) == nil)
+        #expect(try await lookup.podcast(collectionID: 1_147_969_773, storefront: "fi") == nil)
     }
 
     @Test func answersNilForAnIDAppleDoesNotKnow() async throws {
         let lookup = ITunesPodcastLookup(
-            http: FakeHTTPClient.ok(try Fixtures.json("itunes-search-empty")),
-            storefront: "fi"
+            http: FakeHTTPClient.ok(try Fixtures.json("itunes-search-empty"))
         )
 
-        #expect(try await lookup.podcast(collectionID: 1) == nil)
+        #expect(try await lookup.podcast(collectionID: 1, storefront: "fi") == nil)
+    }
+
+    /// The distinction the storefront parameter exists to keep.
+    ///
+    /// A show is only in the stores that carry it, so the same id answers in
+    /// one country and not in another. Both answers are nil here, and nil
+    /// means "no feed anywhere" — so asking the wrong store makes the app
+    /// report a perfectly playable show as exclusive to Apple Podcasts. The
+    /// only defence is asking the store the show charted in.
+    @Test func findsAShowInTheStoreThatCarriesItAndNotInOneThatDoesNot() async throws {
+        let lookup = ITunesPodcastLookup(
+            http: FakeHTTPClient { request in
+                let country = URLComponents(url: request.url!, resolvingAgainstBaseURL: false)?
+                    .queryItems?.first { $0.name == "country" }?.value
+                return (
+                    try Fixtures.json(country == "us" ? "itunes-search" : "itunes-search-empty"),
+                    HTTPURLResponse()
+                )
+            }
+        )
+
+        #expect(try await lookup.podcast(collectionID: 1_000_000_001, storefront: "us") != nil)
+        #expect(try await lookup.podcast(collectionID: 1_000_000_001, storefront: "fi") == nil)
     }
 
     /// Lookup shares the same per-device budget as search and the charts.
     @Test func surfacesThrottlingAsRateLimited() async {
-        let lookup = ITunesPodcastLookup(http: FakeHTTPClient.status(403), storefront: "fi")
+        let lookup = ITunesPodcastLookup(http: FakeHTTPClient.status(403))
 
         await #expect(throws: NetworkError.rateLimited) {
-            _ = try await lookup.podcast(collectionID: 1)
+            _ = try await lookup.podcast(collectionID: 1, storefront: "fi")
         }
     }
 
     @Test func surfacesBeingOfflineAsOffline() async {
         let lookup = ITunesPodcastLookup(
-            http: FakeHTTPClient.failing(URLError(.notConnectedToInternet)),
-            storefront: "fi"
+            http: FakeHTTPClient.failing(URLError(.notConnectedToInternet))
         )
 
         await #expect(throws: NetworkError.offline) {
-            _ = try await lookup.podcast(collectionID: 1)
+            _ = try await lookup.podcast(collectionID: 1, storefront: "fi")
         }
     }
 }

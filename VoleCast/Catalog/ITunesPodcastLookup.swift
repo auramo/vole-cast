@@ -10,14 +10,15 @@ import Foundation
 /// result rather than something that needs its own detection.
 struct ITunesPodcastLookup: PodcastLookup {
     let http: any HTTPClient
-    let storefront: String
 
-    init(http: any HTTPClient = URLSessionHTTPClient(), storefront: String = Storefront.device) {
+    init(http: any HTTPClient = URLSessionHTTPClient()) {
         self.http = http
-        self.storefront = storefront
     }
 
-    func podcast(collectionID: Int) async throws -> PodcastSearchResult? {
+    /// The store is a parameter rather than a property: one lookup follows a
+    /// chart row into whichever country's chart it came from, and the next may
+    /// follow a different one.
+    func podcast(collectionID: Int, storefront: String) async throws -> PodcastSearchResult? {
         var components = URLComponents(string: "https://itunes.apple.com/lookup")
         components?.queryItems = [
             URLQueryItem(name: "id", value: String(collectionID)),

@@ -38,7 +38,10 @@ struct ApplePodcastChartsTests {
     // MARK: - The supported endpoint's shape
 
     @Test func readsTheOverallChart() throws {
-        let entries = try ApplePodcastCharts.decodeTop(Fixtures.json("apple-top-podcasts"))
+        let entries = try ApplePodcastCharts.decodeTop(
+            Fixtures.json("apple-top-podcasts"),
+            storefront: "fi"
+        )
 
         #expect(entries.count == 3)
         let first = try #require(entries.first)
@@ -55,7 +58,8 @@ struct ApplePodcastChartsTests {
 
     @Test func readsAGenreChart() throws {
         let entries = try ApplePodcastCharts.decodeGenreChart(
-            Fixtures.json("itunes-top-podcasts-comedy")
+            Fixtures.json("itunes-top-podcasts-comedy"),
+            storefront: "fi"
         )
 
         let first = try #require(entries.first)
@@ -68,7 +72,8 @@ struct ApplePodcastChartsTests {
     /// wants 168, so anything smaller is visibly soft.
     @Test func takesTheLargestArtworkOffered() throws {
         let entries = try ApplePodcastCharts.decodeGenreChart(
-            Fixtures.json("itunes-top-podcasts-comedy")
+            Fixtures.json("itunes-top-podcasts-comedy"),
+            storefront: "fi"
         )
         let artwork = try #require(entries.first?.artworkURL?.absoluteString)
 
@@ -80,7 +85,8 @@ struct ApplePodcastChartsTests {
     /// earns a row.
     @Test func dropsEntriesItCouldNeverOpen() throws {
         let entries = try ApplePodcastCharts.decodeGenreChart(
-            Fixtures.json("itunes-top-podcasts-comedy")
+            Fixtures.json("itunes-top-podcasts-comedy"),
+            storefront: "fi"
         )
 
         #expect(!entries.contains { $0.title == "Unresolvable Show" })
@@ -92,7 +98,8 @@ struct ApplePodcastChartsTests {
     /// something unusable.
     @Test func numbersTheRowsItKeptWithoutGaps() throws {
         let entries = try ApplePodcastCharts.decodeGenreChart(
-            Fixtures.json("itunes-top-podcasts-comedy")
+            Fixtures.json("itunes-top-podcasts-comedy"),
+            storefront: "fi"
         )
 
         #expect(entries.map(\.rank) == Array(1...entries.count))
@@ -101,7 +108,8 @@ struct ApplePodcastChartsTests {
     /// A show with no `im:artist` still belongs on the chart.
     @Test func keepsAShowWithNoNamedAuthor() throws {
         let entries = try ApplePodcastCharts.decodeGenreChart(
-            Fixtures.json("itunes-top-podcasts-comedy")
+            Fixtures.json("itunes-top-podcasts-comedy"),
+            storefront: "fi"
         )
         let anonymous = try #require(entries.first { $0.title == "No Artist Show" })
 
@@ -112,7 +120,8 @@ struct ApplePodcastChartsTests {
     /// empty array.
     @Test func readsAChartWithNothingInIt() throws {
         let entries = try ApplePodcastCharts.decodeGenreChart(
-            Fixtures.json("itunes-top-podcasts-empty")
+            Fixtures.json("itunes-top-podcasts-empty"),
+            storefront: "fi"
         )
 
         #expect(entries.isEmpty)
@@ -122,19 +131,36 @@ struct ApplePodcastChartsTests {
     /// where an array was expected.
     @Test func readsAChartServedAsASingleObject() throws {
         let entries = try ApplePodcastCharts.decodeGenreChart(
-            Fixtures.json("itunes-top-podcasts-single")
+            Fixtures.json("itunes-top-podcasts-single"),
+            storefront: "fi"
         )
 
         #expect(entries.count == 1)
         #expect(entries.first?.rank == 1)
     }
 
+    /// Each row has to remember whose chart it came from. A show is only in
+    /// the stores that carry it, and the lookup that turns a row into a feed
+    /// happens long after the page is gone — asked of the wrong store it finds
+    /// nothing, which this app reports as the show having no feed at all.
+    @Test func everyRowRemembersWhichStoreItCameFrom() throws {
+        let top = try ApplePodcastCharts.decodeTop(
+            Fixtures.json("apple-top-podcasts"), storefront: "us"
+        )
+        let genre = try ApplePodcastCharts.decodeGenreChart(
+            Fixtures.json("itunes-top-podcasts-comedy"), storefront: "gb"
+        )
+
+        #expect(top.allSatisfy { $0.storefront == "us" })
+        #expect(genre.allSatisfy { $0.storefront == "gb" })
+    }
+
     @Test func refusesAPayloadItCannotRead() {
         #expect(throws: NetworkError.decodingFailed) {
-            try ApplePodcastCharts.decodeGenreChart(Data("not json".utf8))
+            try ApplePodcastCharts.decodeGenreChart(Data("not json".utf8), storefront: "fi")
         }
         #expect(throws: NetworkError.decodingFailed) {
-            try ApplePodcastCharts.decodeTop(Data("not json".utf8))
+            try ApplePodcastCharts.decodeTop(Data("not json".utf8), storefront: "fi")
         }
     }
 

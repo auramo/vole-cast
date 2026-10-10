@@ -35,7 +35,8 @@ struct DiscoverModelTests {
             rank: rank,
             title: title,
             author: "Someone",
-            artworkURL: nil
+            artworkURL: nil,
+            storefront: "fi"
         )
     }
 

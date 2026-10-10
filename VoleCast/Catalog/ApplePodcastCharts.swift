@@ -51,8 +51,8 @@ struct ApplePodcastCharts: PodcastCharts {
         let (data, _) = try await http.data(for: request, maxBytes: AppURLSession.jsonByteLimit)
 
         let entries = genre == nil
-            ? try Self.decodeTop(data)
-            : try Self.decodeGenreChart(data)
+            ? try Self.decodeTop(data, storefront: storefront)
+            : try Self.decodeGenreChart(data, storefront: storefront)
         return ChartPage(entries: entries, storefront: storefront)
     }
 
@@ -79,7 +79,7 @@ struct ApplePodcastCharts: PodcastCharts {
 
     /// The documented endpoint's shape. Pure, so the payload can be checked
     /// without a network or a fake.
-    static func decodeTop(_ data: Data) throws -> [ChartEntry] {
+    static func decodeTop(_ data: Data, storefront: String) throws -> [ChartEntry] {
         do {
             let decoded = try JSONDecoder().decode(TopResponse.self, from: data)
             return entries(from: decoded.feed.results.map {
@@ -89,7 +89,7 @@ struct ApplePodcastCharts: PodcastCharts {
                     author: $0.artistName,
                     artwork: $0.artworkUrl100
                 )
-            })
+            }, storefront: storefront)
         } catch {
             throw NetworkError.decodingFailed
         }
@@ -98,7 +98,7 @@ struct ApplePodcastCharts: PodcastCharts {
     /// The legacy endpoint's shape, which is the same chart wearing Atom's
     /// clothes: every value is wrapped in a `label`, and the useful ids hide
     /// in `attributes` under keys with colons in them.
-    static func decodeGenreChart(_ data: Data) throws -> [ChartEntry] {
+    static func decodeGenreChart(_ data: Data, storefront: String) throws -> [ChartEntry] {
         do {
             let decoded = try JSONDecoder().decode(GenreResponse.self, from: data)
             return entries(from: (decoded.feed.entry?.values ?? []).map {
@@ -113,7 +113,7 @@ struct ApplePodcastCharts: PodcastCharts {
                     // better artwork from the feed itself.
                     artwork: $0.image.max { ($0.height ?? 0) < ($1.height ?? 0) }?.label
                 )
-            })
+            }, storefront: storefront)
         } catch {
             throw NetworkError.decodingFailed
         }
@@ -132,7 +132,7 @@ struct ApplePodcastCharts: PodcastCharts {
     /// show. Rank counts the rows that survive, so the numbers on screen are
     /// contiguous — a gap would read as a rendering fault rather than as
     /// Apple having listed something we could not use.
-    private static func entries(from raw: [RawEntry]) -> [ChartEntry] {
+    private static func entries(from raw: [RawEntry], storefront: String) -> [ChartEntry] {
         raw.compactMap { entry -> (Int, String, String, URL?)? in
             guard let rawID = entry.collectionID, let collectionID = Int(rawID) else { return nil }
             guard let title = entry.title, !title.isEmpty else { return nil }
@@ -146,7 +146,8 @@ struct ApplePodcastCharts: PodcastCharts {
                 rank: index + 1,
                 title: entry.1,
                 author: entry.2,
-                artworkURL: entry.3
+                artworkURL: entry.3,
+                storefront: storefront
             )
         }
     }
