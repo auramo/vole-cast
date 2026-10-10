@@ -31,7 +31,7 @@
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld ohjelmaa ei voitu päivittää"
+            "value": "%lld podcastia ei voitu päivittää"
           }
         }
       }
@@ -41,7 +41,7 @@
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yhtä ohjelmaa ei voitu päivittää"
+            "value": "Yhtä podcastia ei voitu päivittää"
           }
         }
       }
@@ -251,7 +251,7 @@
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tilaamiesi ohjelmien jaksot näkyvät täällä."
+            "value": "Tilaamiesi podcastien jaksot näkyvät täällä."
           }
         }
       }
@@ -281,7 +281,7 @@
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Etsi ohjelmia"
+            "value": "Etsi podcasteja"
           }
         }
       }
@@ -291,7 +291,7 @@
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Etsi ohjelma"
+            "value": "Etsi podcast"
           }
         }
       }
@@ -301,7 +301,7 @@
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Etsi ohjelmia"
+            "value": "Etsi podcasteja"
           }
         }
       }
@@ -621,7 +621,7 @@
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Avaa ohjelman tämän jakson kohdalta"
+            "value": "Avaa podcastin tämän jakson kohdalta"
           }
         }
       }
@@ -731,7 +731,7 @@
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hae ohjelmasta %@"
+            "value": "Hae podcastista %@"
           }
         }
       }
@@ -751,7 +751,7 @@
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ohjelma"
+            "value": "Podcast"
           }
         }
       }
@@ -761,7 +761,7 @@
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ohjelman valinnat"
+            "value": "Podcastin valinnat"
           }
         }
       }
@@ -771,7 +771,7 @@
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Näytä kaikki ohjelman %@ jaksot"
+            "value": "Näytä kaikki podcastin %@ jaksot"
           }
         }
       }
@@ -781,7 +781,7 @@
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ohjelmat"
+            "value": "Podcastit"
           }
         }
       }
@@ -801,7 +801,7 @@
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ohjelmia tai RSS-osoite"
+            "value": "Podcastin nimi tai RSS-osoite"
           }
         }
       }
@@ -811,7 +811,7 @@
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tilaamasi ohjelmat näkyvät täällä."
+            "value": "Tilaamasi podcastit näkyvät täällä."
           }
         }
       }
@@ -971,7 +971,7 @@
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ohjelman julkaisija on ehkä siirtänyt tai poistanut äänitiedoston."
+            "value": "Podcastin julkaisija on ehkä siirtänyt tai poistanut äänitiedoston."
           }
         }
       }
@@ -991,7 +991,7 @@
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ohjelma on vain Apple Podcastsissa, joten mikään muu sovellus ei voi toistaa sitä."
+            "value": "Podcast on vain Apple Podcastsissa, joten mikään muu sovellus ei voi toistaa sitä."
           }
         }
       }
@@ -1072,7 +1072,7 @@
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lopetetaanko ohjelman %@ tilaus?"
+            "value": "Lopetetaanko podcastin %@ tilaus?"
           }
         }
       }
@@ -1102,7 +1102,7 @@
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ohjelmasi eivät ole julkaisseet mitään päivämäärällä varustettua."
+            "value": "Podcastisi eivät ole julkaisseet mitään päivämäärällä varustettua."
           }
         }
       }

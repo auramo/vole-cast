@@ -207,9 +207,11 @@ to are punctuated around it: "Charts from %@" is `Listat maasta: %@`, where the
 colon lets the country name stay in its basic form rather than being asked to
 become *Suomesta*.
 
-Not every term wants translating. "True Crime" is the genre's name in Finnish
-too, and the catalog says so explicitly rather than leaving the entry empty, so
-it reads as a decision rather than as an omission.
+Not every term wants translating. Finnish says *podcast*, so the English
+"show" is a podcast in Finnish rather than an *ohjelma*, and it inflects as a
+loanword — podcastit, podcastin, podcastia. "True Crime" keeps its English name
+for the same reason, and the catalog spells that out rather than leaving the
+entry empty, so it reads as a decision rather than as an omission.
 
 To see it: run with the scheme's language set to Finnish, or from the command
 line
