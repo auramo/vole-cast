@@ -203,8 +203,13 @@ word in either language, and anything only a developer reads — log messages an
 the `fatalError` text in `VoleCastModelContainer` among them.
 
 Finnish cannot inflect an interpolated proper noun, so strings that would need
-to are phrased around it. "Charts from %@" is `Listat: %@` rather than anything
-that would ask *Suomi* to become *Suomesta*.
+to are punctuated around it: "Charts from %@" is `Listat maasta: %@`, where the
+colon lets the country name stay in its basic form rather than being asked to
+become *Suomesta*.
+
+Not every term wants translating. "True Crime" is the genre's name in Finnish
+too, and the catalog says so explicitly rather than leaving the entry empty, so
+it reads as a decision rather than as an omission.
 
 To see it: run with the scheme's language set to Finnish, or from the command
 line

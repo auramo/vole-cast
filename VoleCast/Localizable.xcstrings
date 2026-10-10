@@ -69,7 +69,7 @@
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Talous"
+            "value": "Yritysmaailma"
           }
         }
       }
@@ -89,7 +89,7 @@
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Listat: %@"
+            "value": "Listat maasta: %@"
           }
         }
       }
@@ -959,10 +959,11 @@
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tosirikos"
+            "value": "True Crime"
           }
         }
-      }
+      },
+      "comment": "A podcast genre. Finnish uses the English term, so this is deliberately untranslated."
     },
     "Try Again": {
       "localizations": {
