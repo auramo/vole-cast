@@ -21,6 +21,34 @@ struct SubscriptionTests {
         )
     }
 
+    /// Sync can leave two podcasts behind one feed identity: both devices
+    /// looked for the show, neither found it, both subscribed. Unsubscribing
+    /// has to mean the show is gone, not that one of two copies is — a show
+    /// that comes back after you remove it is the point where someone stops
+    /// trusting the app.
+    @Test func unsubscribingRemovesEveryCopyOfTheShow() throws {
+        let context = context()
+        let url = "https://doubled.example.com/feed"
+        let first = try Subscriptions.subscribe(to: try loaded(at: url), in: context)
+        // What two devices would produce: `subscribe` refuses a second, so the
+        // duplicate is inserted the way CloudKit would deliver it.
+        let second = Podcast(
+            feedURL: url,
+            feedIdentity: first.feedIdentity,
+            title: "Minimal Show"
+        )
+        context.insert(second)
+
+        Subscriptions.unsubscribe(first, in: context)
+
+        let left = try context.fetch(
+            FetchDescriptor<Podcast>(
+                predicate: #Predicate { $0.feedIdentity == "doubled.example.com/feed" }
+            )
+        )
+        #expect(left.isEmpty)
+    }
+
     @Test func subscribingStoresTheShowAndItsEpisodes() throws {
         let context = context()
         let podcast = try Subscriptions.subscribe(
