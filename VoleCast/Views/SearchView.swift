@@ -49,11 +49,6 @@ struct SearchView: View {
             }
             .navigationTitle("Search")
             .toolbar {
-                if half == .discover, let discover {
-                    ToolbarItem(placement: .topBarLeading) {
-                        countryPicker(discover)
-                    }
-                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Add by RSS URL…", systemImage: "link.badge.plus") {
                         showingAddByURL = true
@@ -105,52 +100,10 @@ struct SearchView: View {
     @ViewBuilder
     private var discoverHalf: some View {
         if let discover {
-            DiscoverList(model: discover) {
-                storefront = Storefront.device
-                discover.storefront = Storefront.device
-            }
+            DiscoverList(model: discover, storefront: $storefront)
         }
     }
 
-    /// Country only. The genre is a row of chips under the segmented control,
-    /// where it is visible — it is the thing people change, and it belongs on
-    /// screen rather than behind an icon. Which country you are browsing
-    /// changes rarely enough to live here, and the label says which it is
-    /// rather than leaving it to be guessed.
-    private func countryPicker(_ discover: DiscoverModel) -> some View {
-        Menu {
-            Picker("Country", selection: Binding(
-                get: { storefront },
-                set: { storefront = $0; discover.storefront = $0 }
-            )) {
-                ForEach(Self.countries, id: \.code) { country in
-                    Text(country.name).tag(country.code)
-                }
-            }
-        } label: {
-            Label(
-                Locale.current.localizedString(forRegionCode: storefront)
-                    ?? storefront.uppercased(),
-                systemImage: "globe"
-            )
-        }
-    }
-
-    /// Every region the device can name, rather than Apple's own list of
-    /// stores. Apple has about 175 and publishes them nowhere stable, so a
-    /// hardcoded table would be both long and quietly wrong over time; picking
-    /// one Apple does not serve is recoverable in a way that a missing country
-    /// is not.
-    private static let countries: [(code: String, name: String)] = {
-        Locale.Region.isoRegions
-            .filter { $0.subRegions.isEmpty }
-            .compactMap { region in
-                guard let name = Locale.current.localizedString(forRegionCode: region.identifier)
-                else { return nil }
-                return (region.identifier.lowercased(), name)
-            }
-            .sorted { $0.name < $1.name }
-    }()
 
     @ViewBuilder
     private func content(_ model: SearchModel) -> some View {

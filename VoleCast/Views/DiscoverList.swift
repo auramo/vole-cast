@@ -7,11 +7,12 @@ import SwiftUI
 /// search field and the pasted-URL path above it keep working regardless.
 struct DiscoverList: View {
     let model: DiscoverModel
-    let onUseDeviceCountry: () -> Void
+    @Binding var storefront: String
 
     var body: some View {
         VStack(spacing: 0) {
             genres
+            country
             content
         }
         // Keyed on both, so changing either asks for the right chart — and the
@@ -36,6 +37,56 @@ struct DiscoverList: View {
         }
         .scrollIndicators(.hidden)
     }
+
+    /// Says which country's chart this is, and is how you change it.
+    ///
+    /// A line of text rather than the toolbar: a bare globe glyph answered
+    /// none of the question, and iOS collapses a toolbar label to its icon
+    /// whatever `labelStyle` asks for. Someone looking at a list of unfamiliar
+    /// shows most wants to know whose chart they are reading.
+    private var country: some View {
+        Menu {
+            Picker("Country", selection: Binding(
+                get: { storefront },
+                set: { storefront = $0; model.storefront = $0 }
+            )) {
+                ForEach(Self.countries, id: \.code) { country in
+                    Text(country.name).tag(country.code)
+                }
+            }
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: "globe")
+                Text("Charts from \(Self.name(of: storefront))")
+                Image(systemName: "chevron.down")
+                    .font(.caption2)
+            }
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+        }
+        .padding(.horizontal)
+        .padding(.bottom, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    static func name(of code: String) -> String {
+        Locale.current.localizedString(forRegionCode: code) ?? code.uppercased()
+    }
+
+    /// Every region the device can name, rather than Apple's own roughly 175
+    /// stores, which are published nowhere stable: a hardcoded table would be
+    /// long and quietly wrong over time, and picking a country Apple does not
+    /// serve is recoverable in a way that a missing one is not.
+    private static let countries: [(code: String, name: String)] = {
+        Locale.Region.isoRegions
+            .filter { $0.subRegions.isEmpty }
+            .compactMap { region in
+                guard let name = Locale.current.localizedString(forRegionCode: region.identifier)
+                else { return nil }
+                return (region.identifier.lowercased(), name)
+            }
+            .sorted { $0.name < $1.name }
+    }()
 
     private func chip(_ title: String, genre: PodcastGenre?) -> some View {
         let selected = model.genre?.id == genre?.id
@@ -98,14 +149,14 @@ struct DiscoverList: View {
         ContentUnavailableView {
             Label("No Charts for This Country", systemImage: "globe")
         } description: {
-            Text("Apple may not have a podcast store in \(countryName(code)).")
+            Text("Apple may not have a podcast store in \(Self.name(of: code)).")
         } actions: {
-            Button("Use My Country") { onUseDeviceCountry() }
+            Button("Use My Country") {
+                storefront = Storefront.device
+                model.storefront = Storefront.device
+            }
             Button("Try Again") { Task { await model.refresh() } }
         }
     }
 
-    private func countryName(_ code: String) -> String {
-        Locale.current.localizedString(forRegionCode: code) ?? code.uppercased()
-    }
 }
