@@ -1,29 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
-  One capability flag and nothing personal: no team, no bundle identifier.
+  Capability flags and nothing personal: no team, no bundle identifier. The
+  iCloud container is parameterised, and .githooks/pre-commit puts it back
+  whenever Xcode writes it out in full — which it does every time the Signing
+  & Capabilities pane is touched. Xcode also strips these comments each time,
+  so if they are missing, that is what happened.
 
-  The entitlement itself is granted per Apple developer account, so a
-  contributor without it can build for the simulator and run the tests but
-  cannot sign a device build.
-
-  It lives in Config/ rather than VoleCast/ for the same reason Info.plist
-  does: VoleCast/ is a file-system-synchronized group, which would copy a
-  stray file into the bundle as a resource.
+  This file lives in Config/ rather than VoleCast/ for the same reason
+  Info.plist does: VoleCast/ is a file-system-synchronized group, which would
+  copy a stray file into the bundle as a resource.
 -->
 <plist version="1.0">
 <dict>
+	<!-- Granted per Apple developer account. A contributor without it can
+	     build for the simulator and run the tests but cannot sign a device
+	     build. -->
 	<key>com.apple.developer.carplay-audio</key>
 	<true/>
 
-	<!-- CloudKit, which mirrors the SwiftData store to the listener's own
-	     private database. The identifier is parameterised: the pre-commit
-	     hook rewrites it back whenever Xcode writes it out in full, which it
-	     does every time the Signing & Capabilities pane is touched.
-
-	     aps-environment is "development" here; distribution signing rewrites
-	     it to production. CloudKit needs push to tell a device that another
-	     one changed something. -->
+	<!-- CloudKit mirrors the SwiftData store to the listener's own private
+	     database. aps-environment is "development" here; distribution signing
+	     rewrites it to production. Push is how one device learns that another
+	     changed something. -->
 	<key>aps-environment</key>
 	<string>development</string>
 	<key>com.apple.developer.icloud-container-identifiers</key>
@@ -34,5 +33,10 @@
 	<array>
 		<string>CloudKit</string>
 	</array>
+	<!-- Added by Xcode alongside CloudKit and left alone: it is inert while
+	     nothing here shares a record, and removing it only invites Xcode to
+	     put it back the next time the pane is opened. -->
+	<key>com.apple.developer.icloud-extended-share-access</key>
+	<array/>
 </dict>
 </plist>
