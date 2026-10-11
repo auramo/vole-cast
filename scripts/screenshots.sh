@@ -13,12 +13,13 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-# The 6.9" iPhone, which is the only size App Store Connect asks for while the
-# app ships iPhone-only. A Pro Max is not optional — a plain Pro renders
-# 1206x2622, which is no slot at all.
+# App Store Connect asks for exactly one iPhone size, and it is the 6.3" one:
+# the slot is called "iPhone with Dynamic Island (medium display)" and takes
+# 1206x2622. That is a plain Pro. A Pro Max renders 1320x2868 and is rejected
+# as invalid dimensions, so the device here is not interchangeable.
 DEVICES=("${@:-}")
 if [ -z "${DEVICES[*]}" ]; then
-	DEVICES=("iPhone 18 Pro Max")
+	DEVICES=("iPhone 18 Pro")
 fi
 OUT="$PWD/screenshots"
 

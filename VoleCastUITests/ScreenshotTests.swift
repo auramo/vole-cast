@@ -22,16 +22,19 @@ final class ScreenshotTests: XCTestCase {
         let subscriptions: String
         let search: String
         let discover: String
+        let retry: String
     }
 
     private let scripts = [
         Script(
             language: "en", locale: "en_US",
-            subscriptions: "Subscriptions", search: "Search", discover: "Discover"
+            subscriptions: "Subscriptions", search: "Search", discover: "Discover",
+            retry: "Try Again"
         ),
         Script(
             language: "fi", locale: "fi_FI",
-            subscriptions: "Tilaukset", search: "Haku", discover: "Selaa"
+            subscriptions: "Tilaukset", search: "Haku", discover: "Selaa",
+            retry: "Yritä uudelleen"
         ),
     ]
 
@@ -81,10 +84,36 @@ final class ScreenshotTests: XCTestCase {
         app.tabBars.buttons[script.search].tap()
         app.buttons[script.discover].tap()
         XCTAssertTrue(
-            app.cells.firstMatch.waitForExistence(timeout: 30),
-            "The chart never arrived. Network, or Apple throttling."
+            chartArrives(app, script),
+            "The chart never arrived, and Try Again did not rescue it."
         )
+        // The rows arrive before their artwork, which is fetched a show at a
+        // time from Apple. Unlike Latest, nothing here is cached from an
+        // earlier screen, so snapping the instant the cells exist can catch a
+        // column of grey placeholders — which is what the store would then
+        // show. Give the images a moment to land.
+        Thread.sleep(forTimeInterval: 5)
         try snapshot("4-discover", script)
+    }
+
+    /// Waits for the chart, tapping Try Again whenever it fails to turn up.
+    ///
+    /// Apple's chart host hangs often enough to matter: probing
+    /// `rss.marketingtools.apple.com` directly, one call in four never answered
+    /// inside thirty seconds while the rest came back in about one. A single
+    /// wait therefore makes an eight-shot run a coin flip, and the failure
+    /// lands on the last shot after ten minutes of work. Both failure states
+    /// offer the same button a person would reach for, so take it.
+    @MainActor
+    private func chartArrives(_ app: XCUIApplication, _ script: Script) -> Bool {
+        for _ in 0..<4 {
+            if app.cells.firstMatch.waitForExistence(timeout: 30) { return true }
+            // Absent means the request is still in flight rather than failed;
+            // going round again simply keeps waiting.
+            let again = app.buttons[script.retry]
+            if again.waitForExistence(timeout: 2) { again.tap() }
+        }
+        return false
     }
 
     /// Writes the image where `screenshots.sh` asked for it, under the pixel
