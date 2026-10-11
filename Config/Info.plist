@@ -11,15 +11,21 @@
   It lives in Config/ rather than VoleCast/ because VoleCast/ is a
   file-system-synchronized group, which would copy it into the bundle as a
   stray resource.
+
+  Xcode rewrites this file and drops these comments whenever a capability is
+  changed. If they are missing, that is what happened.
 -->
 <plist version="1.0">
 <dict>
-	<!-- Keeps audio playing when the app is backgrounded or the phone locks.
-	     This is an Info.plist declaration, not an entitlement, so no
-	     .entitlements file is needed. -->
+	<!-- audio keeps playback going when the app is backgrounded or the phone
+	     locks. remote-notification is what lets CloudKit tell this device that
+	     another one changed something while the app is open; without it, a
+	     show subscribed to on the phone reaches the iPad only at its next
+	     launch. Both are Info.plist declarations rather than entitlements. -->
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>
+		<string>remote-notification</string>
 	</array>
 
 	<!-- The car is a second scene, created by UIKit rather than by SwiftUI.
@@ -31,7 +37,10 @@
 	     own with an empty UISceneConfigurations, and the generated one wins
 	     — the CarPlay role below is dropped from the built plist without a
 	     word, and the car simply never offers the app. The failure looks
-	     exactly like a delegate that was never called. -->
+	     exactly like a delegate that was never called.
+
+	     Xcode deletes that build setting when the Signing & Capabilities pane
+	     is used. Check it is still there after touching capabilities. -->
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

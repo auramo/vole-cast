@@ -188,6 +188,36 @@ The country list is every region the device can name, not Apple's own roughly
 175 storefronts, which are published nowhere stable. Picking one Apple does not
 serve is recoverable; a country missing from a hardcoded table is not.
 
+## Syncing
+
+Subscriptions, playback positions and listening history are mirrored to the
+listener's own private iCloud database, so a show subscribed to on the phone is
+on the iPad and an episode paused in the car can be finished in the kitchen.
+There is nothing to switch on: iOS mirrors the store when the device is signed
+into an Apple Account and keeps it local when it isn't. Anyone who would rather
+it didn't can turn VoleCast off under Settings → Apple Account → iCloud. See
+[PRIVACY.md](PRIVACY.md).
+
+None of that is implemented here. SwiftData does the mirroring, so there is no
+sync code, no sync indicator and no account handling in the app — the pieces
+are a container identifier in `Config/VoleCast.entitlements`, the
+`remote-notification` background mode that lets another device's changes arrive
+while the app is open, and `cloudKitDatabase: .automatic` on the store.
+
+Two things follow from it that are worth knowing before changing the model:
+
+- **The CloudKit schema is append-only in production.** Fields can be added,
+  never removed, and a schema has to be deployed in the CloudKit console before
+  the version that depends on it ships. A build whose schema hasn't been
+  deployed syncs nothing for App Store users while working perfectly in
+  development.
+- **Sync cannot make a check-then-insert atomic.** Two devices can both look
+  for a feed, both find nothing, and both subscribe, leaving one show listed
+  twice with its progress split between the copies. `DuplicateSubscriptions`
+  folds those together at launch, keeping the furthest position and the oldest
+  subscription; `Subscriptions.unsubscribe` removes every copy of a show rather
+  than the one object it was handed.
+
 ## Languages
 
 English and Finnish. Strings live in one catalog, `VoleCast/Localizable.xcstrings`,

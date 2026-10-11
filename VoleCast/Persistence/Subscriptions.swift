@@ -51,10 +51,27 @@ enum Subscriptions {
         return podcast
     }
 
+    /// Removes the show, and any other copy of it.
+    ///
+    /// Normally there is only one. Sync can leave a second: both devices
+    /// looked for the feed identity, neither found it, both subscribed. If
+    /// unsubscribing deleted only the object it was handed, the other copy
+    /// would keep the show in the library after the user removed it — which
+    /// reads as the app ignoring them rather than as a rare sync artefact.
     static func unsubscribe(_ podcast: Podcast, in context: ModelContext) {
-        // Episodes go with it by cascade. Downloaded audio will need deleting
+        let identity = podcast.feedIdentity
+        let copies = (try? context.fetch(
+            FetchDescriptor<Podcast>(predicate: #Predicate { $0.feedIdentity == identity })
+        )) ?? []
+
+        // Episodes go with them by cascade. Downloaded audio will need deleting
         // here too, once downloads exist.
-        context.delete(podcast)
+        for copy in copies where !copy.isDeleted {
+            context.delete(copy)
+        }
+        // Belt and braces: an identity so malformed that the predicate misses
+        // it still has to lose the show the user actually asked about.
+        if !podcast.isDeleted { context.delete(podcast) }
     }
 
     /// Folds a re-fetched feed into an existing subscription.

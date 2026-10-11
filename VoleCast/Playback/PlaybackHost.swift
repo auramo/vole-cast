@@ -37,6 +37,9 @@ final class PlaybackHost {
         let container = VoleCastModelContainer.makeStore()
         self.container = container
         self.player = Self.makePlayer(for: container)
+        // Before anything reads the store. Sync can leave two copies of one
+        // show behind, and every screen below here would show both.
+        DuplicateSubscriptions.merge(in: container.mainContext)
         // The app is routinely killed while paused in the background, so the
         // bar has to be put back rather than assumed to survive. Done here
         // rather than when a view appears: whichever scene comes up first —
