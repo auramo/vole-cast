@@ -1,7 +1,7 @@
 #!/bin/bash
 #
-# Captures the App Store screenshots, in English and Finnish, on the simulator
-# sizes App Store Connect actually has slots for. Images land in
+# Captures the App Store screenshots, in English and Finnish, at the size App
+# Store Connect has a slot for. Images land in
 # screenshots/<language>/<pixel size>/ — the folder name is the slot.
 #
 # The library comes from iCloud rather than from sample data, so each simulator
@@ -13,11 +13,12 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-# 6.9" iPhone and 13" iPad: the two App Store Connect asks for. A Pro Max is
-# not optional — a plain Pro renders 1206x2622, which is no slot at all.
+# The 6.9" iPhone, which is the only size App Store Connect asks for while the
+# app ships iPhone-only. A Pro Max is not optional — a plain Pro renders
+# 1206x2622, which is no slot at all.
 DEVICES=("${@:-}")
 if [ -z "${DEVICES[*]}" ]; then
-	DEVICES=("iPhone 18 Pro Max" "iPad Pro 13-inch (M5)")
+	DEVICES=("iPhone 18 Pro Max")
 fi
 OUT="$PWD/screenshots"
 
