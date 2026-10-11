@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Apple requires this of any app using a "required reason" API, and rejects
+  uploads without it. It is short because the app does little: no tracking, no
+  advertising identifier, no analytics, and nothing collected about anyone.
+
+  It lives in VoleCast/ rather than Config/ — the opposite of Info.plist and
+  the entitlements. Those must stay out of the synchronized folder because
+  being copied into the bundle as a resource would be wrong; this one has to
+  be in the bundle to be read at all.
+
+  Note that "collected" here means collected by us. Subscriptions and playback
+  positions are mirrored to the listener's own private iCloud database, which
+  is their storage and not ours — see PRIVACY.md.
+-->
+<plist version="1.0">
+<dict>
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array/>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<!-- One use: @AppStorage("discoverStorefront"), which remembers
+			     whose podcast charts you were last browsing. CA92.1 is the
+			     reason for defaults the app reads and writes only for itself,
+			     which is all this is — no app group, no shared suite. -->
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>CA92.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>
