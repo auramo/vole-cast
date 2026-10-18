@@ -248,7 +248,10 @@ struct ErrorView: View {
             )
         } description: {
             if let hint {
-                Text(error.recoverySuggestion ?? "") + Text("\n\n") + hint
+                // `verbatim`, or the extractor harvests the break itself as
+                // a translatable string — it appeared in the catalog as "\n\n",
+                // captioned as the retry button's text.
+                Text(error.recoverySuggestion ?? "") + Text(verbatim: "\n\n") + hint
             } else {
                 Text(error.recoverySuggestion ?? "")
             }
