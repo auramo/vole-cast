@@ -80,14 +80,19 @@ struct MiniPlayerBar: View {
             .buttonStyle(.plain)
             .accessibilityHint("Opens the player")
 
+            // Forward rather than back, which is the opposite of the usual
+            // choice. There is only room for one control here, and the thing
+            // worth reaching for mid-episode is an ad: skipping past one is
+            // frequent and deliberate, while missing a sentence is rare and
+            // already recoverable from the full player, which has both.
             Button {
-                player.skip(by: -NowPlayingCentre.skipBackward)
+                player.skip(by: NowPlayingCentre.skipForward)
             } label: {
-                Image(systemName: "gobackward.15")
+                Image(systemName: "goforward.30")
                     .font(.title3)
             }
             .buttonStyle(.borderless)
-            .accessibilityLabel("Skip back 15 seconds")
+            .accessibilityLabel("Skip forward 30 seconds")
 
             playPause
         }
