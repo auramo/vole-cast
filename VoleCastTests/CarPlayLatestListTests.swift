@@ -193,4 +193,51 @@ struct CarPlayLatestListTests {
         #expect(sections.first?.title == "Latest")
         #expect(sections.first?.rows.map(\.title) == ["One"])
     }
+
+    // MARK: - Artwork
+
+    /// The same rule the phone row uses: the episode's own picture when the
+    /// feed gave it one, the show's otherwise.
+    @Test func aRowPrefersTheEpisodeArtwork() {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let episode = makeEpisode(context, guid: "c1", title: "One")
+        episode.podcast?.artworkURL = "https://c.example.com/show.jpg"
+        episode.artworkURL = "https://c.example.com/episode.jpg"
+
+        let rows = CarPlayLatestList.rows(for: [episode], current: nil)
+
+        #expect(rows.first?.artworkURL == "https://c.example.com/episode.jpg")
+    }
+
+    @Test func aRowFallsBackToTheShowArtwork() {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let episode = makeEpisode(context, guid: "c1", title: "One")
+        episode.podcast?.artworkURL = "https://c.example.com/show.jpg"
+
+        let rows = CarPlayLatestList.rows(for: [episode], current: nil)
+
+        #expect(rows.first?.artworkURL == "https://c.example.com/show.jpg")
+    }
+
+    @Test func aRowWithNoArtworkAnywhereCarriesNone() {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let episode = makeEpisode(context, guid: "c1", title: "One")
+
+        let rows = CarPlayLatestList.rows(for: [episode], current: nil)
+
+        #expect(rows.first?.artworkURL == nil)
+    }
+
+    /// The Continue row is built by hand rather than through `rows(for:)`, so
+    /// it is the one that can silently miss out.
+    @Test func theContinueRowCarriesArtworkToo() {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let episode = makeEpisode(context, guid: "c1", title: "One")
+        episode.podcast?.artworkURL = "https://c.example.com/show.jpg"
+
+        let sections = CarPlayLatestList.sections(current: episode, at: 60, latest: [])
+
+        #expect(sections.first?.title == "Continue")
+        #expect(sections.first?.rows.first?.artworkURL == "https://c.example.com/show.jpg")
+    }
 }

@@ -87,6 +87,12 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
     private func item(for row: CarPlayRow) -> CPListItem {
         let item = CPListItem(text: row.title, detailText: row.subtitle)
         item.isPlaying = row.isPlaying
+        // Set before the real picture is asked for, so the row is its final
+        // size from the first frame. `ArtworkView` keeps a placeholder for the
+        // same reason on the phone, and a list reflowing under a glance
+        // matters more in a car than it does there.
+        item.setImage(Self.placeholder)
+        loadArtwork(row.artworkURL, into: item)
         item.handler = { [weak self] _, completion in
             // Answered first. CarPlay holds the row in a selected state until
             // this is called, and everything `select` does happens to the
@@ -98,6 +104,44 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
         }
         return item
     }
+
+    // MARK: - Artwork
+
+    /// CarPlay draws the row's image at `maximumImageSize`; anything larger is
+    /// scaled down for nothing. Asked for in pixels because that is what the
+    /// decoder works in, and fetched on the car's own screen scale rather than
+    /// the phone's.
+    private func loadArtwork(_ url: String?, into item: CPListItem) {
+        guard let url, let resolved = URL(string: url) else { return }
+
+        let points = CPListItem.maximumImageSize
+        let scale = interfaceController?.carTraitCollection.displayScale ?? 2
+        let pixels = Int(max(points.width, points.height) * max(scale, 1))
+
+        // Already drawn on the phone, most of the time: the car's scene shares
+        // this process, so the cache is the same one. That path sets the image
+        // without a hop through the network or another decode.
+        if let hit = ArtworkCache.shared.cached(resolved, maxPixels: pixels) {
+            item.setImage(hit)
+            return
+        }
+
+        // The item is captured, not the row: `updateSections` replaces every
+        // item wholesale, so one left over from a list that has moved on just
+        // sets an image on an object nothing is showing, and then goes away
+        // with it.
+        Task {
+            guard let image = await ArtworkCache.shared.image(for: resolved, maxPixels: pixels)
+            else { return }
+            item.setImage(image)
+        }
+    }
+
+    /// The same glyph the phone draws while it waits, rendered once.
+    private static let placeholder: UIImage? = UIImage(
+        systemName: "waveform",
+        withConfiguration: UIImage.SymbolConfiguration(scale: .large)
+    )
 
     // MARK: - Selecting
 
