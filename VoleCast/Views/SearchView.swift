@@ -172,7 +172,12 @@ struct SearchView: View {
             case .searching:
                 ProgressView().controlSize(.large)
             case .failed(let error):
-                ErrorView(error: error) { await model.search(model.query) }
+                ErrorView(
+                    error: error,
+                    hint: SearchModel.suggestsPastingFeed(for: error)
+                        ? Text("Pasting a feed URL into the field above still works.")
+                        : nil
+                ) { await model.search(model.query) }
             case .empty:
                 ContentUnavailableView.search(text: model.query)
             case .results:
@@ -230,6 +235,9 @@ struct SearchView: View {
 /// One way of showing a failed load, so every screen fails the same way.
 struct ErrorView: View {
     let error: NetworkError
+    /// An extra line, for a screen that still has a way through an error the
+    /// shared suggestion can't know about. Most don't, so it defaults away.
+    var hint: Text?
     let retry: () async -> Void
 
     var body: some View {
@@ -239,7 +247,11 @@ struct ErrorView: View {
                 systemImage: error.symbolName
             )
         } description: {
-            Text(error.recoverySuggestion ?? "")
+            if let hint {
+                Text(error.recoverySuggestion ?? "") + Text("\n\n") + hint
+            } else {
+                Text(error.recoverySuggestion ?? "")
+            }
         } actions: {
             Button("Try Again") {
                 Task { await retry() }

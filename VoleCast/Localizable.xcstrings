@@ -651,6 +651,16 @@
         }
       }
     },
+    "Pasting a feed URL into the field above still works." : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voit silti liittää RSS-syötteen osoitteen yllä olevaan kenttään."
+          }
+        }
+      }
+    },
     "Pause" : {
       "localizations" : {
         "fi" : {

@@ -153,4 +153,30 @@ struct SearchModelTests {
         model.query = query
         #expect((model.typedFeedURL != nil) == isURL)
     }
+
+    // MARK: - The way out of a throttled directory
+
+    /// Throttling is the one search failure the same field can route around,
+    /// and the review that rejected 1.0 is evidence it needs saying: Apple's
+    /// reviewers hit a throttled directory, found no content, and concluded
+    /// the app could not be accessed.
+    @Test func throttlingPointsAtPastingAFeed() {
+        #expect(SearchModel.suggestsPastingFeed(for: .rateLimited))
+    }
+
+    /// Nothing else qualifies, and offering the hint anyway would be advice
+    /// that fails too: being offline takes the publisher down with the
+    /// directory, and the rest are about the answer rather than the
+    /// availability.
+    @Test(arguments: [
+        NetworkError.offline,
+        .timedOut,
+        .serverError(500),
+        .notFound,
+        .invalidResponse,
+        .decodingFailed,
+    ])
+    func otherFailuresDoNot(_ error: NetworkError) {
+        #expect(!SearchModel.suggestsPastingFeed(for: error))
+    }
 }
