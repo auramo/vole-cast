@@ -26,6 +26,25 @@ final class SearchModel {
         self.debounce = debounce
     }
 
+    /// Whether a failed search should point at pasting a feed URL instead.
+    ///
+    /// Throttling is the only search failure with a way out that isn't
+    /// waiting: the same field takes a feed URL, and `typedFeedURL` sends that
+    /// to the publisher without touching Apple's directory at all. The
+    /// placeholder says as much — but a placeholder is hidden exactly when
+    /// there is text in the field, which is when this error appears.
+    ///
+    /// That gap is not hypothetical. App review rejected 1.0 under 2.1(a),
+    /// unable to access the app: a new install has no subscriptions, and the
+    /// directory rate-limits per IP, which a shared review network trips.
+    ///
+    /// Nothing else qualifies. Offline takes the publisher down with the
+    /// directory, and the remaining cases are about the answer rather than
+    /// whether one can be had.
+    static func suggestsPastingFeed(for error: NetworkError) -> Bool {
+        error == .rateLimited
+    }
+
     /// A feed URL typed or pasted into the search field, if that's what it is.
     var typedFeedURL: URL? {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
