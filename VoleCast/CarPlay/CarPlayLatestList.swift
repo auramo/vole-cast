@@ -15,6 +15,11 @@ struct CarPlayRow: Equatable, Identifiable {
     /// Marks the episode the player is holding, so it is visibly the one the
     /// car is on.
     let isPlaying: Bool
+    /// The episode's own picture when the feed gave it one, the show's
+    /// otherwise — the same rule the phone's row follows. A string rather than
+    /// a `URL` because that is how the models hold it, and resolving it is the
+    /// scene's job, not this one's.
+    let artworkURL: String?
 }
 
 /// A titled group of rows. `title` is nil for a list that needs no heading.
@@ -69,7 +74,8 @@ enum CarPlayLatestList {
                         id: id,
                         title: current.title,
                         subtitle: detail(for: current, at: position),
-                        isPlaying: true
+                        isPlaying: true,
+                        artworkURL: artwork(for: current)
                     )
                 ]
             ),
@@ -91,9 +97,15 @@ enum CarPlayLatestList {
                 id: episode.persistentModelID,
                 title: episode.title,
                 subtitle: detail(for: episode, at: nil),
-                isPlaying: episode.persistentModelID == current
+                isPlaying: episode.persistentModelID == current,
+                artworkURL: artwork(for: episode)
             )
         }
+    }
+
+    /// One place, so the Continue row cannot drift from the Latest ones.
+    private static func artwork(for episode: Episode) -> String? {
+        episode.artworkURL ?? episode.podcast?.artworkURL
     }
 
     /// Tapping a row means "play this". For the episode already playing that
