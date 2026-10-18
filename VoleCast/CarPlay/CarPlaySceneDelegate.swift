@@ -44,6 +44,7 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
     ) {
         self.interfaceController = interfaceController
         refreshRows()
+        trackPlayer()
         interfaceController.setRootTemplate(listTemplate, animated: false, completion: nil)
     }
 
@@ -56,10 +57,17 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
 
     // MARK: - The list
 
-    /// Built on connect and again after a selection, so the playing indicator
-    /// moves. It deliberately does not track the store: an episode finished on
-    /// the phone mid-drive will not redraw here until the next connect, which
-    /// is a trade this first version makes on purpose.
+    /// Built on connect, after a selection, and whenever the player changes
+    /// what it is holding — including from the phone, which is the case the
+    /// first version missed. Choosing an episode in History while the car
+    /// screen was up left the Continue row naming the previous one, even as
+    /// the right audio played and the system's own Now Playing screen was
+    /// correct, because that screen is fed by `MPNowPlayingInfoCenter` and
+    /// this list is not.
+    ///
+    /// It still does not track the store, so a show subscribed to mid-drive
+    /// brings no new rows until the next connect. Rarer by far than reaching
+    /// for the phone, and it needs watching something other than the player.
     private func refreshRows() {
         let host = PlaybackHost.shared
         let latest = (try? host.container.mainContext.fetch(LatestEpisodes.descriptor())) ?? []
@@ -103,6 +111,33 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
             self?.select(row.id)
         }
         return item
+    }
+
+    /// Watches the player so the list follows what the phone does.
+    ///
+    /// Two things about `withObservationTracking` shape this. It reports a
+    /// change *before* the new value is in place, so the rebuild waits a turn
+    /// of the main actor rather than reading the old one back; and it fires
+    /// once, so it re-arms itself afterwards.
+    private func trackPlayer() {
+        let player = PlaybackHost.shared.player
+        withObservationTracking {
+            // Only what a row is drawn from. Not `position`, which ticks every
+            // second and would rebuild the list under the driver's hand — the
+            // Continue row's own "left at" detail is read at rebuild time, so
+            // it stays current anyway.
+            _ = player.current
+            _ = player.isPlaying
+        } onChange: { [weak self] in
+            Task { @MainActor [weak self] in
+                // Disconnected: stop here rather than re-arming. `didConnect`
+                // starts a fresh chain, so this cannot leave the car without
+                // one.
+                guard let self, interfaceController != nil else { return }
+                refreshRows()
+                trackPlayer()
+            }
+        }
     }
 
     // MARK: - Artwork
