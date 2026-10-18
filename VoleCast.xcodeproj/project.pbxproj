@@ -14,6 +14,13 @@
 			remoteGlobalIDString = AA0000000000000000000004;
 			remoteInfo = VoleCast;
 		};
+		DD000000000000000000000B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AA0000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AA0000000000000000000004;
+			remoteInfo = VoleCast;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -21,6 +28,7 @@
 		BB0000000000000000000002 /* VoleCastTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VoleCastTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		CC0000000000000000000001 /* Shared.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Shared.xcconfig; sourceTree = "<group>"; };
 		CC0000000000000000000002 /* Local.xcconfig.template */ = {isa = PBXFileReference; lastKnownFileType = text; path = Local.xcconfig.template; sourceTree = "<group>"; };
+		DD0000000000000000000002 /* VoleCastUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VoleCastUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -32,6 +40,11 @@
 		BB0000000000000000000006 /* VoleCastTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = VoleCastTests;
+			sourceTree = "<group>";
+		};
+		DD0000000000000000000006 /* VoleCastUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = VoleCastUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -51,6 +64,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		DD0000000000000000000004 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -60,6 +80,7 @@
 				CC0000000000000000000003 /* Config */,
 				AA0000000000000000000009 /* VoleCast */,
 				BB0000000000000000000006 /* VoleCastTests */,
+				DD0000000000000000000006 /* VoleCastUITests */,
 				AA0000000000000000000003 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -69,6 +90,7 @@
 			children = (
 				AA0000000000000000000005 /* VoleCast.app */,
 				BB0000000000000000000002 /* VoleCastTests.xctest */,
+				DD0000000000000000000002 /* VoleCastUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -126,6 +148,27 @@
 			productReference = BB0000000000000000000002 /* VoleCastTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		DD0000000000000000000001 /* VoleCastUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DD0000000000000000000007 /* Build configuration list for PBXNativeTarget "VoleCastUITests" */;
+			buildPhases = (
+				DD0000000000000000000003 /* Sources */,
+				DD0000000000000000000004 /* Frameworks */,
+				DD0000000000000000000005 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				DD000000000000000000000A /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				DD0000000000000000000006 /* VoleCastUITests */,
+			);
+			name = VoleCastUITests;
+			productName = VoleCastUITests;
+			productReference = DD0000000000000000000002 /* VoleCastUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -162,6 +205,7 @@
 			targets = (
 				AA0000000000000000000004 /* VoleCast */,
 				BB0000000000000000000001 /* VoleCastTests */,
+				DD0000000000000000000001 /* VoleCastUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -175,6 +219,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		BB0000000000000000000005 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DD0000000000000000000005 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -198,6 +249,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		DD0000000000000000000003 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -205,6 +263,11 @@
 			isa = PBXTargetDependency;
 			target = AA0000000000000000000004 /* VoleCast */;
 			targetProxy = BB000000000000000000000B /* PBXContainerItemProxy */;
+		};
+		DD000000000000000000000A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AA0000000000000000000004 /* VoleCast */;
+			targetProxy = DD000000000000000000000B /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -354,7 +417,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = "1";
 			};
 			name = Debug;
 		};
@@ -384,7 +447,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = "1";
 			};
 			name = Release;
 		};
@@ -401,7 +464,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = "1";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/VoleCast.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/VoleCast";
 			};
 			name = Debug;
@@ -419,8 +482,44 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = "1";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/VoleCast.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/VoleCast";
+			};
+			name = Release;
+		};
+		DD0000000000000000000008 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = CC0000000000000000000001 /* Shared.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(ORG_IDENTIFIER).VoleCastUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1";
+				TEST_TARGET_NAME = VoleCast;
+			};
+			name = Debug;
+		};
+		DD0000000000000000000009 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = CC0000000000000000000001 /* Shared.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(ORG_IDENTIFIER).VoleCastUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1";
+				TEST_TARGET_NAME = VoleCast;
 			};
 			name = Release;
 		};
@@ -450,6 +549,15 @@
 			buildConfigurations = (
 				BB0000000000000000000008 /* Debug */,
 				BB0000000000000000000009 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		DD0000000000000000000007 /* Build configuration list for PBXNativeTarget "VoleCastUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DD0000000000000000000008 /* Debug */,
+				DD0000000000000000000009 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

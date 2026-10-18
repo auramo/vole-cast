@@ -191,8 +191,8 @@ serve is recoverable; a country missing from a hardcoded table is not.
 ## Syncing
 
 Subscriptions, playback positions and listening history are mirrored to the
-listener's own private iCloud database, so a show subscribed to on the phone is
-on the iPad and an episode paused in the car can be finished in the kitchen.
+listener's own private iCloud database, so a show subscribed to on one phone is
+on the other and an episode paused in the car can be finished in the kitchen.
 There is nothing to switch on: iOS mirrors the store when the device is signed
 into an Apple Account and keeps it local when it isn't. Anyone who would rather
 it didn't can turn VoleCast off under Settings → Apple Account → iCloud. See
@@ -253,7 +253,7 @@ xcrun simctl launch <udid> <bundle-id> -AppleLanguages "(fi)" -AppleLocale fi_FI
 ## Requirements
 
 - Xcode 26.3 or newer
-- iOS 26.1+ (iPhone and iPad)
+- iOS 26.1+ (iPhone)
 - Swift 6
 
 ## Getting started
