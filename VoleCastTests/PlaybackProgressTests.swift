@@ -136,4 +136,55 @@ struct PlaybackProgressTests {
         // Seeking backwards is a move worth recording however small.
         #expect(PlaybackProgress.shouldWrite(position: 5, lastWritten: 100))
     }
+
+    // MARK: - The fraction
+
+    @Test func aPartPlayedEpisodeHasAFraction() {
+        let half = PlaybackProgress.fraction(stored: 900, duration: 1800, isPlayed: false)
+
+        #expect(half == 0.5)
+    }
+
+    /// The point of defining it through `resumePosition`: the bar is drawn
+    /// exactly when tapping the row would carry on from somewhere. Each of
+    /// these is a position that plays from the beginning, so each must show
+    /// nothing rather than a mark contradicting what the tap does.
+    @Test(arguments: [
+        // Never started.
+        (0.0, 1800.0, false),
+        // So early that resuming would replay the intro.
+        (2.9, 1800.0, false),
+        // Finished.
+        (900.0, 1800.0, true),
+        // Within `nearEnd` of the end.
+        (1790.0, 1800.0, false),
+        // Stranded past an end a refresh moved.
+        (2000.0, 1800.0, false),
+    ])
+    func somethingThatWouldStartOverShowsNothing(
+        _ stored: Double, _ duration: Double, _ isPlayed: Bool
+    ) {
+        #expect(
+            PlaybackProgress.fraction(
+                stored: stored, duration: duration, isPlayed: isPlayed
+            ) == nil
+        )
+    }
+
+    /// Its own refusal, not inherited: `resumePosition` is happy to resume at
+    /// a stored position for a feed that declared no duration, but there is no
+    /// fraction to take of an unknown whole.
+    @Test func withoutADurationThereIsNoFraction() {
+        #expect(PlaybackProgress.fraction(stored: 900, duration: nil, isPlayed: false) == nil)
+        #expect(PlaybackProgress.fraction(stored: 900, duration: 0, isPlayed: false) == nil)
+    }
+
+    /// A `CPListItem` takes 0...1 and the phone's ring trims a circle, so a
+    /// value outside that range is a drawing bug in either.
+    @Test func theFractionStaysInRange() {
+        for stored in [3.0, 100, 899, 1700] {
+            let f = PlaybackProgress.fraction(stored: stored, duration: 1800, isPlayed: false)
+            #expect(f.map { $0 > 0 && $0 <= 1 } ?? true)
+        }
+    }
 }

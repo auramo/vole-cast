@@ -240,4 +240,55 @@ struct CarPlayLatestListTests {
         #expect(sections.first?.title == "Continue")
         #expect(sections.first?.rows.first?.artworkURL == "https://c.example.com/show.jpg")
     }
+
+    // MARK: - Progress
+
+    /// `makeEpisode` gives every episode a 2520 s duration, so 630 is a
+    /// quarter of the way in.
+    @Test func aRowCarriesHowFarInYouWere() {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let episode = makeEpisode(context, guid: "c1", title: "One")
+        episode.playbackPosition = 630
+
+        let rows = CarPlayLatestList.rows(for: [episode], current: nil)
+
+        #expect(rows.first?.progress == 0.25)
+    }
+
+    @Test func anUntouchedRowCarriesNoProgress() {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let episode = makeEpisode(context, guid: "c1", title: "One")
+
+        let rows = CarPlayLatestList.rows(for: [episode], current: nil)
+
+        #expect(rows.first?.progress == nil)
+    }
+
+    /// The rule lives in `PlaybackProgress` and is tested there; this only
+    /// pins that the car asks it rather than inventing a threshold of its own,
+    /// which this file previously did for the printed clock.
+    @Test func aBarelyStartedRowCarriesNoProgress() {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let episode = makeEpisode(context, guid: "c1", title: "One")
+        episode.playbackPosition = 2
+
+        let rows = CarPlayLatestList.rows(for: [episode], current: nil)
+
+        #expect(rows.first?.progress == nil)
+    }
+
+    /// Built by hand rather than through `rows(for:)`, so it is again the one
+    /// that can silently miss out — and it takes its position from the player
+    /// rather than the store, so it cannot simply call the same helper.
+    @Test func theContinueRowCarriesProgressToo() {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let episode = makeEpisode(context, guid: "c1", title: "One")
+        // Deliberately disagreeing with the live position below: the row must
+        // draw where the player is, not where the store was last written.
+        episode.playbackPosition = 60
+
+        let sections = CarPlayLatestList.sections(current: episode, at: 1260, latest: [])
+
+        #expect(sections.first?.rows.first?.progress == 0.5)
+    }
 }

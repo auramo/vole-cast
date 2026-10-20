@@ -8,9 +8,12 @@ import SwiftData
 enum PlaybackProgress {
 
     /// Below this, resuming would just replay the intro.
-    static let nearStart: TimeInterval = 3
+    ///
+    /// `nonisolated`, like the pure rules that read it: an immutable
+    /// `TimeInterval` is safe to ask for from anywhere.
+    nonisolated static let nearStart: TimeInterval = 3
     /// Within this of the end, the episode counts as finished.
-    static let nearEnd: TimeInterval = 15
+    nonisolated static let nearEnd: TimeInterval = 15
     /// How far playback must move before a position is written again.
     ///
     /// Deliberately coarse. `LatestEpisodesView` is driven by a `@Query`, and
@@ -24,8 +27,10 @@ enum PlaybackProgress {
 
     /// Where playing this episode should actually start.
     ///
-    /// Pure, so the rules can be checked without a store.
-    static func resumePosition(
+    /// Pure, so the rules can be checked without a store — and `nonisolated`
+    /// so callers that are not on the main actor can ask. It reads its
+    /// arguments and nothing else.
+    nonisolated static func resumePosition(
         stored: TimeInterval,
         duration: TimeInterval?,
         isPlayed: Bool
@@ -35,6 +40,29 @@ enum PlaybackProgress {
         // Finished, or stranded past an end that a refresh moved.
         guard stored <= duration - nearEnd else { return 0 }
         return stored
+    }
+
+    /// How far through, 0...1, or nil when there is nothing worth drawing.
+    ///
+    /// Deliberately defined in terms of `resumePosition` rather than by a
+    /// threshold of its own. That ties the mark to the behaviour: an episode
+    /// shows progress exactly when playing it would carry on from somewhere,
+    /// and shows none exactly when playing it would start from the beginning.
+    /// A bar that disagreed with what tapping the row does would be worse than
+    /// no bar.
+    ///
+    /// It therefore inherits all three of that function's refusals — barely
+    /// started, finished, and stranded past an end a refresh moved — and adds
+    /// one of its own: without a duration there is no fraction to take, however
+    /// far in the position is.
+    nonisolated static func fraction(
+        stored: TimeInterval,
+        duration: TimeInterval?,
+        isPlayed: Bool
+    ) -> Double? {
+        let resume = resumePosition(stored: stored, duration: duration, isPlayed: isPlayed)
+        guard resume > 0, let duration, duration > 0 else { return nil }
+        return min(resume / duration, 1)
     }
 
     /// Whether a position has moved far enough to be worth a write.

@@ -20,6 +20,10 @@ struct CarPlayRow: Equatable, Identifiable {
     /// a `URL` because that is how the models hold it, and resolving it is the
     /// scene's job, not this one's.
     let artworkURL: String?
+    /// How far through, 0...1, or nil for a row with nothing to show — which
+    /// `CPListItem` draws as the system's own bar under the row, the same mark
+    /// every other car audio app uses.
+    let progress: Double?
 }
 
 /// A titled group of rows. `title` is nil for a list that needs no heading.
@@ -40,10 +44,6 @@ enum CarPlaySelection: Equatable {
 enum CarPlayLatestList {
     static let continueTitle = "Continue"
     static let latestTitle = "Latest"
-
-    /// Below this a position is not worth printing: "0:00" is noise, and an
-    /// episode this early has nothing to return to.
-    private static let worthReporting: TimeInterval = 3
 
     /// The whole list: what you were in the middle of, then what is new.
     ///
@@ -75,7 +75,17 @@ enum CarPlayLatestList {
                         title: current.title,
                         subtitle: detail(for: current, at: position),
                         isPlaying: true,
-                        artworkURL: artwork(for: current)
+                        artworkURL: artwork(for: current),
+                        // The player's reading rather than the stored one, for
+                        // the reason the phone's ring uses it: positions are
+                        // written to the store every ten seconds, so the bar
+                        // would otherwise sit behind the clock printed beside
+                        // it in this very row.
+                        progress: PlaybackProgress.fraction(
+                            stored: position,
+                            duration: current.duration,
+                            isPlayed: current.isPlayed
+                        )
                     )
                 ]
             ),
@@ -98,9 +108,20 @@ enum CarPlayLatestList {
                 title: episode.title,
                 subtitle: detail(for: episode, at: nil),
                 isPlaying: episode.persistentModelID == current,
-                artworkURL: artwork(for: episode)
+                artworkURL: artwork(for: episode),
+                progress: progress(for: episode)
             )
         }
+    }
+
+    /// One place, like `artwork`, so the Continue row and the Latest ones
+    /// cannot drift apart.
+    private static func progress(for episode: Episode) -> Double? {
+        PlaybackProgress.fraction(
+            stored: episode.playbackPosition,
+            duration: episode.duration,
+            isPlayed: episode.isPlayed
+        )
     }
 
     /// One place, so the Continue row cannot drift from the Latest ones.
@@ -126,7 +147,10 @@ enum CarPlayLatestList {
             episode.podcast?.title,
             EpisodeSubtitle.text(published: episode.publishedAt, duration: episode.duration),
         ]
-        if let position, position >= worthReporting {
+        // `nearStart` rather than a second constant saying 3: "0:00" is
+        // noise for the same reason resuming there would just replay the
+        // intro, and this row's bar is already drawn by that rule.
+        if let position, position >= PlaybackProgress.nearStart {
             parts.append(PlaybackTime.clock(position))
         }
         // Same separator `EpisodeSubtitle` uses internally, and the same
