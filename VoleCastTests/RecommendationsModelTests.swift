@@ -1,0 +1,207 @@
+import Testing
+import Foundation
+import SwiftData
+@testable import VoleCast
+
+@Suite(.serialized)
+@MainActor
+struct RecommendationsModelTests {
+
+    private struct StubDirectory: PodcastDirectory {
+        var byAuthor: [PodcastSearchResult] = []
+        var failure: (any Error)?
+
+        func search(term: String, limit: Int) async throws -> [PodcastSearchResult] { [] }
+        func shows(byAuthor author: String, limit: Int) async throws -> [PodcastSearchResult] {
+            if let failure { throw failure }
+            return byAuthor
+        }
+    }
+
+    private struct StubLookup: PodcastLookup {
+        var genresByID: [Int: [PodcastGenre]] = [:]
+
+        func podcast(collectionID: Int, storefront: String) async throws -> PodcastSearchResult? { nil }
+        func genres(for collectionIDs: [Int], storefront: String) async throws -> [Int: [PodcastGenre]] {
+            genresByID
+        }
+    }
+
+    private struct StubCharts: PodcastCharts {
+        var page = ChartPage(entries: [], storefront: "fi")
+        var failure: (any Error)?
+
+        func top(
+            limit: Int, genre: PodcastGenre?, storefront: String, revalidating: Bool
+        ) async throws -> ChartPage {
+            if let failure { throw failure }
+            return page
+        }
+    }
+
+    /// The author matters: `Podcast.author` defaults to "" and the publisher
+    /// section refuses to ask Apple about a show with no publisher, so a
+    /// fixture without one would make three of these tests pass while
+    /// exercising nothing.
+    private func subscribed(
+        _ context: ModelContext, _ name: String,
+        collectionID: Int, author: String = "Goalhanger"
+    ) -> Podcast {
+        let podcast = Podcast(
+            feedURL: "https://\(name).example.com/feed",
+            feedIdentity: "\(name).example.com/feed",
+            title: name
+        )
+        podcast.author = author
+        podcast.itunesCollectionID = collectionID
+        context.insert(podcast)
+        return podcast
+    }
+
+    private func entry(_ collectionID: Int, _ title: String) -> ChartEntry {
+        ChartEntry(
+            id: "itunes:\(collectionID)", collectionID: collectionID, rank: 1,
+            title: title, author: "a", artworkURL: nil, storefront: "fi"
+        )
+    }
+
+    private func model(
+        _ context: ModelContext,
+        directory: StubDirectory = StubDirectory(),
+        lookup: StubLookup = StubLookup(),
+        charts: StubCharts = StubCharts()
+    ) -> RecommendationsModel {
+        RecommendationsModel(
+            directory: directory, lookup: lookup, charts: charts,
+            context: context, storefront: "fi"
+        )
+    }
+
+    /// Nothing subscribed is not a failure, and the remedy is not Try Again.
+    @Test func withNoSubscriptionsItSaysSo() async {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let model = model(context)
+
+        await model.load()
+
+        #expect(model.state == .empty(.noSubscriptions))
+    }
+
+    /// Only pasted feeds: Apple has nothing to go on, and must not be asked.
+    @Test func withNothingFromApplesDirectoryItSaysSo() async {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let pasted = Podcast(
+            feedURL: "https://p.example.com/feed",
+            feedIdentity: "p.example.com/feed", title: "pasted"
+        )
+        context.insert(pasted)
+
+        let model = model(context)
+        await model.load()
+
+        #expect(model.state == .empty(.noAppleShows))
+    }
+
+    @Test func buildsAPublisherSection() async throws {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        _ = subscribed(context, "seed", collectionID: 1)
+
+        let model = model(context, directory: StubDirectory(byAuthor: [
+            PodcastSearchResult(
+                id: "itunes:99", title: "Sibling", author: "Goalhanger",
+                feedURL: URL(string: "https://sib.example.com/feed")!,
+                artworkURL: nil, episodeCount: nil, genres: [], itunesCollectionID: 99
+            )
+        ]))
+        await model.load()
+
+        guard case .loaded(let sections) = model.state else {
+            Issue.record("expected sections, got \(model.state)")
+            return
+        }
+        #expect(sections.contains { $0.rows.contains { $0.title == "Sibling" } })
+    }
+
+    /// The publisher section needs no play history at all, which is what keeps
+    /// the dead window to "before the first subscription".
+    @Test func aGenreSectionExcludesWhatIsAlreadySubscribedTo() async {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        _ = subscribed(context, "seed", collectionID: 1)
+        _ = subscribed(context, "owned", collectionID: 2)
+
+        let model = model(
+            context,
+            lookup: StubLookup(genresByID: [1: [PodcastGenre(id: 1526, name: "Daily News")]]),
+            charts: StubCharts(page: ChartPage(
+                entries: [entry(2, "Owned"), entry(3, "New")], storefront: "fi"
+            ))
+        )
+        await model.load()
+
+        guard case .loaded(let sections) = model.state else {
+            Issue.record("expected sections, got \(model.state)")
+            return
+        }
+        let titles = sections.flatMap { $0.rows.map(\.title) }
+        #expect(titles.contains("New"))
+        #expect(!titles.contains("Owned"))
+    }
+
+    /// One source failing must not empty the screen.
+    @Test func aFailingPublisherSearchLeavesTheGenreSections() async {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        _ = subscribed(context, "seed", collectionID: 1)
+
+        let model = model(
+            context,
+            directory: StubDirectory(failure: NetworkError.offline),
+            lookup: StubLookup(genresByID: [1: [PodcastGenre(id: 1526, name: "Daily News")]]),
+            charts: StubCharts(page: ChartPage(entries: [entry(3, "New")], storefront: "fi"))
+        )
+        await model.load()
+
+        guard case .loaded(let sections) = model.state else {
+            Issue.record("expected sections, got \(model.state)")
+            return
+        }
+        #expect(sections.flatMap { $0.rows.map(\.title) } == ["New"])
+    }
+
+    /// Everything suggested already being subscribed to is an outcome, not an
+    /// error — "Try Again" would promise something that cannot change.
+    @Test func everythingAlreadyOwnedIsItsOwnState() async {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        _ = subscribed(context, "seed", collectionID: 1)
+        _ = subscribed(context, "owned", collectionID: 2)
+
+        let model = model(
+            context,
+            lookup: StubLookup(genresByID: [1: [PodcastGenre(id: 1526, name: "Daily News")]]),
+            charts: StubCharts(page: ChartPage(entries: [entry(2, "Owned")], storefront: "fi"))
+        )
+        await model.load()
+
+        #expect(model.state == .empty(.nothingNew))
+    }
+
+    /// Returning to the tab must not blink through a spinner to redraw what it
+    /// had a moment ago — the same reason `DiscoverModel` memoizes.
+    @Test func doesNotRefetchWithinASession() async {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        _ = subscribed(context, "seed", collectionID: 1)
+
+        let model = model(context, directory: StubDirectory(byAuthor: [
+            PodcastSearchResult(
+                id: "itunes:99", title: "Sibling", author: "a",
+                feedURL: URL(string: "https://sib.example.com/feed")!,
+                artworkURL: nil, episodeCount: nil, genres: [], itunesCollectionID: 99
+            )
+        ]))
+        await model.load()
+        let first = model.state
+
+        await model.load()
+
+        #expect(model.state == first)
+    }
+}
