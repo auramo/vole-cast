@@ -35,7 +35,14 @@ enum Recommendations {
                 let firstPlays = playCounts[first.persistentModelID] ?? 0
                 let secondPlays = playCounts[second.persistentModelID] ?? 0
                 guard firstPlays == secondPlays else { return firstPlays > secondPlays }
-                return first.subscribedAt > second.subscribedAt
+                guard first.subscribedAt == second.subscribedAt else {
+                    return first.subscribedAt > second.subscribedAt
+                }
+                // Neither signal separates them, and the array arrives from a
+                // fetch whose order is unspecified. Something stable has to
+                // decide, or the screen reshuffles between launches for no
+                // reason the reader can see.
+                return first.feedIdentity < second.feedIdentity
             }
             .prefix(limit)
             .map { $0 }
@@ -58,7 +65,11 @@ enum Recommendations {
     }
 
     /// Chart entries worth showing. A chart gives a collection id and nothing
-    /// else, so that is all there is to match on.
+    /// else, so that is all there is to match on — a show subscribed to by
+    /// pasting its feed carries no collection id in the store, so if that show
+    /// charts it will not be excluded here and can appear as its own
+    /// suggestion. A chart entry carries no feed URL, so there is nothing else
+    /// to match on; a limitation to record, not a bug to fix.
     static func surviving(
         _ entries: [ChartEntry],
         excludingCollectionIDs excluded: Set<Int>

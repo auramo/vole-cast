@@ -85,6 +85,42 @@ struct RecommendationsTests {
         #expect(Recommendations.seeds(from: shows, playCounts: [:], limit: 2).count == 2)
     }
 
+    /// The filter must run before the limit. Reversed, the two pasted feeds
+    /// would take both slots and the one show Apple actually knows about
+    /// would be dropped. Every other seed test passes either way, so this is
+    /// the one that pins the order.
+    @Test func pastedFeedsCannotCrowdOutAnEligibleShow() {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let eligible = show(context, "eligible", collectionID: 7,
+                            subscribedAt: Date(timeIntervalSince1970: 1000))
+        let pastedA = show(context, "pastedA", collectionID: nil,
+                           subscribedAt: Date(timeIntervalSince1970: 8000))
+        let pastedB = show(context, "pastedB", collectionID: nil,
+                           subscribedAt: Date(timeIntervalSince1970: 9000))
+
+        let seeds = Recommendations.seeds(
+            from: [pastedA, pastedB, eligible], playCounts: [:], limit: 2
+        )
+
+        #expect(seeds.map(\.title) == ["eligible"])
+    }
+
+    /// Play count and subscribedAt can both tie — two shows added in the same
+    /// batch, neither played. The array order they arrive in is a fetch's,
+    /// and unspecified. Something stable has to break the tie, or the screen
+    /// reshuffles between launches for no reason the reader can see.
+    @Test func tiedShowsOrderStablyRegardlessOfInputOrder() {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let sameTime = Date(timeIntervalSince1970: 5000)
+        let alpha = show(context, "alpha", collectionID: 1, subscribedAt: sameTime)
+        let beta = show(context, "beta", collectionID: 2, subscribedAt: sameTime)
+
+        let forward = Recommendations.seeds(from: [alpha, beta], playCounts: [:], limit: 2)
+        let backward = Recommendations.seeds(from: [beta, alpha], playCounts: [:], limit: 2)
+
+        #expect(forward.map(\.title) == backward.map(\.title))
+    }
+
     // MARK: - Subgenre
 
     /// The values are Apple's own, recorded from a live response. A wrong id
