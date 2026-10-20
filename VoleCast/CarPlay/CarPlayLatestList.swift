@@ -38,12 +38,15 @@ enum CarPlaySelection: Equatable {
 /// The rules behind the car's list. Pure, so they can be checked without a
 /// car, a template or an interface controller.
 enum CarPlayLatestList {
-    static let continueTitle = "Continue"
-    static let latestTitle = "Latest"
-
-    /// Below this a position is not worth printing: "0:00" is noise, and an
-    /// episode this early has nothing to return to.
-    private static let worthReporting: TimeInterval = 3
+    /// `String(localized:)`, not a plain literal: a bare `String` never
+    /// reaches the string catalog, so these headings stayed English above
+    /// Finnish rows until a photograph of the car screen showed it.
+    ///
+    /// Computed rather than stored so they are read in the language that is
+    /// current when the car asks, not the one that was current the first time
+    /// anything touched this type.
+    static var continueTitle: String { String(localized: "Continue") }
+    static var latestTitle: String { String(localized: "Latest") }
 
     /// The whole list: what you were in the middle of, then what is new.
     ///
@@ -73,7 +76,7 @@ enum CarPlayLatestList {
                     CarPlayRow(
                         id: id,
                         title: current.title,
-                        subtitle: detail(for: current, at: position),
+                        subtitle: detail(for: current, at: position, percent: nil),
                         isPlaying: true,
                         artworkURL: artwork(for: current)
                     )
@@ -96,11 +99,21 @@ enum CarPlayLatestList {
             CarPlayRow(
                 id: episode.persistentModelID,
                 title: episode.title,
-                subtitle: detail(for: episode, at: nil),
+                subtitle: detail(for: episode, at: nil, percent: percent(for: episode)),
                 isPlaying: episode.persistentModelID == current,
                 artworkURL: artwork(for: episode)
             )
         }
+    }
+
+    /// How far in, for a row that has no clock to show.
+    private static func percent(for episode: Episode) -> String? {
+        guard let fraction = PlaybackProgress.fraction(
+            stored: episode.playbackPosition,
+            duration: episode.duration,
+            isPlayed: episode.isPlayed
+        ) else { return nil }
+        return PlaybackTime.percent(fraction)
     }
 
     /// One place, so the Continue row cannot drift from the Latest ones.
@@ -121,13 +134,28 @@ enum CarPlayLatestList {
     /// show shares the second one with the date and duration. Without it the
     /// car lists a column of episode titles and no sign of which show any of
     /// them came from.
-    private static func detail(for episode: Episode, at position: TimeInterval?) -> String {
+    ///
+    /// The two kinds of row say how far in you are differently, and the
+    /// difference is the promise each makes. The Continue row resumes at an
+    /// exact point, so it names that point as a clock. A Latest row makes no
+    /// such promise and only needs to convey how much is left, which a
+    /// percentage does in less room.
+    private static func detail(
+        for episode: Episode,
+        at position: TimeInterval?,
+        percent: String?
+    ) -> String {
         var parts = [
             episode.podcast?.title,
             EpisodeSubtitle.text(published: episode.publishedAt, duration: episode.duration),
         ]
-        if let position, position >= worthReporting {
+        // `nearStart` rather than a second constant saying 3: "0:00" is noise
+        // for the same reason resuming there would just replay the intro.
+        if let position, position >= PlaybackProgress.nearStart {
             parts.append(PlaybackTime.clock(position))
+        }
+        if let percent {
+            parts.append(percent)
         }
         // Same separator `EpisodeSubtitle` uses internally, and the same
         // reason for dropping empties: an orphan or an undated episode must

@@ -36,6 +36,23 @@ enum PlaybackTime {
 
     /// Truncates rather than rounds: reading 1:03 while the player sits at
     /// 1:03.9 is behind by less than a second, where 1:04 is ahead of it.
+    /// How far through as a percentage — "25%", or "25 %" where the language
+    /// puts a space there, which is why the locale is a parameter and the
+    /// string is not built by hand.
+    ///
+    /// Nil when it would round to nothing. "0 %" beside an episode reads as a
+    /// fault rather than as information, and the rounding is the only
+    /// threshold needed to decide that: below half a percent there is nothing
+    /// to say.
+    static func percent(_ fraction: Double, locale: Locale = .current) -> String? {
+        guard fraction.isFinite else { return nil }
+        let whole = Int((fraction * 100).rounded())
+        guard whole >= 1, whole <= 100 else { return nil }
+        // `Int` rather than the fraction, because the integer style does not
+        // multiply by a hundred a second time.
+        return whole.formatted(.percent.locale(locale))
+    }
+
     private static func wholeSeconds(_ seconds: TimeInterval) -> Int? {
         guard seconds.isFinite, seconds >= 0, seconds <= maxSeconds else { return nil }
         return Int(seconds)

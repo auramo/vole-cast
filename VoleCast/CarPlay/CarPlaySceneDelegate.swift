@@ -24,7 +24,12 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
     /// button with it and leaving the list pressed against the top of the
     /// screen. That button is the only route back to the player once
     /// something is playing, so the bar has to stay.
-    private let listTemplate = CPListTemplate(title: "Episodes", sections: [])
+    /// Localized for the same reason the section headings are: a plain
+    /// `String` never reaches the catalog, so this read "Episodes" above
+    /// Finnish rows.
+    private let listTemplate = CPListTemplate(
+        title: String(localized: "Episodes"), sections: []
+    )
 
     /// The episodes the rows on screen stand for, kept for as long as those
     /// rows are.

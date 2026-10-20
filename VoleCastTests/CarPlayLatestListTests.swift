@@ -135,10 +135,10 @@ struct CarPlayLatestListTests {
         )
 
         #expect(sections.count == 2)
-        #expect(sections.first?.title == "Continue")
+        #expect(sections.first?.title == CarPlayLatestList.continueTitle)
         #expect(sections.first?.rows.map(\.title) == ["Carried Over"])
         #expect(sections.first?.rows.first?.isPlaying == true)
-        #expect(sections.last?.title == "Latest")
+        #expect(sections.last?.title == CarPlayLatestList.latestTitle)
         #expect(sections.last?.rows.map(\.title) == ["Something Else"])
     }
 
@@ -190,7 +190,7 @@ struct CarPlayLatestListTests {
         let sections = CarPlayLatestList.sections(current: nil, at: 0, latest: [episode])
 
         #expect(sections.count == 1)
-        #expect(sections.first?.title == "Latest")
+        #expect(sections.first?.title == CarPlayLatestList.latestTitle)
         #expect(sections.first?.rows.map(\.title) == ["One"])
     }
 
@@ -237,7 +237,76 @@ struct CarPlayLatestListTests {
 
         let sections = CarPlayLatestList.sections(current: episode, at: 60, latest: [])
 
-        #expect(sections.first?.title == "Continue")
+        #expect(sections.first?.title == CarPlayLatestList.continueTitle)
         #expect(sections.first?.rows.first?.artworkURL == "https://c.example.com/show.jpg")
+    }
+
+    // MARK: - Progress
+
+    /// `CPListItem.playbackProgress` is the framework's own mark for this and
+    /// would have been the right answer, but a probe setting every row to 0.5
+    /// drew no bar at all on a real head unit, so the percentage goes in the
+    /// line we control. Asserted by shape: Finnish writes "25 %" and English
+    /// "25%", and the suite must pass in either.
+    @Test func aRowSaysHowFarInYouWere() {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let episode = makeEpisode(context, guid: "c1", title: "One")
+        // A quarter of the 2520 s `makeEpisode` gives it.
+        episode.playbackPosition = 630
+
+        let rows = CarPlayLatestList.rows(for: [episode], current: nil)
+
+        #expect(rows.first?.subtitle.hasSuffix("%") == true)
+        #expect(rows.first?.subtitle.contains("25") == true)
+    }
+
+    @Test(arguments: [
+        // Never started.
+        0.0,
+        // So early that resuming would replay the intro.
+        2.0,
+        // Within `nearEnd` of the end.
+        2515.0,
+    ])
+    func aRowWithNothingToResumeSaysNothing(_ position: Double) {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let episode = makeEpisode(context, guid: "c1", title: "One")
+        episode.playbackPosition = position
+
+        let rows = CarPlayLatestList.rows(for: [episode], current: nil)
+
+        #expect(rows.first?.subtitle.contains("%") == false)
+    }
+
+    /// The Continue row resumes at an exact point and names it, so a
+    /// percentage beside that clock would be the same fact twice.
+    @Test func theContinueRowSaysAClockAndNotAPercentage() {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let episode = makeEpisode(context, guid: "c1", title: "One")
+        episode.playbackPosition = 630
+
+        let sections = CarPlayLatestList.sections(current: episode, at: 1260, latest: [])
+        let subtitle = sections.first?.rows.first?.subtitle
+
+        #expect(subtitle?.contains("%") == false)
+        // A clock is the only part with a colon in it, in any language.
+        #expect(subtitle?.contains(":") == true)
+    }
+
+    // MARK: - Headings
+
+    /// They were plain `String` literals, so they never reached the catalog
+    /// and stayed English above Finnish rows. Compared against the constants
+    /// rather than against "Latest", which is exactly the assumption that hid
+    /// the bug — and would now fail on a Finnish machine.
+    @Test func theHeadingsAreTranslatable() {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let episode = makeEpisode(context, guid: "c1", title: "One")
+
+        let sections = CarPlayLatestList.sections(current: episode, at: 60, latest: [episode])
+
+        #expect(sections.first?.title == CarPlayLatestList.continueTitle)
+        #expect(sections.last?.title == CarPlayLatestList.latestTitle)
+        #expect(CarPlayLatestList.continueTitle != CarPlayLatestList.latestTitle)
     }
 }
