@@ -43,13 +43,39 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
     /// screen alive holding the same episodes decides it.
     private var shown: [PersistentIdentifier: Episode] = [:]
 
+    /// What the Latest section was built from, so a store change can be
+    /// compared against it rather than redrawn blindly.
+    private var shownLatest: [PersistentIdentifier] = []
+
+    /// The car's own, rather than the one `LatestEpisodesView` keeps in
+    /// `@State`: that one belongs to a screen that may never have existed, and
+    /// a scene cannot be handed anything.
+    private lazy var refresher = LibraryRefresh(
+        feedLoader: FeedLoader(),
+        context: PlaybackHost.shared.container.mainContext
+    )
+
+    private var storeObserver: (any NSObjectProtocol)?
+
+    /// Held, because its enabled state is the only progress the car shows.
+    private lazy var refreshButton = CPBarButton(
+        image: UIImage(systemName: "arrow.clockwise") ?? UIImage()
+    ) { [weak self] _ in
+        self?.refreshFeeds()
+    }
+
     func templateApplicationScene(
         _ scene: CPTemplateApplicationScene,
         didConnect interfaceController: CPInterfaceController
     ) {
         self.interfaceController = interfaceController
+        // Leading rather than trailing: the system puts its now-playing button
+        // on the trailing side of this same bar, and that button is the only
+        // route back to the player.
+        listTemplate.leadingNavigationBarButtons = [refreshButton]
         refreshRows()
         trackPlayer()
+        trackStore()
         interfaceController.setRootTemplate(listTemplate, animated: false, completion: nil)
     }
 
@@ -58,21 +84,21 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
         didDisconnectInterfaceController interfaceController: CPInterfaceController
     ) {
         self.interfaceController = nil
+        if let storeObserver {
+            NotificationCenter.default.removeObserver(storeObserver)
+        }
+        storeObserver = nil
     }
 
     // MARK: - The list
 
-    /// Built on connect, after a selection, and whenever the player changes
-    /// what it is holding — including from the phone, which is the case the
-    /// first version missed. Choosing an episode in History while the car
-    /// screen was up left the Continue row naming the previous one, even as
-    /// the right audio played and the system's own Now Playing screen was
-    /// correct, because that screen is fed by `MPNowPlayingInfoCenter` and
-    /// this list is not.
+    /// Built on connect, after a selection, whenever the player changes what
+    /// it is holding, and whenever the store changes which episodes the list
+    /// would show — so picking an episode on the phone, refreshing there, or
+    /// changing what is subscribed to all reach the car without unplugging it.
     ///
-    /// It still does not track the store, so a show subscribed to mid-drive
-    /// brings no new rows until the next connect. Rarer by far than reaching
-    /// for the phone, and it needs watching something other than the player.
+    /// None of that is covered by the system's own Now Playing screen, which
+    /// is fed by `MPNowPlayingInfoCenter` and knows nothing about this list.
     private func refreshRows() {
         let host = PlaybackHost.shared
         let latest = (try? host.container.mainContext.fetch(LatestEpisodes.descriptor())) ?? []
@@ -88,6 +114,7 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
         // collide by design — last one wins rather than trapping.
         shown = (latest + [current].compactMap { $0 })
             .reduce(into: [:]) { $0[$1.persistentModelID] = $1 }
+        shownLatest = latest.map(\.persistentModelID)
         listTemplate.updateSections(sections.map(section(for:)))
     }
 
@@ -142,6 +169,59 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
                 refreshRows()
                 trackPlayer()
             }
+        }
+    }
+
+    /// Watches the store, so what the phone does to the library arrives here.
+    /// `trackPlayer` cannot cover this: a feed gaining an episode leaves the
+    /// player untouched.
+    ///
+    /// The guard is the whole design. `didSave` fires on every write, and
+    /// `PlaybackProgress` writes a position every ten seconds while something
+    /// plays — rebuilding on each of those would replace every row under the
+    /// driver's hand six times a minute. So the identifiers the list would be
+    /// built from are compared against the ones it *was* built from, and
+    /// nothing is redrawn unless they differ. `fetchIdentifiers` rather than
+    /// `fetch`, because this runs often and the models are not wanted.
+    private func trackStore() {
+        storeObserver = NotificationCenter.default.addObserver(
+            forName: ModelContext.didSave, object: nil, queue: nil
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.rebuildIfTheListChanged()
+            }
+        }
+    }
+
+    private func rebuildIfTheListChanged() {
+        guard interfaceController != nil else { return }
+        let context = PlaybackHost.shared.container.mainContext
+        let latest = (try? context.fetchIdentifiers(LatestEpisodes.descriptor())) ?? []
+        guard latest != shownLatest else { return }
+        refreshRows()
+    }
+
+    // MARK: - Refreshing
+
+    /// The car's own way to ask, since a list template has no pull-to-refresh.
+    ///
+    /// `force`, like the phone's button and its pull-to-refresh — someone
+    /// asking is not the same as a screen appearing, and the half-hour
+    /// staleness gate would make the button do nothing most of the time.
+    ///
+    /// The disabled button is the only progress the car shows. There is no
+    /// spinner in a `CPBarButton`, and the rows themselves cannot say they are
+    /// being refetched; `showsSpinnerWhileEmpty` only covers an empty list.
+    /// What the driver sees is the button go dim and the list change when it
+    /// is done — or not change, which is also an answer.
+    private func refreshFeeds() {
+        guard !refresher.isRefreshing else { return }
+        refreshButton.isEnabled = false
+        Task { @MainActor in
+            await refresher.refreshAll(force: true)
+            refreshButton.isEnabled = true
+            // `didSave` does the redrawing, but only if something actually
+            // arrived. Nothing more is needed here.
         }
     }
 
