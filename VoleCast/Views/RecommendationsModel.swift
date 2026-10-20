@@ -175,6 +175,10 @@ final class RecommendationsModel {
         for seed: Podcast, ownedIDs: Set<Int>, ownedIdentities: Set<String>
     ) async throws -> RecommendationSection? {
         guard !seed.author.isEmpty else { return nil }
+        // Exclusion happens after this request comes back, so the request has
+        // to ask for more than a full section's worth: sized off every
+        // subscription rather than just this publisher's, since there is no
+        // way to know in advance how many of them this publisher made.
         let found = try await directory.shows(
             byAuthor: seed.author, limit: Self.rowsPerSection + ownedIDs.count
         )
@@ -201,6 +205,9 @@ final class RecommendationsModel {
     private func genreSection(
         for seed: Podcast, genre: PodcastGenre, excluding: Set<Int>
     ) async throws -> RecommendationSection? {
+        // The `+ 1` covers the seed's own show, which can appear in its own
+        // genre chart and will be excluded — without the extra slot that
+        // would leave a section one row short of a full one.
         let page = try await charts.top(
             limit: Self.rowsPerSection + excluding.count + 1,
             genre: genre,

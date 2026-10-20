@@ -10,9 +10,14 @@ struct RecommendationsModelTests {
     private struct StubDirectory: PodcastDirectory {
         var byAuthor: [PodcastSearchResult] = []
         var failure: (any Error)?
+        /// A class property on a value-type stub, so every copy of the stub
+        /// — including the one `RecommendationsModel` holds — shares one
+        /// counter with whatever copy the test kept to read it back from.
+        let authorCalls = Mutex<Int>(0)
 
         func search(term: String, limit: Int) async throws -> [PodcastSearchResult] { [] }
         func shows(byAuthor author: String, limit: Int) async throws -> [PodcastSearchResult] {
+            authorCalls.withLock { $0 += 1 }
             if let failure { throw failure }
             return byAuthor
         }
@@ -184,24 +189,28 @@ struct RecommendationsModelTests {
         #expect(model.state == .empty(.nothingNew))
     }
 
-    /// Returning to the tab must not blink through a spinner to redraw what it
-    /// had a moment ago — the same reason `DiscoverModel` memoizes.
+    /// Returning to the tab must not refetch. Asserted on a call count rather
+    /// than on the resulting state: the stubs answer identically every time,
+    /// so comparing states cannot tell a memo hit from a second fetch that
+    /// happened to agree.
     @Test func doesNotRefetchWithinASession() async {
         let context = ModelContext(VoleCastModelContainer.makeInMemory())
         _ = subscribed(context, "seed", collectionID: 1)
 
-        let model = model(context, directory: StubDirectory(byAuthor: [
+        let directory = StubDirectory(byAuthor: [
             PodcastSearchResult(
                 id: "itunes:99", title: "Sibling", author: "a",
                 feedURL: URL(string: "https://sib.example.com/feed")!,
                 artworkURL: nil, episodeCount: nil, genres: [], itunesCollectionID: 99
             )
-        ]))
+        ])
+        let model = model(context, directory: directory)
         await model.load()
         let first = model.state
 
         await model.load()
 
         #expect(model.state == first)
+        #expect(directory.authorCalls.current == 1)
     }
 }
