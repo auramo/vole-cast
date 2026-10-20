@@ -103,4 +103,87 @@ struct ITunesPodcastLookupTests {
             _ = try await lookup.podcast(collectionID: 1, storefront: "fi")
         }
     }
+
+    // MARK: - Genres
+
+    /// Apple returns `genreIds` and `genres` as parallel arrays. Pairing them
+    /// is what lets a subgenre be charted later without inventing a name.
+    @Test func decodesGenresForEachShow() throws {
+        let json = """
+        {"resultCount": 2, "results": [
+          {"collectionId": 1200361736, "genreIds": ["1526","26","1489"],
+           "genres": ["Daily News","Podcasts","News"]},
+          {"collectionId": 1028908750, "genreIds": ["1535","26","1533"],
+           "genres": ["Social Sciences","Podcasts","Science"]}
+        ]}
+        """.data(using: .utf8)!
+
+        let genres = try ITunesPodcastLookup.decodeGenres(json)
+
+        #expect(genres[1200361736]?.map(\.id) == [1526, 26, 1489])
+        #expect(genres[1200361736]?.first?.name == "Daily News")
+        #expect(genres[1028908750]?.map(\.id) == [1535, 26, 1533])
+    }
+
+    /// A show Apple files under nothing is not an error; it simply seeds no
+    /// section.
+    @Test func aShowWithNoGenresDecodesToAnEmptyList() throws {
+        let json = """
+        {"resultCount": 1, "results": [{"collectionId": 7}]}
+        """.data(using: .utf8)!
+
+        #expect(try ITunesPodcastLookup.decodeGenres(json)[7] == [])
+    }
+
+    @Test func rejectsAGenrePayloadThatIsNotJSON() {
+        #expect(throws: NetworkError.decodingFailed) {
+            try ITunesPodcastLookup.decodeGenres(Data("not json".utf8))
+        }
+    }
+
+    /// Ids are comma-joined into one request rather than one request per show,
+    /// and the store is the caller's.
+    @Test func asksForEveryIdInOneRequest() async throws {
+        let recorder = URLRecorder()
+        let lookup = ITunesPodcastLookup(http: recorder.client(returning: Data(#"{"results":[]}"#.utf8)))
+
+        _ = try await lookup.genres(for: [1, 2, 3], storefront: "fi")
+
+        let items = try #require(recorder.lastQueryItems)
+        #expect(items["id"] == "1,2,3")
+        #expect(items["country"] == "fi")
+    }
+
+    /// Nothing to ask about means no request at all.
+    @Test func asksNothingForAnEmptyList() async throws {
+        let recorder = URLRecorder()
+        let lookup = ITunesPodcastLookup(http: recorder.client(returning: Data()))
+
+        #expect(try await lookup.genres(for: [], storefront: "fi").isEmpty)
+        #expect(recorder.lastQueryItems == nil)
+    }
+}
+
+/// Captures the URL a call actually built, which is the part worth pinning:
+/// a wrong query item does not fail, it returns a valid answer to the wrong
+/// question.
+private final class URLRecorder: @unchecked Sendable {
+    private(set) var lastQueryItems: [String: String]?
+
+    func client(returning data: Data) -> FakeHTTPClient {
+        FakeHTTPClient { [self] request in
+            if let url = request.url,
+               let components = URLComponents(url: url, resolvingAgainstBaseURL: false) {
+                lastQueryItems = (components.queryItems ?? []).reduce(into: [:]) {
+                    $0[$1.name] = $1.value
+                }
+            }
+            // Built here rather than borrowed from `FakeHTTPClient`, whose
+            // own helper is private.
+            let response = HTTPURLResponse(
+                url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil
+            )!
+            return (data, response)
+        }
+    }
 }
