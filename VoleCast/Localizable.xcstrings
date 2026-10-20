@@ -191,6 +191,17 @@
         }
       }
     },
+    "Continue" : {
+      "comment" : "Heading over the episode the car should carry on with.",
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jatka"
+          }
+        }
+      }
+    },
     "Copy Feed URL" : {
       "localizations" : {
         "fi" : {

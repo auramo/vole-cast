@@ -179,8 +179,9 @@ struct PlaybackProgressTests {
         #expect(PlaybackProgress.fraction(stored: 900, duration: 0, isPlayed: false) == nil)
     }
 
-    /// A `CPListItem` takes 0...1 and the phone's ring trims a circle, so a
-    /// value outside that range is a drawing bug in either.
+    /// The phone's ring trims a circle with it and the car's percentage
+    /// multiplies it by a hundred, so a value outside 0...1 is a drawing bug
+    /// in one and a nonsense reading in the other.
     @Test func theFractionStaysInRange() {
         for stored in [3.0, 100, 899, 1700] {
             let f = PlaybackProgress.fraction(stored: stored, duration: 1800, isPlayed: false)

@@ -24,7 +24,12 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
     /// button with it and leaving the list pressed against the top of the
     /// screen. That button is the only route back to the player once
     /// something is playing, so the bar has to stay.
-    private let listTemplate = CPListTemplate(title: "Episodes", sections: [])
+    /// Localized for the same reason the section headings are: a plain
+    /// `String` never reaches the catalog, so this read "Episodes" above
+    /// Finnish rows.
+    private let listTemplate = CPListTemplate(
+        title: String(localized: "Episodes"), sections: []
+    )
 
     /// The episodes the rows on screen stand for, kept for as long as those
     /// rows are.
@@ -95,9 +100,6 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
     private func item(for row: CarPlayRow) -> CPListItem {
         let item = CPListItem(text: row.title, detailText: row.subtitle)
         item.isPlaying = row.isPlaying
-        // Zero is how `CPListItem` says "no bar", which is also the default,
-        // so a row with nothing to show is left looking untouched.
-        item.playbackProgress = row.progress ?? 0
         // Set before the real picture is asked for, so the row is its final
         // size from the first frame. `ArtworkView` keeps a placeholder for the
         // same reason on the phone, and a list reflowing under a glance
