@@ -57,6 +57,11 @@ struct ITunesPodcastLookup: PodcastLookup {
     /// `genreIds` and `genres` arrive as parallel arrays. Zipping them is what
     /// keeps a subgenre's name attached to its id; the ids alone would need a
     /// table of roughly a hundred names this app does not have.
+    ///
+    /// If the two arrays were ever unequal length, `zip` would silently drop
+    /// whichever trailing ids have no matching name — deliberately: a genre
+    /// section cannot be titled without a name, so an id that arrived without
+    /// one is not worth keeping.
     static func decodeGenres(_ data: Data) throws -> [Int: [PodcastGenre]] {
         struct Response: Decodable { let results: [Entry] }
         struct Entry: Decodable {

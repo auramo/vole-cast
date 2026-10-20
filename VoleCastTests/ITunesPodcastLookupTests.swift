@@ -135,6 +135,21 @@ struct ITunesPodcastLookupTests {
         #expect(try ITunesPodcastLookup.decodeGenres(json)[7] == [])
     }
 
+    /// `genreIds` and `genres` are supposed to arrive the same length. If
+    /// Apple ever sends them mismatched, zipping truncates to the shorter
+    /// array rather than erroring — deliberately: an id with no matching name
+    /// cannot title a section, so it is dropped rather than kept half-formed.
+    @Test func dropsATrailingGenreIDThatHasNoMatchingName() throws {
+        let json = """
+        {"resultCount": 1, "results": [
+          {"collectionId": 7, "genreIds": ["1526","26","1489"],
+           "genres": ["Daily News","Podcasts"]}
+        ]}
+        """.data(using: .utf8)!
+
+        #expect(try ITunesPodcastLookup.decodeGenres(json)[7]?.map(\.id) == [1526, 26])
+    }
+
     @Test func rejectsAGenrePayloadThatIsNotJSON() {
         #expect(throws: NetworkError.decodingFailed) {
             try ITunesPodcastLookup.decodeGenres(Data("not json".utf8))
@@ -162,21 +177,43 @@ struct ITunesPodcastLookupTests {
         #expect(try await lookup.genres(for: [], storefront: "fi").isEmpty)
         #expect(recorder.lastQueryItems == nil)
     }
+
+    /// Apple answering for only some of the ids asked about is the realistic
+    /// case, not an edge case. The id it stayed silent on must be absent from
+    /// the dictionary, not present with an empty list — those mean different
+    /// things to a caller deciding whether to retry.
+    @Test func leavesAnIDAppleDidNotAnswerForOutOfTheDictionary() async throws {
+        let json = """
+        {"resultCount": 1, "results": [
+          {"collectionId": 1, "genreIds": ["1526"], "genres": ["Daily News"]}
+        ]}
+        """
+        let lookup = ITunesPodcastLookup(
+            http: FakeHTTPClient.ok(Data(json.utf8))
+        )
+
+        let genres = try await lookup.genres(for: [1, 2, 3], storefront: "fi")
+
+        #expect(genres[1]?.map(\.id) == [1526])
+        #expect(genres[2] == nil)
+        #expect(genres[3] == nil)
+    }
 }
 
 /// Captures the URL a call actually built, which is the part worth pinning:
 /// a wrong query item does not fail, it returns a valid answer to the wrong
 /// question.
-private final class URLRecorder: @unchecked Sendable {
-    private(set) var lastQueryItems: [String: String]?
+private final class URLRecorder {
+    private let items = Mutex<[String: String]?>(nil)
+    var lastQueryItems: [String: String]? { items.current }
 
     func client(returning data: Data) -> FakeHTTPClient {
-        FakeHTTPClient { [self] request in
+        FakeHTTPClient { [items] request in
             if let url = request.url,
                let components = URLComponents(url: url, resolvingAgainstBaseURL: false) {
-                lastQueryItems = (components.queryItems ?? []).reduce(into: [:]) {
+                _ = items.exchange((components.queryItems ?? []).reduce(into: [:]) {
                     $0[$1.name] = $1.value
-                }
+                })
             }
             // Built here rather than borrowed from `FakeHTTPClient`, whose
             // own helper is private.
