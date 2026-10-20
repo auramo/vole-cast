@@ -16,6 +16,8 @@ struct SearchModelTests {
             if let error { throw error }
             return results
         }
+
+        func shows(byAuthor author: String, limit: Int) async throws -> [PodcastSearchResult] { [] }
     }
 
     private func result(_ title: String) -> PodcastSearchResult {
