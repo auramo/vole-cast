@@ -83,4 +83,52 @@ struct ITunesPodcastDirectoryTests {
             try await directory.search(term: "anything", limit: 5)
         }
     }
+
+    // MARK: - By publisher
+
+    /// `artistTerm` is the whole point: without it this is an ordinary search
+    /// and a publisher's name matches anything that mentions it.
+    @Test func searchesByPublisherRatherThanByWords() async throws {
+        let recorder = DirectoryURLRecorder()
+        let directory = ITunesPodcastDirectory(
+            http: recorder.client(returning: Data(#"{"results":[]}"#.utf8)),
+            storefront: "fi"
+        )
+
+        _ = try await directory.shows(byAuthor: "Goalhanger", limit: 5)
+
+        let items = try #require(recorder.lastQueryItems)
+        #expect(items["attribute"] == "artistTerm")
+        #expect(items["term"] == "Goalhanger")
+        #expect(items["country"] == "fi")
+        #expect(items["limit"] == "5")
+        #expect(items["entity"] == "podcast")
+    }
+}
+
+private final class DirectoryURLRecorder {
+    /// The test target's own `Mutex`, which exists for exactly this — a
+    /// `@Sendable` handler that has to carry state. Capturing the box rather
+    /// than `self` also means this class needs no Sendable conformance of its
+    /// own, unchecked or otherwise.
+    private let items = Mutex<[String: String]?>(nil)
+
+    var lastQueryItems: [String: String]? { items.current }
+
+    func client(returning data: Data) -> FakeHTTPClient {
+        FakeHTTPClient { [items] request in
+            if let url = request.url,
+               let components = URLComponents(url: url, resolvingAgainstBaseURL: false) {
+                _ = items.exchange((components.queryItems ?? []).reduce(into: [:]) {
+                    $0[$1.name] = $1.value
+                })
+            }
+            // Built here rather than borrowed from `FakeHTTPClient`, whose
+            // own helper is private.
+            let response = HTTPURLResponse(
+                url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil
+            )!
+            return (data, response)
+        }
+    }
 }

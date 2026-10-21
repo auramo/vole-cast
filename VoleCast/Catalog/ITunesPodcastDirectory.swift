@@ -42,6 +42,29 @@ struct ITunesPodcastDirectory: PodcastDirectory {
         return try Self.decodeResults(data)
     }
 
+    func shows(byAuthor author: String, limit: Int) async throws -> [PodcastSearchResult] {
+        var components = URLComponents(string: "https://itunes.apple.com/search")
+        components?.queryItems = [
+            URLQueryItem(name: "media", value: "podcast"),
+            URLQueryItem(name: "entity", value: "podcast"),
+            // Without this the publisher's name is matched as words, which
+            // returns every show that happens to mention it.
+            URLQueryItem(name: "attribute", value: "artistTerm"),
+            URLQueryItem(name: "country", value: storefront),
+            URLQueryItem(name: "limit", value: String(limit)),
+            URLQueryItem(name: "term", value: author),
+        ]
+        guard let url = components?.url else { throw NetworkError.invalidURL }
+
+        let (data, _) = try await http.data(
+            for: URLRequest(url: url),
+            maxBytes: AppURLSession.jsonByteLimit
+        )
+        // The response is the search endpoint's own shape, so the decoder and
+        // its "drop anything without a usable feed" rule are reused whole.
+        return try Self.decodeResults(data)
+    }
+
     /// Pure, so the response shape is testable without a network or a fake.
     static func decodeResults(_ data: Data) throws -> [PodcastSearchResult] {
         let response: SearchResponse

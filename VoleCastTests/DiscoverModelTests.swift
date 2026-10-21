@@ -177,5 +177,6 @@ struct DiscoverModelTests {
     private struct StubDirectory: PodcastDirectory {
         var results: [PodcastSearchResult] = []
         func search(term: String, limit: Int) async throws -> [PodcastSearchResult] { results }
+        func shows(byAuthor author: String, limit: Int) async throws -> [PodcastSearchResult] { [] }
     }
 }

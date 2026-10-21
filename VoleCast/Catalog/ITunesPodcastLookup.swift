@@ -33,4 +33,57 @@ struct ITunesPodcastLookup: PodcastLookup {
         )
         return try ITunesPodcastDirectory.decodeResults(data).first
     }
+
+    func genres(for collectionIDs: [Int], storefront: String) async throws -> [Int: [PodcastGenre]] {
+        guard !collectionIDs.isEmpty else { return [:] }
+
+        var components = URLComponents(string: "https://itunes.apple.com/lookup")
+        components?.queryItems = [
+            URLQueryItem(name: "id", value: collectionIDs.map(String.init).joined(separator: ",")),
+            URLQueryItem(name: "entity", value: "podcast"),
+            URLQueryItem(name: "country", value: storefront),
+        ]
+        guard let url = components?.url else { throw NetworkError.invalidURL }
+
+        let (data, _) = try await http.data(
+            for: URLRequest(url: url),
+            maxBytes: AppURLSession.jsonByteLimit
+        )
+        return try Self.decodeGenres(data)
+    }
+
+    /// Pure, so the payload shape is testable without a network or a fake.
+    ///
+    /// `genreIds` and `genres` arrive as parallel arrays. Zipping them is what
+    /// keeps a subgenre's name attached to its id; the ids alone would need a
+    /// table of roughly a hundred names this app does not have.
+    ///
+    /// If the two arrays were ever unequal length, `zip` would silently drop
+    /// whichever trailing ids have no matching name — deliberately: a genre
+    /// section cannot be titled without a name, so an id that arrived without
+    /// one is not worth keeping.
+    static func decodeGenres(_ data: Data) throws -> [Int: [PodcastGenre]] {
+        struct Response: Decodable { let results: [Entry] }
+        struct Entry: Decodable {
+            let collectionId: Int?
+            let genreIds: [String]?
+            let genres: [String]?
+        }
+
+        let decoded: Response
+        do {
+            decoded = try JSONDecoder().decode(Response.self, from: data)
+        } catch {
+            throw NetworkError.decodingFailed
+        }
+
+        return decoded.results.reduce(into: [:]) { out, entry in
+            guard let collectionID = entry.collectionId else { return }
+            let ids = entry.genreIds ?? []
+            let names = entry.genres ?? []
+            out[collectionID] = zip(ids, names).compactMap { id, name in
+                Int(id).map { PodcastGenre(id: $0, name: name) }
+            }
+        }
+    }
 }
