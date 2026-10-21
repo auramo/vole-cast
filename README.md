@@ -27,8 +27,10 @@ You can find a show by name, or paste an RSS feed URL, subscribe to it, browse
 its episodes and play them, with the lock-screen controls and
 resume-where-you-left-off you'd expect. Alongside the search there is a
 Discover list: Apple's top podcasts for a country you choose, overall or by
-genre. Search and pasting a URL are the paths that matter, and they are built
-so that Discover failing cannot touch them.
+genre. A third segment, For You, suggests shows based on what you already
+subscribe to and actually play. Search and pasting a URL are the paths that
+matter, and they are built so that neither Discover nor For You failing can
+touch them.
 
 Built with SwiftUI and SwiftData, with no third-party dependencies — feeds are
 parsed with Foundation's `XMLParser`.
@@ -57,6 +59,41 @@ Podme or Spotify have no feed, so no podcast app can reach them.
 be added without the UI knowing. That one needs an API key; if it is ever added,
 the key belongs in a git-ignored xcconfig with a committed template, the same
 way `Config/Local.xcconfig` works.
+
+## Suggestions
+
+The third segment in the Search tab, For You, has no box to type into. It
+shows sections that each name their own reason: more shows from a publisher
+you already follow, and shows popular in the narrow genres of the shows you
+actually play.
+
+Which of your shows seeds a section is ranked by episodes actually played, not
+merely subscribed to — a show you subscribed to and never opened says less
+about your taste than one you've worked through. Before anything has been
+played, ranking falls back to how recently you subscribed. That fallback is
+why a section is titled "Like X" rather than "Because you listen to X": the
+warmer wording would be false on a fresh install, where nothing has been
+played yet.
+
+Genre has to mean subgenre for this to be worth anything. Apple files The
+Daily under both News and Daily News; charting the first just suggests
+whatever is popular in the country, and charting the second suggests other
+daily news shows.
+
+It uses only keyless public Apple endpoints — the same iTunes search and chart
+services the rest of the app already calls — so there is no API key, no
+server, and nothing about your listening is ever sent anywhere. That rules out
+Listen Notes and Podcast Index: both need a key, which would ship inside the
+app since the repo is public, and both would mean sending show identifiers to
+a third party.
+
+A show added by pasting a feed URL seeds nothing, because Apple has no
+identifier for it. That's deliberate, not a gap to close: a private feed
+carries a token in its address, and it is never handed to Apple, the same
+reason a pasted URL stays out of search.
+
+The honest limitation: charts are top-N lists, so this suggests popular shows
+in niches you already like, not obscure ones outside them.
 
 ## How playback works
 
@@ -140,14 +177,14 @@ ever point one way — parsing knows nothing about the network, and nothing belo
 | Folder | Holds | May use |
 | --- | --- | --- |
 | `Models/` | `Podcast`, `Episode` | SwiftData |
-| `Persistence/` | the container, the `LatestEpisodes` and `ListeningHistory` queries, plus `Subscriptions` and `PlaybackProgress` — the only writers to the store | SwiftData |
+| `Persistence/` | the container, the `LatestEpisodes` and `ListeningHistory` queries, `ListeningTotals`, plus `Subscriptions` and `PlaybackProgress` — the only writers to the store | SwiftData |
 | `FeedParsing/` | `FeedParser` and the pure helpers it needs (`RSSDate`, `EpisodeDuration`, `FeedURL`, `ParsedFeed`) | nothing but Foundation |
 | `Networking/` | `HTTPClient`, `AppURLSession`, `NetworkError` — transport, no podcast knowledge | URLSession |
-| `Catalog/` | where shows come from: `PodcastDirectory` and `PodcastCharts` with their Apple implementations, `PodcastLookup`, `PodcastGenre`, `Storefront`, and `FeedLoader` | Networking + FeedParsing |
+| `Catalog/` | where shows come from: `PodcastDirectory` and `PodcastCharts` with their Apple implementations, `PodcastLookup`, `PodcastGenre`, `Storefront`, `FeedLoader`, and `Recommendations` | Networking + FeedParsing |
 | `Formatting/` | turning stored values into display strings | Foundation |
 | `Playback/` | `AudioPlayback` and its AVPlayer engine, the audio session, now-playing and remote commands. Speaks in `PlayableEpisode` values, never `Episode` | AVFoundation, MediaPlayer, UIKit |
 | `Player/` | `PlayerModel` — the one thing that sees both an `Episode` and the engine, and the only code both UIs share | SwiftData, `Playback/` |
-| `Views/` | SwiftUI screens, `SearchModel` and `DiscoverModel` | everything above |
+| `Views/` | SwiftUI screens, `SearchModel`, `DiscoverModel` and `RecommendationsModel` | everything above |
 
 Services reach the views through the environment (`Views/Environment+Services.swift`),
 so no view names a concrete implementation and previews and tests can substitute
