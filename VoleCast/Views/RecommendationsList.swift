@@ -68,7 +68,11 @@ struct RecommendationsList: View {
             ContentUnavailableView {
                 Label("Nothing New to Suggest", systemImage: "checkmark.circle")
             } description: {
-                Text("Everything we would suggest, you already follow.")
+                // Also shown when Apple's lookup simply returned no genres for
+                // your shows — nothing was suggested at all, not "you already
+                // follow everything we'd suggest" — so the wording has to hold
+                // for both causes rather than naming the wrong one.
+                Text("Nothing new to suggest just now.")
             }
         }
     }

@@ -214,6 +214,60 @@ struct RecommendationsModelTests {
         #expect(directory.authorCalls.current == 1)
     }
 
+    /// The first-run flow has to be able to recover. Someone opens this with
+    /// nothing subscribed, takes the Find Shows button, subscribes, and comes
+    /// back — memoizing the empty answer would leave them staring at it for
+    /// the rest of the session.
+    @Test func subscribingAfterAnEmptyVisitIsNoticed() async {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let model = model(context, directory: StubDirectory(byAuthor: [
+            PodcastSearchResult(
+                id: "itunes:99", title: "Sibling", author: "a",
+                feedURL: URL(string: "https://sib.example.com/feed")!,
+                artworkURL: nil, episodeCount: nil, genres: [], itunesCollectionID: 99
+            )
+        ]))
+
+        await model.load()
+        #expect(model.state == .empty(.noSubscriptions))
+
+        _ = subscribed(context, "seed", collectionID: 1)
+        await model.load()
+
+        guard case .loaded(let sections) = model.state else {
+            Issue.record("expected suggestions after subscribing, got \(model.state)")
+            return
+        }
+        #expect(!sections.isEmpty)
+    }
+
+    /// Two news shows, entirely ordinary, can share a subgenre. Charting it
+    /// twice would both waste a request and hand the list two sections with
+    /// the same id — a SwiftUI diffing hazard `ForEach(sections)` should
+    /// never see.
+    @Test func twoSeedsSharingASubgenreProduceOneSectionNotTwo() async {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        _ = subscribed(context, "first", collectionID: 1, author: "")
+        _ = subscribed(context, "second", collectionID: 2, author: "")
+
+        let model = model(
+            context,
+            lookup: StubLookup(genresByID: [
+                1: [PodcastGenre(id: 1526, name: "Daily News")],
+                2: [PodcastGenre(id: 1526, name: "Daily News")],
+            ]),
+            charts: StubCharts(page: ChartPage(entries: [entry(3, "New")], storefront: "fi"))
+        )
+        await model.load()
+
+        guard case .loaded(let sections) = model.state else {
+            Issue.record("expected sections, got \(model.state)")
+            return
+        }
+        #expect(sections.count == 1)
+        #expect(Set(sections.map(\.id)).count == sections.count)
+    }
+
     // MARK: - Isolation
 
     /// The guarantee this screen is arranged around: a suggestions source

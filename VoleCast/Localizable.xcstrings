@@ -302,16 +302,6 @@
         }
       }
     },
-    "Everything we would suggest, you already follow." : {
-      "localizations" : {
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Seuraat jo kaikkea, mitä voisimme ehdottaa."
-          }
-        }
-      }
-    },
     "Fiction" : {
       "localizations" : {
         "fi" : {
@@ -658,6 +648,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ei vielä mitään"
+          }
+        }
+      }
+    },
+    "Nothing new to suggest just now." : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ei juuri nyt uutta ehdotettavaa."
           }
         }
       }

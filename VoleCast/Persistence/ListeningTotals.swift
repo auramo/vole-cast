@@ -18,10 +18,10 @@ enum ListeningTotals {
     /// Keyed by the show's identifier. A show with nothing played is absent
     /// rather than zero, which is the distinction the ranking rests on.
     static func playCounts(in context: ModelContext) -> [PersistentIdentifier: Int] {
-        // The same marker `ListeningHistory` uses: `lastPlayedAt` is the only
-        // thing that says an episode was ever played.
+        // `ListeningHistory.playedPredicate`: the same definition of
+        // "played", not a second copy of it — see its doc comment for why.
         let descriptor = FetchDescriptor<Episode>(
-            predicate: #Predicate { $0.lastPlayedAt != nil && $0.podcast != nil }
+            predicate: ListeningHistory.playedPredicate
         )
 
         // A fetch failure here must not be able to pass for "nothing has ever

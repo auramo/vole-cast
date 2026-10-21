@@ -81,11 +81,15 @@ whatever is popular in the country, and charting the second suggests other
 daily news shows.
 
 It uses only keyless public Apple endpoints — the same iTunes search and chart
-services the rest of the app already calls — so there is no API key, no
-server, and nothing about your listening is ever sent anywhere. That rules out
-Listen Notes and Podcast Index: both need a key, which would ship inside the
-app since the repo is public, and both would mean sending show identifiers to
-a third party.
+services the rest of the app already calls — so there is no API key and no
+server of its own. What does leave the device is the public Apple iTunes
+collection ids of your top shows, sent to Apple's lookup to find their genres,
+and your most-played show's publisher name, sent to Apple's search to find
+more from them. Nothing else about your listening goes anywhere, and neither
+request goes to anyone but Apple. That rules out Listen Notes and Podcast
+Index: both need a key, which would ship inside the app since the repo is
+public, and both would mean sending show identifiers to a third party rather
+than to Apple, which already has them.
 
 A show added by pasting a feed URL seeds nothing, because Apple has no
 identifier for it. That's deliberate, not a gap to close: a private feed
@@ -180,7 +184,7 @@ ever point one way — parsing knows nothing about the network, and nothing belo
 | `Persistence/` | the container, the `LatestEpisodes` and `ListeningHistory` queries, `ListeningTotals`, plus `Subscriptions` and `PlaybackProgress` — the only writers to the store | SwiftData |
 | `FeedParsing/` | `FeedParser` and the pure helpers it needs (`RSSDate`, `EpisodeDuration`, `FeedURL`, `ParsedFeed`) | nothing but Foundation |
 | `Networking/` | `HTTPClient`, `AppURLSession`, `NetworkError` — transport, no podcast knowledge | URLSession |
-| `Catalog/` | where shows come from: `PodcastDirectory` and `PodcastCharts` with their Apple implementations, `PodcastLookup`, `PodcastGenre`, `Storefront`, `FeedLoader`, and `Recommendations` | Networking + FeedParsing |
+| `Catalog/` | where shows come from: `PodcastDirectory` and `PodcastCharts` with their Apple implementations, `PodcastLookup`, `PodcastGenre`, `Storefront`, `FeedLoader`, and `Recommendations` | Networking + FeedParsing + SwiftData — `Recommendations` is a pure rule set that takes `[Podcast]`, the same precedent `CarPlayLatestList` sets for pure rules taking model types |
 | `Formatting/` | turning stored values into display strings | Foundation |
 | `Playback/` | `AudioPlayback` and its AVPlayer engine, the audio session, now-playing and remote commands. Speaks in `PlayableEpisode` values, never `Episode` | AVFoundation, MediaPlayer, UIKit |
 | `Player/` | `PlayerModel` — the one thing that sees both an `Episode` and the engine, and the only code both UIs share | SwiftData, `Playback/` |

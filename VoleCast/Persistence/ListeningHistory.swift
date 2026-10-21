@@ -16,11 +16,20 @@ import SwiftData
 enum ListeningHistory {
     static let defaultLimit = 100
 
+    /// The definition of "played", shared with `ListeningTotals`. One
+    /// predicate rather than two copies of it: this project has already
+    /// shipped the same threshold under two names once, and a predicate is
+    /// easier to fork by accident than a number is.
+    ///
+    /// `lastPlayedAt` is the only marker that anything was played, and an
+    /// orphan with no show has neither a name nor artwork to show.
+    static let playedPredicate = #Predicate<Episode> {
+        $0.lastPlayedAt != nil && $0.podcast != nil
+    }
+
     static func descriptor(limit: Int = defaultLimit) -> FetchDescriptor<Episode> {
         var descriptor = FetchDescriptor<Episode>(
-            // `lastPlayedAt` is the only marker that anything was played, and
-            // an orphan with no show has neither a name nor artwork to show.
-            predicate: #Predicate { $0.lastPlayedAt != nil && $0.podcast != nil },
+            predicate: playedPredicate,
             sortBy: [SortDescriptor(\.lastPlayedAt, order: .reverse)]
         )
         descriptor.fetchLimit = limit

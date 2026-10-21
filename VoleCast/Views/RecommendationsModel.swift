@@ -90,10 +90,15 @@ final class RecommendationsModel {
     private func rebuild() async {
         state = .loading
 
+        // `built` is NOT set on either early return below: it means "the
+        // network work was done", not "a question was answered once". Both
+        // of these are a local store query, not a request, so re-checking
+        // them is free — and memoizing the answer here is exactly what would
+        // strand someone who opens this with nothing subscribed, subscribes
+        // from the Find Shows button, and comes back expecting suggestions.
         let subscriptions = (try? context.fetch(FetchDescriptor<Podcast>())) ?? []
         guard !subscriptions.isEmpty else {
             state = .empty(.noSubscriptions)
-            built = true
             return
         }
 
@@ -104,7 +109,6 @@ final class RecommendationsModel {
         )
         guard !seeds.isEmpty else {
             state = .empty(.noAppleShows)
-            built = true
             return
         }
 
@@ -134,17 +138,27 @@ final class RecommendationsModel {
 
         var genres: [Int: [PodcastGenre]] = [:]
         do {
+            // Sorted rather than left in play-count order: the unsorted order
+            // would put your most-played show's id first on the wire, which
+            // leaks a ranking this request has no business revealing.
             genres = try await lookup.genres(
-                for: seeds.compactMap(\.itunesCollectionID), storefront: storefront
+                for: seeds.compactMap(\.itunesCollectionID).sorted(), storefront: storefront
             )
         } catch {
             failure = failure ?? NetworkError(from: error)
         }
 
+        // Two seeds can share a subgenre — two news shows is entirely
+        // ordinary — and charting it twice would both waste a request and
+        // hand `ForEach(sections)` two sections with the same "genre:\(id)"
+        // id, which is a SwiftUI diffing hazard. One chart per genre.
+        var chartedGenres: Set<Int> = []
         for seed in seeds where sections.count < Self.maximumSections {
             guard let collectionID = seed.itunesCollectionID,
-                  let genre = Recommendations.subgenre(from: genres[collectionID] ?? [])
+                  let genre = Recommendations.subgenre(from: genres[collectionID] ?? []),
+                  !chartedGenres.contains(genre.id)
             else { continue }
+            chartedGenres.insert(genre.id)
 
             do {
                 if let section = try await genreSection(
@@ -179,8 +193,12 @@ final class RecommendationsModel {
         // to ask for more than a full section's worth: sized off every
         // subscription rather than just this publisher's, since there is no
         // way to know in advance how many of them this publisher made.
+        // Clamped to 200: Apple's search endpoint rejects a larger limit, and
+        // without the clamp someone with ~195 Apple-sourced subscriptions
+        // would silently lose the whole publisher section to a rejected
+        // request rather than just an oversized one.
         let found = try await directory.shows(
-            byAuthor: seed.author, limit: Self.rowsPerSection + ownedIDs.count
+            byAuthor: seed.author, limit: min(Self.rowsPerSection + ownedIDs.count, 200)
         )
 
         let rows = Recommendations.surviving(
@@ -205,11 +223,12 @@ final class RecommendationsModel {
     private func genreSection(
         for seed: Podcast, genre: PodcastGenre, excluding: Set<Int>
     ) async throws -> RecommendationSection? {
-        // The `+ 1` covers the seed's own show, which can appear in its own
-        // genre chart and will be excluded — without the extra slot that
-        // would leave a section one row short of a full one.
+        // Sized off every excluded show, not just this genre's, for the same
+        // reason `publisherSection` is: there is no way to know in advance how
+        // many of them chart here. Clamped to 200, the most Apple's chart
+        // endpoint will return for one request.
         let page = try await charts.top(
-            limit: Self.rowsPerSection + excluding.count + 1,
+            limit: min(Self.rowsPerSection + excluding.count, 200),
             genre: genre,
             storefront: storefront,
             revalidating: false
