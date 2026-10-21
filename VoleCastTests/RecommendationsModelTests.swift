@@ -213,4 +213,54 @@ struct RecommendationsModelTests {
         #expect(model.state == first)
         #expect(directory.authorCalls.current == 1)
     }
+
+    // MARK: - Isolation
+
+    /// The guarantee this whole screen is arranged around: searching by name
+    /// and opening a pasted feed URL must keep working with every suggestion
+    /// source dead. They are the two things people actually depend on.
+    @Test func everySuggestionSourceFailingLeavesSearchAlone() async {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        _ = subscribed(context, "seed", collectionID: 1)
+
+        let suggestions = model(
+            context,
+            directory: StubDirectory(failure: NetworkError.offline),
+            lookup: StubLookup(),
+            charts: StubCharts(failure: NetworkError.offline)
+        )
+        await suggestions.load()
+
+        // Dead, and honest about why: with every source down this is a
+        // failure with a Try Again, not "you already follow everything".
+        #expect(suggestions.state == .failed(.offline))
+
+        // And the search half, which shares only the tab, is untouched.
+        let search = SearchModel(
+            directory: WorkingDirectory(), debounce: .milliseconds(0)
+        )
+        search.query = "something"
+        await search.search("something")
+
+        guard case .results(let results) = search.state else {
+            Issue.record("search should still work, got \(search.state)")
+            return
+        }
+        #expect(results.count == 1)
+
+        // As is recognising a pasted feed URL, which never touches a service.
+        search.query = "https://example.com/feed.xml"
+        #expect(search.typedFeedURL != nil)
+    }
+
+    private struct WorkingDirectory: PodcastDirectory {
+        func search(term: String, limit: Int) async throws -> [PodcastSearchResult] {
+            [PodcastSearchResult(
+                id: "itunes:1", title: "Found", author: "a",
+                feedURL: URL(string: "https://found.example.com/feed")!,
+                artworkURL: nil, episodeCount: nil, genres: [], itunesCollectionID: 1
+            )]
+        }
+        func shows(byAuthor author: String, limit: Int) async throws -> [PodcastSearchResult] { [] }
+    }
 }
