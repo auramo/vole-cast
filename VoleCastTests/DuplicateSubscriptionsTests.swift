@@ -171,4 +171,144 @@ struct DuplicateSubscriptionsTests {
         #expect(DuplicateSubscriptions.merge(in: context) == 0)
         #expect(try context.fetch(FetchDescriptor<Podcast>()).count == 2)
     }
+
+    // MARK: - Episodes within one show
+
+    /// What the phone's store held: one show, and the same episode in it twice
+    /// — one copy from its own refresh, one from another device that refreshed
+    /// before the show's episodes had finished arriving by sync.
+    private func doubledEpisode(
+        _ context: ModelContext,
+        positions: (Double, Double),
+        createdAt: (Date?, Date?) = (nil, nil)
+    ) -> Podcast {
+        let podcast = show(context, subscribedAt: .now, episodes: [])
+        for (position, created) in [(positions.0, createdAt.0), (positions.1, createdAt.1)] {
+            let episode = Episode(guid: "a", title: "Episode a",
+                                  audioURL: "https://twice.example.com/a.mp3")
+            episode.playbackPosition = position
+            episode.createdAt = created
+            episode.podcast = podcast
+            context.insert(episode)
+        }
+        return podcast
+    }
+
+    @Test func foldsAnEpisodeThatArrivedTwiceIntoOne() throws {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let podcast = doubledEpisode(context, positions: (0, 900))
+
+        #expect(DuplicateSubscriptions.foldEpisodes(of: podcast, in: context) == 1)
+
+        let episodes = try context.fetch(FetchDescriptor<Episode>())
+        #expect(episodes.count == 1)
+        #expect(episodes.first?.playbackPosition == 900)
+        #expect(podcast.episodeCount == 1)
+    }
+
+    /// Both devices fold the same pair on their own. If each kept a different
+    /// copy, each would delete the other's keeper and the episode would be
+    /// gone from both — so the keeper has to be one they agree on.
+    @Test func keepsTheOlderCopyWhicheverOrderTheyComeIn() throws {
+        let older = Date(timeIntervalSince1970: 1000)
+        let newer = Date(timeIntervalSince1970: 9000)
+        for stamps in [(older, newer), (newer, older)] {
+            let context = ModelContext(VoleCastModelContainer.makeInMemory())
+            let podcast = doubledEpisode(context, positions: (0, 0), createdAt: stamps)
+
+            DuplicateSubscriptions.foldEpisodes(of: podcast, in: context)
+
+            let episodes = try context.fetch(FetchDescriptor<Episode>())
+            #expect(episodes.map(\.createdAt) == [older])
+        }
+    }
+
+    /// A copy from before episodes were stamped is older than any stamped one.
+    @Test func countsAnUnstampedCopyAsTheOldest() throws {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let podcast = doubledEpisode(
+            context, positions: (0, 0), createdAt: (Date(timeIntervalSince1970: 1000), nil)
+        )
+
+        DuplicateSubscriptions.foldEpisodes(of: podcast, in: context)
+
+        let episodes = try context.fetch(FetchDescriptor<Episode>())
+        #expect(episodes.count == 1)
+        #expect(episodes.first?.createdAt == nil)
+    }
+
+    @Test func leavesDistinctEpisodesAlone() throws {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let podcast = show(context, subscribedAt: .now,
+                           episodes: [("a", 0, false), ("b", 0, false)])
+
+        #expect(DuplicateSubscriptions.foldEpisodes(of: podcast, in: context) == 0)
+        #expect(try context.fetch(FetchDescriptor<Episode>()).count == 2)
+    }
+
+    // MARK: - Episodes with no show
+
+    /// What turning sync on left on the phone: another device's import deleted
+    /// eight shows without their episodes, the shows came back, and the old
+    /// episodes stayed behind with no show — and with them, plays that
+    /// History no longer listed.
+    private func orphan(
+        _ context: ModelContext,
+        guid: String,
+        position: Double = 0,
+        lastPlayedAt: Date? = nil
+    ) {
+        let episode = Episode(guid: guid, title: "Episode \(guid)",
+                              audioURL: "https://twice.example.com/\(guid).mp3")
+        episode.playbackPosition = position
+        episode.lastPlayedAt = lastPlayedAt
+        context.insert(episode)
+    }
+
+    @Test func foldsAnOrphanIntoItsTwinSoItsPlayIsInHistoryAgain() throws {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        _ = show(context, subscribedAt: .now, episodes: [("a", 0, false)])
+        let played = Date(timeIntervalSince1970: 5000)
+        orphan(context, guid: "a", position: 1323, lastPlayedAt: played)
+
+        #expect(DuplicateSubscriptions.foldOrphans(in: context) == 1)
+
+        let episodes = try context.fetch(FetchDescriptor<Episode>())
+        #expect(episodes.count == 1)
+        #expect(episodes.first?.playbackPosition == 1323)
+        let history = try context.fetch(ListeningHistory.descriptor())
+        #expect(history.map(\.lastPlayedAt) == [played])
+    }
+
+    /// With no twin there is no show to put it back in — and an episode can
+    /// be without its show for a moment while sync is still delivering both.
+    /// Deleting it then would delete it on every device.
+    @Test func leavesAnOrphanWithNoTwinAlone() throws {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        _ = show(context, subscribedAt: .now, episodes: [("a", 0, false)])
+        orphan(context, guid: "b", lastPlayedAt: .now)
+
+        #expect(DuplicateSubscriptions.foldOrphans(in: context) == 0)
+        #expect(try context.fetch(FetchDescriptor<Episode>()).count == 2)
+    }
+
+    /// Two shows using the same guid leave no way to tell which one the
+    /// orphan belonged to.
+    @Test func leavesAnOrphanAloneWhenTwoShowsClaimItsGUID() throws {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        _ = show(context, subscribedAt: .now, episodes: [("a", 0, false)])
+        let other = Podcast(
+            feedURL: "https://elsewhere.example.com/feed",
+            feedIdentity: "elsewhere.example.com/feed",
+            title: "Other Show"
+        )
+        context.insert(other)
+        let same = Episode(guid: "a", title: "Episode a", audioURL: "https://elsewhere.example.com/a.mp3")
+        same.podcast = other
+        context.insert(same)
+        orphan(context, guid: "a", lastPlayedAt: .now)
+
+        #expect(DuplicateSubscriptions.foldOrphans(in: context) == 0)
+        #expect(try context.fetch(FetchDescriptor<Episode>()).count == 3)
+    }
 }

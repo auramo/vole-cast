@@ -79,6 +79,111 @@ enum DuplicateSubscriptions {
         return removed
     }
 
+    /// Folds every episode the show holds more than once into one copy.
+    ///
+    /// Sync delivers these on its own, no double subscription needed: a device
+    /// that receives a show and refreshes it before the show's episodes have
+    /// finished arriving finds none to match against, makes its own copy of
+    /// every one, and sends them all back. One phone ended up with 5,693
+    /// episodes twice over and the Latest list showing each one twice.
+    ///
+    /// The oldest copy is kept, and an unstamped one counts as oldest. That has
+    /// to be a rule every device reaches by itself: each folds the same pair
+    /// independently, and two devices keeping different copies would each
+    /// delete the other's keeper and lose the episode everywhere.
+    ///
+    /// Takes one show because the caller is a refresh, which has its episodes
+    /// in hand already. Returns how many copies were removed.
+    @discardableResult
+    static func foldEpisodes(of podcast: Podcast, in context: ModelContext) -> Int {
+        let byGUID = Dictionary(grouping: podcast.episodes ?? [], by: \.guid)
+
+        var removed = 0
+        for (_, copies) in byGUID where copies.count > 1 {
+            let sorted = copies.sorted {
+                ($0.createdAt ?? .distantPast) < ($1.createdAt ?? .distantPast)
+            }
+            guard let keeper = sorted.first else { continue }
+
+            for loser in sorted.dropFirst() {
+                reconcile(keeper, with: loser)
+
+                // Detached first, so the show stops listing it now rather than
+                // at the next save.
+                loser.podcast = nil
+                context.delete(loser)
+                removed += 1
+            }
+        }
+        return removed
+    }
+
+    /// Folds an episode that has lost its show into the copy that still has
+    /// one.
+    ///
+    /// Turning sync on left these: another device's import deleted shows on
+    /// this one without their episodes, the shows came back with fresh
+    /// copies, and the old episodes stayed behind with no show. History only
+    /// lists episodes with a show, so plays made on the old copies vanished
+    /// from it.
+    ///
+    /// Only with exactly one twin. With none there is no show to put it back
+    /// in, and an episode can be without its show for a moment while sync is
+    /// still delivering both — deleting it then would delete it on every
+    /// device. With twins in two shows there is no telling which it was.
+    @discardableResult
+    static func foldOrphans(in context: ModelContext) -> Int {
+        let orphans = (try? context.fetch(
+            FetchDescriptor<Episode>(predicate: #Predicate { $0.podcast == nil })
+        )) ?? []
+        guard !orphans.isEmpty else { return 0 }
+
+        // One query for every twin rather than one per orphan: the phone this
+        // was written for had two thousand of them.
+        let guids = Set(orphans.map(\.guid))
+        let twins = (try? context.fetch(
+            FetchDescriptor<Episode>(predicate: #Predicate {
+                $0.podcast != nil && guids.contains($0.guid)
+            })
+        )) ?? []
+        let twinsByGUID = Dictionary(grouping: twins, by: \.guid)
+
+        var removed = 0
+        for orphan in orphans {
+            guard let found = twinsByGUID[orphan.guid], found.count == 1,
+                  let twin = found.first else { continue }
+            reconcile(twin, with: orphan)
+            context.delete(orphan)
+            removed += 1
+        }
+
+        // Saved for the same reason `merge` saves: it runs at launch.
+        if removed > 0 { try? context.save() }
+        return removed
+    }
+
+    /// Writes the two copies' combined playback state onto the keeper.
+    ///
+    /// Only what moved, for the same reason `Subscriptions.merge` does it:
+    /// every write re-runs the queries watching episodes.
+    private static func reconcile(_ keeper: Episode, with other: Episode) {
+        let merged = merging(
+            PlaybackState(
+                position: keeper.playbackPosition,
+                isPlayed: keeper.isPlayed,
+                lastPlayedAt: keeper.lastPlayedAt
+            ),
+            PlaybackState(
+                position: other.playbackPosition,
+                isPlayed: other.isPlayed,
+                lastPlayedAt: other.lastPlayedAt
+            )
+        )
+        if keeper.playbackPosition != merged.position { keeper.playbackPosition = merged.position }
+        if keeper.isPlayed != merged.isPlayed { keeper.isPlayed = merged.isPlayed }
+        if keeper.lastPlayedAt != merged.lastPlayedAt { keeper.lastPlayedAt = merged.lastPlayedAt }
+    }
+
     /// Moves what the loser knows into the keeper.
     ///
     /// An episode the keeper already has is reconciled and left behind, to be
@@ -96,21 +201,7 @@ enum DuplicateSubscriptions {
                 episode.podcast = keeper
                 continue
             }
-            let merged = merging(
-                PlaybackState(
-                    position: twin.playbackPosition,
-                    isPlayed: twin.isPlayed,
-                    lastPlayedAt: twin.lastPlayedAt
-                ),
-                PlaybackState(
-                    position: episode.playbackPosition,
-                    isPlayed: episode.isPlayed,
-                    lastPlayedAt: episode.lastPlayedAt
-                )
-            )
-            twin.playbackPosition = merged.position
-            twin.isPlayed = merged.isPlayed
-            twin.lastPlayedAt = merged.lastPlayedAt
+            reconcile(twin, with: episode)
         }
 
         // The keeper should look as refreshed as the better-refreshed copy.

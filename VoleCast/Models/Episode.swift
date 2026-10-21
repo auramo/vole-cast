@@ -34,6 +34,12 @@ final class Episode {
     var isPlayed: Bool = false
     var lastPlayedAt: Date?
 
+    /// When this copy was made, on whichever device made it. Not shown
+    /// anywhere: it is the tie-break `DuplicateSubscriptions` needs when sync
+    /// has delivered one episode twice, so that every device keeps the same
+    /// copy. Nil on episodes from before it existed.
+    var createdAt: Date?
+
     var podcast: Podcast?
 
     init(
@@ -46,5 +52,6 @@ final class Episode {
         self.title = title
         self.audioURL = audioURL
         self.publishedAt = publishedAt
+        self.createdAt = .now
     }
 }

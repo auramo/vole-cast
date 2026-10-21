@@ -40,6 +40,9 @@ final class PlaybackHost {
         // Before anything reads the store. Sync can leave two copies of one
         // show behind, and every screen below here would show both.
         DuplicateSubscriptions.merge(in: container.mainContext)
+        // And episodes that lost their show to sync, so their plays are back
+        // in History.
+        DuplicateSubscriptions.foldOrphans(in: container.mainContext)
         // The app is routinely killed while paused in the background, so the
         // bar has to be put back rather than assumed to survive. Done here
         // rather than when a view appears: whichever scene comes up first —
