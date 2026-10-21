@@ -302,6 +302,16 @@
         }
       }
     },
+    "Everything we would suggest, you already follow." : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seuraat jo kaikkea, mitä voisimme ehdottaa."
+          }
+        }
+      }
+    },
     "Fiction" : {
       "localizations" : {
         "fi" : {
@@ -338,6 +348,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Etsi podcasteja"
+          }
+        }
+      }
+    },
+    "For You" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sinulle"
           }
         }
       }
@@ -452,6 +472,26 @@
         }
       }
     },
+    "Like %@" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Samankaltaisia kuin %@"
+          }
+        }
+      }
+    },
+    "More from %@" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lisää tekijältä %@"
+          }
+        }
+      }
+    },
     "Music" : {
       "localizations" : {
         "fi" : {
@@ -542,6 +582,16 @@
         }
       }
     },
+    "No Suggestions Yet" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ei vielä ehdotuksia"
+          }
+        }
+      }
+    },
     "Not a Podcast Feed" : {
       "localizations" : {
         "fi" : {
@@ -568,6 +618,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ei löytynyt"
+          }
+        }
+      }
+    },
+    "Nothing New to Suggest" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ei uutta ehdotettavaa"
           }
         }
       }
@@ -912,6 +972,16 @@
         }
       }
     },
+    "Subscribe to a show and suggestions appear here." : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilaa jokin podcast, niin ehdotukset ilmestyvät tähän."
+          }
+        }
+      }
+    },
     "Subscribed" : {
       "localizations" : {
         "fi" : {
@@ -928,6 +998,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tilaukset"
+          }
+        }
+      }
+    },
+    "Suggestions come from shows found by name. The feeds you pasted are not sent anywhere, so they cannot be used for this." : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ehdotukset perustuvat nimellä löydettyihin podcasteihin. Liittämiäsi syötteitä ei lähetetä minnekään, joten niitä ei voi käyttää tähän."
           }
         }
       }

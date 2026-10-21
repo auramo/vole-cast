@@ -1,3 +1,4 @@
+import SwiftData
 import SwiftUI
 
 /// Finding a show: by name, by pasting a feed URL, or by browsing a chart.
@@ -10,12 +11,15 @@ import SwiftUI
 struct SearchView: View {
     @Binding var path: NavigationPath
 
-    private enum Half: Hashable { case search, discover }
+    private enum Half: Hashable { case search, discover, forYou }
 
     @Environment(\.podcastDirectory) private var directory
     @Environment(\.podcastCharts) private var charts
+    @Environment(\.podcastLookup) private var lookup
+    @Environment(\.modelContext) private var modelContext
     @State private var model: SearchModel?
     @State private var discover: DiscoverModel?
+    @State private var forYou: RecommendationsModel?
     @State private var half: Half = .search
     @FocusState private var typing: Bool
     /// Remembered across launches, because someone who browses another
@@ -28,6 +32,7 @@ struct SearchView: View {
                 Picker("Find shows by", selection: $half) {
                     Text("Search").tag(Half.search)
                     Text("Discover").tag(Half.discover)
+                    Text("For You").tag(Half.forYou)
                 }
                 .pickerStyle(.segmented)
                 // Large, and with no navigation title above it. These two are
@@ -50,6 +55,8 @@ struct SearchView: View {
                         searchHalf
                     case .discover:
                         discoverHalf
+                    case .forYou:
+                        forYouHalf
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -86,6 +93,12 @@ struct SearchView: View {
             if model == nil { model = SearchModel(directory: directory) }
             if discover == nil {
                 discover = DiscoverModel(charts: charts, storefront: storefront)
+            }
+            if forYou == nil {
+                forYou = RecommendationsModel(
+                    directory: directory, lookup: lookup,
+                    charts: charts, context: modelContext
+                )
             }
         }
     }
@@ -148,6 +161,15 @@ struct SearchView: View {
     private var discoverHalf: some View {
         if let discover {
             DiscoverList(model: discover, storefront: $storefront)
+        }
+    }
+
+    @ViewBuilder
+    private var forYouHalf: some View {
+        if let forYou {
+            // Switching to the search half is the way out of every empty
+            // state here, and the shell owns which half is showing.
+            RecommendationsList(model: forYou) { half = .search }
         }
     }
 
