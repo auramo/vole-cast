@@ -216,30 +216,35 @@ struct RecommendationsModelTests {
 
     // MARK: - Isolation
 
-    /// The guarantee this whole screen is arranged around: searching by name
-    /// and opening a pasted feed URL must keep working with every suggestion
-    /// source dead. They are the two things people actually depend on.
-    @Test func everySuggestionSourceFailingLeavesSearchAlone() async {
+    /// The guarantee this screen is arranged around: a suggestions source
+    /// failing must not break searching by name.
+    ///
+    /// The directory is deliberately ONE instance used by both models, because
+    /// that is the production topology — `SearchView` hands the same
+    /// environment directory to both. Two separate stubs would show only that
+    /// two unrelated objects do not interact, which is true of any two objects
+    /// and would keep passing if that shared instance ever gained state a
+    /// failure could poison.
+    @Test func aFailingSuggestionSourceLeavesSearchWorking() async {
         let context = ModelContext(VoleCastModelContainer.makeInMemory())
         _ = subscribed(context, "seed", collectionID: 1)
+        let shared = SharedDirectory()
 
-        let suggestions = model(
-            context,
-            directory: StubDirectory(failure: NetworkError.offline),
-            lookup: StubLookup(),
-            charts: StubCharts(failure: NetworkError.offline)
+        let suggestions = RecommendationsModel(
+            directory: shared,
+            // Genres resolve, so the chart request is genuinely attempted and
+            // genuinely fails — without this the charts stub is never called.
+            lookup: StubLookup(genresByID: [1: [PodcastGenre(id: 1526, name: "Daily News")]]),
+            charts: StubCharts(failure: NetworkError.offline),
+            context: context,
+            storefront: "fi"
         )
         await suggestions.load()
 
-        // Dead, and honest about why: with every source down this is a
-        // failure with a Try Again, not "you already follow everything".
         #expect(suggestions.state == .failed(.offline))
 
-        // And the search half, which shares only the tab, is untouched.
-        let search = SearchModel(
-            directory: WorkingDirectory(), debounce: .milliseconds(0)
-        )
-        search.query = "something"
+        // The same directory instance still answers a search.
+        let search = SearchModel(directory: shared, debounce: .milliseconds(0))
         await search.search("something")
 
         guard case .results(let results) = search.state else {
@@ -248,12 +253,15 @@ struct RecommendationsModelTests {
         }
         #expect(results.count == 1)
 
-        // As is recognising a pasted feed URL, which never touches a service.
+        // Pasting survives for a different reason worth stating: it reaches no
+        // service at all, so there is nothing for a failure to travel along.
         search.query = "https://example.com/feed.xml"
         #expect(search.typedFeedURL != nil)
     }
 
-    private struct WorkingDirectory: PodcastDirectory {
+    /// One directory, failing the way the suggestions screen uses it and
+    /// working the way the search field does.
+    private struct SharedDirectory: PodcastDirectory {
         func search(term: String, limit: Int) async throws -> [PodcastSearchResult] {
             [PodcastSearchResult(
                 id: "itunes:1", title: "Found", author: "a",
@@ -261,6 +269,9 @@ struct RecommendationsModelTests {
                 artworkURL: nil, episodeCount: nil, genres: [], itunesCollectionID: 1
             )]
         }
-        func shows(byAuthor author: String, limit: Int) async throws -> [PodcastSearchResult] { [] }
+
+        func shows(byAuthor author: String, limit: Int) async throws -> [PodcastSearchResult] {
+            throw NetworkError.offline
+        }
     }
 }
