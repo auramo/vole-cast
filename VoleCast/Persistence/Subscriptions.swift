@@ -121,6 +121,11 @@ enum Subscriptions {
         into podcast: Podcast,
         in context: ModelContext
     ) {
+        // Before matching, so an episode sync delivered twice is one again:
+        // the dictionary below would otherwise pick one copy and leave the
+        // other in the Latest list for good.
+        DuplicateSubscriptions.foldEpisodes(of: podcast, in: context)
+
         var byGUID = Dictionary(
             (podcast.episodes ?? []).map { ($0.guid, $0) },
             uniquingKeysWith: { first, _ in first }

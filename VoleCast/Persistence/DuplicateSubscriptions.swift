@@ -79,6 +79,61 @@ enum DuplicateSubscriptions {
         return removed
     }
 
+    /// Folds every episode the show holds more than once into one copy.
+    ///
+    /// Sync delivers these on its own, no double subscription needed: a device
+    /// that receives a show and refreshes it before the show's episodes have
+    /// finished arriving finds none to match against, makes its own copy of
+    /// every one, and sends them all back. One phone ended up with 5,693
+    /// episodes twice over and the Latest list showing each one twice.
+    ///
+    /// The oldest copy is kept, and an unstamped one counts as oldest. That has
+    /// to be a rule every device reaches by itself: each folds the same pair
+    /// independently, and two devices keeping different copies would each
+    /// delete the other's keeper and lose the episode everywhere.
+    ///
+    /// Takes one show because the caller is a refresh, which has its episodes
+    /// in hand already. Returns how many copies were removed.
+    @discardableResult
+    static func foldEpisodes(of podcast: Podcast, in context: ModelContext) -> Int {
+        let byGUID = Dictionary(grouping: podcast.episodes ?? [], by: \.guid)
+
+        var removed = 0
+        for (_, copies) in byGUID where copies.count > 1 {
+            let sorted = copies.sorted {
+                ($0.createdAt ?? .distantPast) < ($1.createdAt ?? .distantPast)
+            }
+            guard let keeper = sorted.first else { continue }
+
+            for loser in sorted.dropFirst() {
+                let merged = merging(
+                    PlaybackState(
+                        position: keeper.playbackPosition,
+                        isPlayed: keeper.isPlayed,
+                        lastPlayedAt: keeper.lastPlayedAt
+                    ),
+                    PlaybackState(
+                        position: loser.playbackPosition,
+                        isPlayed: loser.isPlayed,
+                        lastPlayedAt: loser.lastPlayedAt
+                    )
+                )
+                // Only what moved, for the same reason `Subscriptions.merge`
+                // does it: every write re-runs the queries watching episodes.
+                if keeper.playbackPosition != merged.position { keeper.playbackPosition = merged.position }
+                if keeper.isPlayed != merged.isPlayed { keeper.isPlayed = merged.isPlayed }
+                if keeper.lastPlayedAt != merged.lastPlayedAt { keeper.lastPlayedAt = merged.lastPlayedAt }
+
+                // Detached first, so the show stops listing it now rather than
+                // at the next save.
+                loser.podcast = nil
+                context.delete(loser)
+                removed += 1
+            }
+        }
+        return removed
+    }
+
     /// Moves what the loser knows into the keeper.
     ///
     /// An episode the keeper already has is reconciled and left behind, to be

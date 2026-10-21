@@ -143,6 +143,36 @@ struct SubscriptionTests {
         #expect(podcast.orderedEpisodes.contains { $0.title == "Episode Two (remastered)" })
     }
 
+    /// A refresh is where every show's episodes are already being read, so it
+    /// is where an episode that sync delivered twice gets folded back into one
+    /// — otherwise the Latest list shows it twice until something else does.
+    @Test func refreshingFoldsAnEpisodeThatArrivedTwice() throws {
+        let context = context()
+        let podcast = try Subscriptions.subscribe(
+            to: try loaded(at: "https://twin.example.com/feed"),
+            in: context
+        )
+        let original = try #require(podcast.orderedEpisodes.first)
+        original.playbackPosition = 900
+        // The copy another device made, delivered the way CloudKit would.
+        let twin = Episode(guid: original.guid, title: original.title, audioURL: original.audioURL)
+        twin.podcast = podcast
+        context.insert(twin)
+        let before = podcast.episodeCount
+
+        let feed = try FeedParser.parse(try Fixtures.feed("feed-minimal"))
+        Subscriptions.refresh(
+            LoadedFeed(feed: feed, resolvedURL: URL(string: "https://twin.example.com/feed")!),
+            into: podcast,
+            in: context
+        )
+
+        #expect(podcast.episodeCount == before - 1)
+        let survivors = podcast.orderedEpisodes.filter { $0.guid == original.guid }
+        #expect(survivors.count == 1)
+        #expect(survivors.first?.playbackPosition == 900)
+    }
+
     /// A refresh used to reassign all nine fields of every episode whether or
     /// not anything had changed, dirtying them all and re-running every query
     /// watching them. With the Latest list driven by one of those queries, an

@@ -171,4 +171,78 @@ struct DuplicateSubscriptionsTests {
         #expect(DuplicateSubscriptions.merge(in: context) == 0)
         #expect(try context.fetch(FetchDescriptor<Podcast>()).count == 2)
     }
+
+    // MARK: - Episodes within one show
+
+    /// What the phone's store held: one show, and the same episode in it twice
+    /// — one copy from its own refresh, one from another device that refreshed
+    /// before the show's episodes had finished arriving by sync.
+    private func doubledEpisode(
+        _ context: ModelContext,
+        positions: (Double, Double),
+        createdAt: (Date?, Date?) = (nil, nil)
+    ) -> Podcast {
+        let podcast = show(context, subscribedAt: .now, episodes: [])
+        for (position, created) in [(positions.0, createdAt.0), (positions.1, createdAt.1)] {
+            let episode = Episode(guid: "a", title: "Episode a",
+                                  audioURL: "https://twice.example.com/a.mp3")
+            episode.playbackPosition = position
+            episode.createdAt = created
+            episode.podcast = podcast
+            context.insert(episode)
+        }
+        return podcast
+    }
+
+    @Test func foldsAnEpisodeThatArrivedTwiceIntoOne() throws {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let podcast = doubledEpisode(context, positions: (0, 900))
+
+        #expect(DuplicateSubscriptions.foldEpisodes(of: podcast, in: context) == 1)
+
+        let episodes = try context.fetch(FetchDescriptor<Episode>())
+        #expect(episodes.count == 1)
+        #expect(episodes.first?.playbackPosition == 900)
+        #expect(podcast.episodeCount == 1)
+    }
+
+    /// Both devices fold the same pair on their own. If each kept a different
+    /// copy, each would delete the other's keeper and the episode would be
+    /// gone from both — so the keeper has to be one they agree on.
+    @Test func keepsTheOlderCopyWhicheverOrderTheyComeIn() throws {
+        let older = Date(timeIntervalSince1970: 1000)
+        let newer = Date(timeIntervalSince1970: 9000)
+        for stamps in [(older, newer), (newer, older)] {
+            let context = ModelContext(VoleCastModelContainer.makeInMemory())
+            let podcast = doubledEpisode(context, positions: (0, 0), createdAt: stamps)
+
+            DuplicateSubscriptions.foldEpisodes(of: podcast, in: context)
+
+            let episodes = try context.fetch(FetchDescriptor<Episode>())
+            #expect(episodes.map(\.createdAt) == [older])
+        }
+    }
+
+    /// A copy from before episodes were stamped is older than any stamped one.
+    @Test func countsAnUnstampedCopyAsTheOldest() throws {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let podcast = doubledEpisode(
+            context, positions: (0, 0), createdAt: (Date(timeIntervalSince1970: 1000), nil)
+        )
+
+        DuplicateSubscriptions.foldEpisodes(of: podcast, in: context)
+
+        let episodes = try context.fetch(FetchDescriptor<Episode>())
+        #expect(episodes.count == 1)
+        #expect(episodes.first?.createdAt == nil)
+    }
+
+    @Test func leavesDistinctEpisodesAlone() throws {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let podcast = show(context, subscribedAt: .now,
+                           episodes: [("a", 0, false), ("b", 0, false)])
+
+        #expect(DuplicateSubscriptions.foldEpisodes(of: podcast, in: context) == 0)
+        #expect(try context.fetch(FetchDescriptor<Episode>()).count == 2)
+    }
 }
