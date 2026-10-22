@@ -153,6 +153,12 @@ struct SearchView: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
         .background(.quaternary.opacity(0.5), in: Capsule())
+        // The capsule is what reads as the field, but only the text inside it
+        // took a tap: the icon and the padding around the text did nothing, so
+        // whether a tap started typing depended on where the finger landed.
+        // The Clear button keeps its own tap — a button wins over this.
+        .contentShape(Capsule())
+        .onTapGesture { typing = true }
         .padding(.horizontal)
         .padding(.bottom, 8)
     }
