@@ -15,6 +15,11 @@ struct EpisodeDetailView: View {
                 Text(EpisodeSubtitle.text(published: episode.publishedAt, duration: episode.duration))
                     .font(.footnote)
                     .foregroundStyle(.secondary)
+                if episode.isPlayed {
+                    Label("Played", systemImage: "checkmark.circle.fill")
+                        .font(.footnote.weight(.medium))
+                        .foregroundStyle(.tint)
+                }
                 playButton
                 showLink
                 if !episode.summary.isEmpty {

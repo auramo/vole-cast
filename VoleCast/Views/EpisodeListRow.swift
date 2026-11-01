@@ -33,6 +33,7 @@ struct EpisodeListRow: View {
                         // unfinished indistinguishable to a screen reader while
                         // they differ plainly on screen.
                         Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(.tint)
                             .accessibilityLabel("Played")
                     }
                     Text(EpisodeSubtitle.text(published: episode.publishedAt, duration: episode.duration))
