@@ -310,6 +310,124 @@ struct PlayerModelTests {
         #expect(episode.playbackPosition == 0)
     }
 
+    /// Nothing else writes when the audio runs out with the phone locked: the
+    /// app can be suspended right after, and autosave may never get its pass.
+    @Test func reachingTheEndSavesStraightAway() throws {
+        let context = ModelContext(TestContainer.shared)
+        let show = makeShow(context, identity: "ra.example.com", episodes: ["ra1"])
+        let episode = try #require(show.episodes?.first)
+        let fake = FakeAudioPlayback()
+        let player = model(fake, context)
+
+        player.toggle(episode)
+        fake.emit(.reachedEnd)
+
+        #expect(episode.isPlayed)
+        #expect(!context.hasChanges)
+    }
+
+    @Test func switchingAwayNearTheEndMarksItPlayed() throws {
+        let context = ModelContext(TestContainer.shared)
+        let show = makeShow(context, identity: "rb.example.com", episodes: ["rb1", "rb2"])
+        let episodes = try #require(show.episodes)
+        let first = try #require(episodes.first { $0.guid == "rb1" })
+        let second = try #require(episodes.first { $0.guid == "rb2" })
+        let fake = FakeAudioPlayback()
+        let player = model(fake, context)
+
+        player.toggle(first)
+        fake.emit(.time(1790))
+        player.toggle(second)
+
+        #expect(first.isPlayed)
+        #expect(first.playbackPosition == 0)
+        #expect(!second.isPlayed)
+    }
+
+    @Test func switchingAwayEarlierLeavesItPartPlayed() throws {
+        let context = ModelContext(TestContainer.shared)
+        let show = makeShow(context, identity: "rc.example.com", episodes: ["rc1", "rc2"])
+        let episodes = try #require(show.episodes)
+        let first = try #require(episodes.first { $0.guid == "rc1" })
+        let second = try #require(episodes.first { $0.guid == "rc2" })
+        let fake = FakeAudioPlayback()
+        let player = model(fake, context)
+
+        player.toggle(first)
+        fake.emit(.time(1700))
+        player.toggle(second)
+
+        #expect(!first.isPlayed)
+        #expect(first.playbackPosition == 1700)
+    }
+
+    @Test func pausingNearTheEndMarksItPlayedAndSaves() throws {
+        let context = ModelContext(TestContainer.shared)
+        let show = makeShow(context, identity: "rd.example.com", episodes: ["rd1"])
+        let episode = try #require(show.episodes?.first)
+        let fake = FakeAudioPlayback()
+        let player = model(fake, context)
+
+        player.toggle(episode)
+        fake.emit(.time(1790))
+        player.pause()
+
+        #expect(episode.isPlayed)
+        #expect(episode.playbackPosition == 0)
+        #expect(!context.hasChanges)
+    }
+
+    /// A pause from the lock screen reaches the model only as a phase change,
+    /// so leaving the app is the first chance to notice it.
+    @Test func leavingTheAppPausedNearTheEndMarksItPlayed() throws {
+        let context = ModelContext(TestContainer.shared)
+        let show = makeShow(context, identity: "re.example.com", episodes: ["re1"])
+        let episode = try #require(show.episodes?.first)
+        let fake = FakeAudioPlayback()
+        let player = model(fake, context)
+
+        player.toggle(episode)
+        fake.emit(.time(1790))
+        fake.emit(.phase(.paused))
+        player.flush()
+
+        #expect(episode.isPlayed)
+    }
+
+    /// Still playing means the real end is coming, and it will say so itself.
+    @Test func leavingTheAppWhilePlayingNearTheEndWaitsForTheEnd() throws {
+        let context = ModelContext(TestContainer.shared)
+        let show = makeShow(context, identity: "rf.example.com", episodes: ["rf1"])
+        let episode = try #require(show.episodes?.first)
+        let fake = FakeAudioPlayback()
+        let player = model(fake, context)
+
+        player.toggle(episode)
+        fake.emit(.phase(.playing))
+        fake.emit(.time(1790))
+        player.flush()
+
+        #expect(!episode.isPlayed)
+        #expect(episode.playbackPosition == 1790)
+    }
+
+    /// A clip shorter than the window is near its end from the first second,
+    /// so the window says nothing about it.
+    @Test func pausingAVeryShortEpisodeDoesNotFinishIt() throws {
+        let context = ModelContext(TestContainer.shared)
+        let show = makeShow(context, identity: "rg.example.com", episodes: ["rg1"])
+        let episode = try #require(show.episodes?.first)
+        episode.duration = 10
+        let fake = FakeAudioPlayback()
+        let player = model(fake, context)
+
+        player.toggle(episode)
+        fake.emit(.time(8))
+        player.pause()
+
+        #expect(!episode.isPlayed)
+    }
+
     /// A call or an alarm can be followed by the app being killed, so the
     /// position has to be down before control is handed back.
     @Test func anInterruptionWritesThePosition() throws {
@@ -368,6 +486,9 @@ struct PlayerModelTests {
         let context = ModelContext(TestContainer.shared)
         let show = makeShow(context, identity: "za.example.com", episodes: ["za1"])
         let episode = try #require(show.episodes?.first)
+        // Finishing saves, and a first save swaps an unsaved episode's temporary
+        // identifier for its permanent one. Real episodes are long past that.
+        try context.save()
         let fake = FakeAudioPlayback()
         let player = model(fake, context)
 
