@@ -42,6 +42,16 @@ enum PlaybackProgress {
         return stored
     }
 
+    /// Whether stopping here counts as having finished.
+    ///
+    /// Outros and credits mean plenty of episodes are done with before the
+    /// audio runs out. An episode no longer than the window is excluded: it is
+    /// near its end from the first second, so being there says nothing.
+    nonisolated static func isNearEnd(position: TimeInterval, duration: TimeInterval?) -> Bool {
+        guard position.isFinite, let duration, duration > nearEnd else { return false }
+        return position > duration - nearEnd
+    }
+
     /// How far through, 0...1, or nil when there is nothing worth drawing.
     ///
     /// Deliberately defined in terms of `resumePosition` rather than by a
@@ -103,6 +113,12 @@ enum PlaybackProgress {
         episode.lastPlayedAt = .now
     }
 
+    /// A finished episode being listened to again is an unfinished one, with
+    /// the position left alone for playback to carry on writing.
+    static func markReplaying(_ episode: Episode, in context: ModelContext) {
+        episode.isPlayed = false
+    }
+
     /// Note what this does *not* do: `lastPlayedAt` is left alone, so the
     /// episode stays in the listening history. That is deliberate — you did
     /// play it — but it is the decision to revisit if a "Mark as Unplayed"
@@ -118,7 +134,8 @@ enum PlaybackProgress {
     /// screen. Background audio breaks that assumption: the app can be
     /// suspended while playing and killed later without another pass of the
     /// main runloop, taking the last few seconds of position with it. Called
-    /// only when the scene leaves `.active`, and on interruption.
+    /// when the scene leaves `.active`, on interruption, and when an episode
+    /// finishes, which is the moment the app is most likely to be suspended.
     static func flush(in context: ModelContext) {
         guard context.hasChanges else { return }
         try? context.save()

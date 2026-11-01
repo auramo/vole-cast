@@ -14,6 +14,9 @@ struct EpisodePlayButton: View {
     private var isCurrent: Bool { player.isCurrent(episode) }
     private var isPlayingThis: Bool { isCurrent && player.isPlaying }
     private var isBufferingThis: Bool { isCurrent && player.isBuffering }
+    /// Tapping starts from the beginning, so the icon says that rather than
+    /// "play". It goes as soon as a replay is under way.
+    private var offersReplay: Bool { episode.isPlayed && !isPlayingThis && !isBufferingThis }
 
     /// `audioURL` is a `String` off a feed and can be empty or nonsense.
     private var isPlayable: Bool {
@@ -41,11 +44,16 @@ struct EpisodePlayButton: View {
         if isBufferingThis {
             ProgressView().controlSize(.small)
         } else {
-            Image(systemName: isPlayingThis ? "pause.circle.fill" : "play.circle.fill")
+            Image(systemName: iconName)
                 .font(.system(size: 30))
                 .symbolRenderingMode(.hierarchical)
                 .foregroundStyle(isPlayable ? AnyShapeStyle(.tint) : AnyShapeStyle(.tertiary))
         }
+    }
+
+    private var iconName: String {
+        if isPlayingThis { return "pause.circle.fill" }
+        return offersReplay ? "arrow.counterclockwise.circle.fill" : "play.circle.fill"
     }
 
     /// How far in you already were, without costing a row of its own.
@@ -65,6 +73,7 @@ struct EpisodePlayButton: View {
     /// actually running, where the icon is already a pause button and a ring
     /// creeping around it is noise.
     private var ringFraction: Double? {
+        guard !offersReplay else { return nil }
         guard isCurrent else { return storedFraction }
         guard !isPlayingThis, !isBufferingThis else { return nil }
         // The player's own reading rather than the stored one: it is live, so
@@ -90,6 +99,7 @@ struct EpisodePlayButton: View {
     /// read aloud in English whatever language the phone is in.
     private var label: String {
         if isPlayingThis { return String(localized: "Pause") }
+        if offersReplay { return String(localized: "Replay \(episode.title)") }
         if episode.playbackPosition > 0 {
             return String(localized: "Resume \(episode.title)")
         }

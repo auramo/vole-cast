@@ -15,6 +15,11 @@ struct EpisodeDetailView: View {
                 Text(EpisodeSubtitle.text(published: episode.publishedAt, duration: episode.duration))
                     .font(.footnote)
                     .foregroundStyle(.secondary)
+                if episode.isPlayed {
+                    Label("Played", systemImage: "checkmark.circle.fill")
+                        .font(.footnote.weight(.medium))
+                        .foregroundStyle(.tint)
+                }
                 playButton
                 showLink
                 if !episode.summary.isEmpty {
@@ -71,14 +76,23 @@ struct EpisodeDetailView: View {
             Button {
                 player.toggle(episode)
             } label: {
-                Label(
-                    isPlayingThis ? "Pause" : "Play",
-                    systemImage: isPlayingThis ? "pause.fill" : "play.fill"
-                )
-                .frame(maxWidth: .infinity)
+                playLabel
+                    .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
+        }
+    }
+
+    /// Tapping a finished episode starts it over, as it does on the row's button.
+    @ViewBuilder
+    private var playLabel: some View {
+        if isPlayingThis {
+            Label("Pause", systemImage: "pause.fill")
+        } else if episode.isPlayed {
+            Label("Replay", systemImage: "arrow.counterclockwise")
+        } else {
+            Label("Play", systemImage: "play.fill")
         }
     }
 

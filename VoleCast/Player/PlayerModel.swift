@@ -30,7 +30,7 @@ final class PlayerModel {
     /// The position last written to the store, so ticks can be thinned against
     /// it rather than writing on every one.
     private var lastWritten: TimeInterval = 0
-    /// Set when an episode plays out. The player still sits at the duration
+    /// Set when an episode finishes. The player still sits at the duration
     /// afterwards, so without this a later forced write — a backgrounding, a
     /// stop — would put that duration back on an episode whose position
     /// `markPlayed` had just zeroed, leaving it finished *and* part-played.
@@ -107,6 +107,13 @@ final class PlayerModel {
             play(episode)
             return
         }
+        // Finished, so the row is offering a replay. `load` ignores the episode
+        // it already has, which is why this seeks rather than playing it anew.
+        if reachedEnd {
+            seek(to: 0)
+            resume()
+            return
+        }
         if isPlaying { playback.pause() } else { resume() }
     }
 
@@ -115,7 +122,7 @@ final class PlayerModel {
         // Forced: whatever was playing keeps exactly where it got to, even if
         // that is less than `writeInterval` in. Switching away after a few
         // seconds used to discard those seconds entirely.
-        writePosition(force: true)
+        settle()
         error = nil
         currentID = episode.persistentModelID
         heldEpisode = episode
@@ -146,7 +153,7 @@ final class PlayerModel {
     func pause() {
         guard current != nil else { return }
         playback.pause()
-        writePosition(force: true)
+        settle()
     }
 
     func seek(to time: TimeInterval) {
@@ -156,6 +163,10 @@ final class PlayerModel {
         // recording resumes. Position is set here rather than waiting for the
         // engine's tick, so the write below records where we are going.
         reachedEnd = false
+        if !PlaybackProgress.isNearEnd(position: target, duration: duration),
+           let episode = liveEpisode(), episode.isPlayed {
+            PlaybackProgress.markReplaying(episode, in: context)
+        }
         position = target
         // Nothing to seek in the engine yet; `resume` will start here instead.
         if !needsLoad { playback.seek(to: target) }
@@ -197,7 +208,10 @@ final class PlayerModel {
             if case let .failed(error) = phase { self.error = error }
             // `.playing` means audio is genuinely flowing, so an episode whose
             // enclosure is dead never enters the history.
-            if phase == .playing { stampStart() }
+            if phase == .playing {
+                stampStart()
+                noteReplay()
+            }
         case let .time(seconds):
             position = seconds
             writePosition()
@@ -207,11 +221,7 @@ final class PlayerModel {
         case .reachedEnd:
             phase = .paused
             position = duration ?? position
-            if let episode = liveEpisode() {
-                PlaybackProgress.markPlayed(episode, in: context)
-            }
-            lastWritten = 0
-            reachedEnd = true
+            finish()
         case .playRequested:
             // Only ever meaningful for an episode restored into the bar and
             // never handed over. Anything else is a play command for audio the
@@ -221,11 +231,11 @@ final class PlayerModel {
             resume()
         case .interrupted:
             phase = .paused
-            writePosition(force: true)
+            settle()
             PlaybackProgress.flush(in: context)
         case .routeLost:
             phase = .paused
-            writePosition(force: true)
+            settle()
         }
     }
 
@@ -246,6 +256,31 @@ final class PlayerModel {
         lastWritten = position
     }
 
+    /// Records where the listener has stopped, which is finishing if they
+    /// stopped close enough to the end.
+    ///
+    /// If playback then carries on after all, nothing is lost: the real end
+    /// arrives and finishes it again.
+    private func settle() {
+        guard current != nil, !reachedEnd else { return }
+        if PlaybackProgress.isNearEnd(position: position, duration: duration) {
+            finish()
+        } else {
+            writePosition(force: true)
+        }
+    }
+
+    /// Saved straight away, because an episode ending with the phone locked
+    /// is followed by the app being suspended.
+    private func finish() {
+        if let episode = liveEpisode() {
+            PlaybackProgress.markPlayed(episode, in: context)
+            PlaybackProgress.flush(in: context)
+        }
+        lastWritten = 0
+        reachedEnd = true
+    }
+
     /// Records this episode as listened to, once per load.
     private func stampStart() {
         guard !stampedStart, let episode = liveEpisode() else { return }
@@ -253,10 +288,27 @@ final class PlayerModel {
         stampedStart = true
     }
 
+    /// Audio flowing means this is no longer a finished episode, whichever
+    /// way it was started again.
+    ///
+    /// Except at the very end, where a play command from the lock screen has
+    /// nothing left to play.
+    private func noteReplay() {
+        if let duration, position >= duration { return }
+        reachedEnd = false
+        if let episode = liveEpisode(), episode.isPlayed {
+            PlaybackProgress.markReplaying(episode, in: context)
+        }
+    }
+
     /// Writes whatever is pending and saves. For the scene leaving `.active`,
     /// where autosave can no longer be relied on.
+    ///
+    /// Only a paused episode can finish here. One still playing is about to
+    /// reach its real end, and a pause from the lock screen arrives as nothing
+    /// more than a phase change, so this is the first chance to act on it.
     func flush() {
-        writePosition(force: true)
+        if phase == .paused { settle() } else { writePosition(force: true) }
         PlaybackProgress.flush(in: context)
     }
 
