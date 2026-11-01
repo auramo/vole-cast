@@ -802,6 +802,26 @@
         }
       }
     },
+    "Replay" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toista uudelleen"
+          }
+        }
+      }
+    },
+    "Replay %@" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toista uudelleen: %@"
+          }
+        }
+      }
+    },
     "Resume %@" : {
       "localizations" : {
         "fi" : {

@@ -113,6 +113,12 @@ enum PlaybackProgress {
         episode.lastPlayedAt = .now
     }
 
+    /// A finished episode being listened to again is an unfinished one, with
+    /// the position left alone for playback to carry on writing.
+    static func markReplaying(_ episode: Episode, in context: ModelContext) {
+        episode.isPlayed = false
+    }
+
     /// Note what this does *not* do: `lastPlayedAt` is left alone, so the
     /// episode stays in the listening history. That is deliberate — you did
     /// play it — but it is the decision to revisit if a "Mark as Unplayed"

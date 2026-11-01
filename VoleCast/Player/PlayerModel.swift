@@ -107,6 +107,13 @@ final class PlayerModel {
             play(episode)
             return
         }
+        // Finished, so the row is offering a replay. `load` ignores the episode
+        // it already has, which is why this seeks rather than playing it anew.
+        if reachedEnd {
+            seek(to: 0)
+            resume()
+            return
+        }
         if isPlaying { playback.pause() } else { resume() }
     }
 
@@ -156,6 +163,10 @@ final class PlayerModel {
         // recording resumes. Position is set here rather than waiting for the
         // engine's tick, so the write below records where we are going.
         reachedEnd = false
+        if !PlaybackProgress.isNearEnd(position: target, duration: duration),
+           let episode = liveEpisode(), episode.isPlayed {
+            PlaybackProgress.markReplaying(episode, in: context)
+        }
         position = target
         // Nothing to seek in the engine yet; `resume` will start here instead.
         if !needsLoad { playback.seek(to: target) }
@@ -197,7 +208,10 @@ final class PlayerModel {
             if case let .failed(error) = phase { self.error = error }
             // `.playing` means audio is genuinely flowing, so an episode whose
             // enclosure is dead never enters the history.
-            if phase == .playing { stampStart() }
+            if phase == .playing {
+                stampStart()
+                noteReplay()
+            }
         case let .time(seconds):
             position = seconds
             writePosition()
@@ -272,6 +286,19 @@ final class PlayerModel {
         guard !stampedStart, let episode = liveEpisode() else { return }
         PlaybackProgress.markStarted(episode, in: context)
         stampedStart = true
+    }
+
+    /// Audio flowing means this is no longer a finished episode, whichever
+    /// way it was started again.
+    ///
+    /// Except at the very end, where a play command from the lock screen has
+    /// nothing left to play.
+    private func noteReplay() {
+        if let duration, position >= duration { return }
+        reachedEnd = false
+        if let episode = liveEpisode(), episode.isPlayed {
+            PlaybackProgress.markReplaying(episode, in: context)
+        }
     }
 
     /// Writes whatever is pending and saves. For the scene leaving `.active`,
