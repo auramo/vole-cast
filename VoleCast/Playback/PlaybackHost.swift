@@ -19,6 +19,7 @@ final class PlaybackHost {
 
     let container: ModelContainer
     let player: PlayerModel
+    private let arrivals: SyncArrivalWatcher
 
     /// The player the app runs with, built apart from `shared` so a test can
     /// build the same one against an in-memory store.
@@ -43,6 +44,12 @@ final class PlaybackHost {
         // And episodes that lost their show to sync, so their plays are back
         // in History.
         DuplicateSubscriptions.foldOrphans(in: container.mainContext)
+        // And from then on, episodes that sync delivers twice, as they land.
+        self.arrivals = SyncArrivalWatcher(
+            context: container.mainContext,
+            storeURL: container.configurations.first?.url
+        )
+        arrivals.start()
         // The app is routinely killed while paused in the background, so the
         // bar has to be put back rather than assumed to survive. Done here
         // rather than when a view appears: whichever scene comes up first —
