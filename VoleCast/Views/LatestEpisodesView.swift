@@ -8,6 +8,7 @@ struct LatestEpisodesView: View {
 
     @Environment(\.feedLoader) private var feedLoader
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.scenePhase) private var scenePhase
 
     /// Built in `onAppear` rather than an initialiser so it picks up the
     /// environment's loader, which previews and tests replace.
@@ -55,8 +56,20 @@ struct LatestEpisodesView: View {
         // did nothing at all.
         //
         // Stale-gated, so opening the tab doesn't hammer every feed.
-        .task {
-            await existingRefresher().refreshAll(force: false)
+        //
+        // Only with the window in front. A sync push launches the app in the
+        // background, and on a Mac that builds this screen too: the 1.0 copy
+        // on a laptop refreshed every feed on every push, and each of those
+        // refreshes could put a second copy of a new episode into sync. Coming
+        // to the front afterwards is a phase change, so nothing is skipped for
+        // good — and a return after the stale window now refreshes as well.
+        //
+        // A `Task` of its own rather than `.task(id:)`, which would cancel a
+        // refresh halfway through the moment the phase flickers to inactive.
+        // CarPlay refreshes through its own scene and is untouched by this.
+        .onChange(of: scenePhase, initial: true) { _, phase in
+            guard phase == .active else { return }
+            Task { await existingRefresher().refreshAll(force: false) }
         }
     }
 
