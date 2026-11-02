@@ -138,10 +138,11 @@ partial plist which `GENERATE_INFOPLIST_FILE` merges the generated keys into.
 
 ## CarPlay
 
-The car gets the Latest list and the system Now Playing screen, and nothing
-else for now. No Subscriptions, no History, and no search — search needs a
-keyboard the car locks out while moving. The list shows what is already in the
-store; feeds are not refreshed from the car.
+The car gets two tabs, Latest and History, and the system Now Playing screen.
+History is what you have played, most recently first, with a finished episode
+marked Played; tapping one starts it over. No Subscriptions and no search —
+search needs a keyboard the car locks out while moving. Latest's refresh button
+refetches every feed; otherwise the lists show what is already in the store.
 
 Connecting puts a part-listened episode back in the player at its stored
 position without making a sound. Plugging in for maps should not start a

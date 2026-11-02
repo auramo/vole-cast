@@ -11,8 +11,8 @@ import UIKit
 /// initialiser is what puts the last played episode back in the player.
 ///
 /// Deliberately thin. What the rows say and what a selection means live in
-/// `CarPlayLatestList`, where they are tested; this turns those values into
-/// templates and back.
+/// `CarPlayLatestList` and `CarPlayHistoryList`, where they are tested; this
+/// turns those values into templates and back.
 @MainActor
 final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegate {
     private var interfaceController: CPInterfaceController?
@@ -31,6 +31,23 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
         title: String(localized: "Episodes"), sections: []
     )
 
+    /// Titled for the reason above: an untitled list loses its bar, and the
+    /// now-playing button with it.
+    private let historyTemplate = CPListTemplate(
+        title: String(localized: "History"), sections: []
+    )
+
+    /// Latest first, so connecting lands where it always has. Tabs rather than
+    /// a row leading into History, or a section under Latest: a tab is one
+    /// tap from anywhere, and it is how the car's own audio apps are laid out.
+    private lazy var tabs: CPTabBarTemplate = {
+        listTemplate.tabTitle = String(localized: "Latest")
+        listTemplate.tabImage = UIImage(systemName: "waveform")
+        historyTemplate.tabTitle = String(localized: "History")
+        historyTemplate.tabImage = UIImage(systemName: "clock.arrow.circlepath")
+        return CPTabBarTemplate(templates: [listTemplate, historyTemplate])
+    }()
+
     /// The episodes the rows on screen stand for, kept for as long as those
     /// rows are.
     ///
@@ -43,9 +60,10 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
     /// screen alive holding the same episodes decides it.
     private var shown: [PersistentIdentifier: Episode] = [:]
 
-    /// What the Latest section was built from, so a store change can be
-    /// compared against it rather than redrawn blindly.
+    /// What the Latest section and the History tab were built from, so a
+    /// store change can be compared against them rather than redrawn blindly.
     private var shownLatest: [PersistentIdentifier] = []
+    private var shownHistory: [PersistentIdentifier] = []
 
     /// The car's own, rather than the one `LatestEpisodesView` keeps in
     /// `@State`: that one belongs to a screen that may never have existed, and
@@ -76,7 +94,7 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
         refreshRows()
         trackPlayer()
         trackStore()
-        interfaceController.setRootTemplate(listTemplate, animated: false, completion: nil)
+        interfaceController.setRootTemplate(tabs, animated: false, completion: nil)
     }
 
     func templateApplicationScene(
@@ -101,21 +119,35 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
     /// is fed by `MPNowPlayingInfoCenter` and knows nothing about this list.
     private func refreshRows() {
         let host = PlaybackHost.shared
-        let latest = (try? host.container.mainContext.fetch(LatestEpisodes.descriptor())) ?? []
+        let context = host.container.mainContext
+        let latest = (try? context.fetch(LatestEpisodes.descriptor())) ?? []
+        let history = (try? context.fetch(Self.historyDescriptor)) ?? []
         let current = host.player.currentEpisode
         let sections = CarPlayLatestList.sections(
             current: current,
             at: host.player.position,
             latest: latest
         )
+        let historySections = CarPlayHistoryList.sections(
+            history: history,
+            current: current?.persistentModelID
+        )
         // Rebuilt wholesale alongside the rows, so it holds exactly what is on
-        // screen and an episode that has left the list is let go with its row.
-        // The current episode is usually in `latest` as well, so the keys
-        // collide by design — last one wins rather than trapping.
-        shown = (latest + [current].compactMap { $0 })
+        // screen and an episode that has left the lists is let go with its row.
+        // The current episode is usually in `latest` or `history` as well, so
+        // the keys collide by design — last one wins rather than trapping.
+        shown = (latest + history + [current].compactMap { $0 })
             .reduce(into: [:]) { $0[$1.persistentModelID] = $1 }
         shownLatest = latest.map(\.persistentModelID)
+        shownHistory = history.map(\.persistentModelID)
         listTemplate.updateSections(sections.map(section(for:)))
+        historyTemplate.updateSections(historySections.map(section(for:)))
+    }
+
+    /// As long as Latest, rather than the phone's hundred: a car can cap how
+    /// long a list may be, and the two tabs should be cut short alike.
+    private static var historyDescriptor: FetchDescriptor<Episode> {
+        ListeningHistory.descriptor(limit: LatestEpisodes.defaultLimit)
     }
 
     private func section(for section: CarPlaySection) -> CPListSection {
@@ -197,7 +229,8 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
         guard interfaceController != nil else { return }
         let context = PlaybackHost.shared.container.mainContext
         let latest = (try? context.fetchIdentifiers(LatestEpisodes.descriptor())) ?? []
-        guard latest != shownLatest else { return }
+        let history = (try? context.fetchIdentifiers(Self.historyDescriptor)) ?? []
+        guard latest != shownLatest || history != shownHistory else { return }
         refreshRows()
     }
 
@@ -281,7 +314,11 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
         case .resumeThenShowPlayer:
             // Carries on from the stored position, and hands the episode to
             // the engine if launching restored it without ever loading it.
-            host.player.resume()
+            // `toggle` rather than `resume`, safe here because this is never
+            // the playing case: for an episode that has just finished it
+            // starts over, where `resume` would play from its very end — and
+            // History holds finished episodes as a matter of course.
+            host.player.toggle(episode)
         case .showPlayer:
             break
         }

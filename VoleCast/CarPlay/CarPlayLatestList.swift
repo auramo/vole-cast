@@ -107,7 +107,7 @@ enum CarPlayLatestList {
     }
 
     /// How far in, for a row that has no clock to show.
-    private static func percent(for episode: Episode) -> String? {
+    static func percent(for episode: Episode) -> String? {
         guard let fraction = PlaybackProgress.fraction(
             stored: episode.playbackPosition,
             duration: episode.duration,
@@ -116,8 +116,9 @@ enum CarPlayLatestList {
         return PlaybackTime.percent(fraction)
     }
 
-    /// One place, so the Continue row cannot drift from the Latest ones.
-    private static func artwork(for episode: Episode) -> String? {
+    /// One place, so the Continue row cannot drift from the Latest ones, nor
+    /// History's rows from either.
+    static func artwork(for episode: Episode) -> String? {
         episode.artworkURL ?? episode.podcast?.artworkURL
     }
 
@@ -140,7 +141,7 @@ enum CarPlayLatestList {
     /// exact point, so it names that point as a clock. A Latest row makes no
     /// such promise and only needs to convey how much is left, which a
     /// percentage does in less room.
-    private static func detail(
+    static func detail(
         for episode: Episode,
         at position: TimeInterval?,
         percent: String?
