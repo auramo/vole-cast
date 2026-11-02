@@ -97,25 +97,35 @@ enum DuplicateSubscriptions {
     @discardableResult
     static func foldEpisodes(of podcast: Podcast, in context: ModelContext) -> Int {
         let byGUID = Dictionary(grouping: podcast.episodes ?? [], by: \.guid)
+        return byGUID.values.reduce(0) { $0 + fold(copies: $1, in: context) }
+    }
 
-        var removed = 0
-        for (_, copies) in byGUID where copies.count > 1 {
-            let sorted = copies.sorted {
-                ($0.createdAt ?? .distantPast) < ($1.createdAt ?? .distantPast)
-            }
-            guard let keeper = sorted.first else { continue }
-
-            for loser in sorted.dropFirst() {
-                reconcile(keeper, with: loser)
-
-                // Detached first, so the show stops listing it now rather than
-                // at the next save.
-                loser.podcast = nil
-                context.delete(loser)
-                removed += 1
-            }
+    /// Folds copies of one episode, all in one show, down to the keeper the
+    /// rule above picks. Returns how many were removed.
+    ///
+    /// Apart from `foldEpisodes` for `SyncArrivals`, which finds its copies by
+    /// fetching: a show's relationship, once loaded, does not see a copy that
+    /// another context has saved since.
+    static func fold(copies: [Episode], in context: ModelContext) -> Int {
+        let sorted = copies.sorted {
+            ($0.createdAt ?? .distantPast) < ($1.createdAt ?? .distantPast)
         }
-        return removed
+        guard sorted.count > 1, let keeper = sorted.first,
+              // Two copies equally old leave no keeper every device would pick,
+              // and each keeping a different one would lose the episode. The
+              // duplicate stays instead.
+              sorted[1].createdAt != keeper.createdAt
+        else { return 0 }
+
+        for loser in sorted.dropFirst() {
+            reconcile(keeper, with: loser)
+
+            // Detached first, so the show stops listing it now rather than at
+            // the next save.
+            loser.podcast = nil
+            context.delete(loser)
+        }
+        return sorted.count - 1
     }
 
     /// Folds an episode that has lost its show into the copy that still has

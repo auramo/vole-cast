@@ -196,7 +196,10 @@ struct DuplicateSubscriptionsTests {
 
     @Test func foldsAnEpisodeThatArrivedTwiceIntoOne() throws {
         let context = ModelContext(VoleCastModelContainer.makeInMemory())
-        let podcast = doubledEpisode(context, positions: (0, 900))
+        let podcast = doubledEpisode(
+            context, positions: (0, 900),
+            createdAt: (Date(timeIntervalSince1970: 1000), Date(timeIntervalSince1970: 9000))
+        )
 
         #expect(DuplicateSubscriptions.foldEpisodes(of: podcast, in: context) == 1)
 
@@ -235,6 +238,33 @@ struct DuplicateSubscriptionsTests {
         let episodes = try context.fetch(FetchDescriptor<Episode>())
         #expect(episodes.count == 1)
         #expect(episodes.first?.createdAt == nil)
+    }
+
+    /// Two copies the rule cannot tell apart give no keeper every device
+    /// agrees on, and two devices keeping different ones would delete the
+    /// episode everywhere. A duplicate left on screen is the lesser harm.
+    @Test func leavesAPairWithNoOlderCopyAlone() throws {
+        let same = Date(timeIntervalSince1970: 1000)
+        for stamps: (Date?, Date?) in [(nil, nil), (same, same)] {
+            let context = ModelContext(VoleCastModelContainer.makeInMemory())
+            let podcast = doubledEpisode(context, positions: (0, 0), createdAt: stamps)
+
+            #expect(DuplicateSubscriptions.foldEpisodes(of: podcast, in: context) == 0)
+            #expect(try context.fetch(FetchDescriptor<Episode>()).count == 2)
+        }
+    }
+
+    /// A third, newer copy does not settle which of the other two to keep.
+    @Test func leavesThreeCopiesAloneWhenTheOldestTwoTie() throws {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let podcast = doubledEpisode(context, positions: (0, 0))
+        let third = Episode(guid: "a", title: "Episode a", audioURL: "https://twice.example.com/a.mp3")
+        third.createdAt = Date(timeIntervalSince1970: 9000)
+        third.podcast = podcast
+        context.insert(third)
+
+        #expect(DuplicateSubscriptions.foldEpisodes(of: podcast, in: context) == 0)
+        #expect(try context.fetch(FetchDescriptor<Episode>()).count == 3)
     }
 
     @Test func leavesDistinctEpisodesAlone() throws {
