@@ -81,6 +81,16 @@ struct CarPlayHistoryListTests {
         #expect(sections.first?.title == nil)
     }
 
+    /// Refreshing brings in new episodes, which land in Latest, not here.
+    @Test func offersNoRefresh() {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let episode = makeEpisode(context, guid: "h1")
+
+        let sections = CarPlayHistoryList.sections(history: [episode], current: nil)
+
+        #expect(sections.first?.offersRefresh == false)
+    }
+
     @Test func nothingPlayedMakesAnEmptyList() {
         #expect(CarPlayHistoryList.sections(history: [], current: nil).first?.rows.isEmpty == true)
     }

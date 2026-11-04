@@ -26,6 +26,10 @@ struct CarPlayRow: Equatable, Identifiable {
 struct CarPlaySection: Equatable {
     let title: String?
     let rows: [CarPlayRow]
+    /// Heads the rows with one that refreshes every feed. A row because a list
+    /// inside a tab bar loses its navigation bar buttons, and with them the
+    /// refresh button the list used to carry.
+    var offersRefresh = false
 }
 
 /// What selecting a row should do.
@@ -65,7 +69,9 @@ enum CarPlayLatestList {
         guard let current else {
             // Still titled with nothing playing: the template above carries no
             // title, so this is the only thing naming the list.
-            return [CarPlaySection(title: latestTitle, rows: rows(for: latest, current: nil))]
+            return [CarPlaySection(
+                title: latestTitle, rows: rows(for: latest, current: nil), offersRefresh: true
+            )]
         }
 
         let id = current.persistentModelID
@@ -86,7 +92,8 @@ enum CarPlayLatestList {
             // things to read and two places to tap for one outcome.
             CarPlaySection(
                 title: latestTitle,
-                rows: rows(for: latest.filter { $0.persistentModelID != id }, current: nil)
+                rows: rows(for: latest.filter { $0.persistentModelID != id }, current: nil),
+                offersRefresh: true
             ),
         ]
     }

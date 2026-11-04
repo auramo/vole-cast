@@ -75,22 +75,15 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
 
     private var storeObserver: (any NSObjectProtocol)?
 
-    /// Held, because its enabled state is the only progress the car shows.
-    private lazy var refreshButton = CPBarButton(
-        image: UIImage(systemName: "arrow.clockwise") ?? UIImage()
-    ) { [weak self] _ in
-        self?.refreshFeeds()
-    }
+    /// The row on screen now, held so its detail can say a refresh is under
+    /// way and say it stopped. Every rebuild makes a new one.
+    private var refreshItem: CPListItem?
 
     func templateApplicationScene(
         _ scene: CPTemplateApplicationScene,
         didConnect interfaceController: CPInterfaceController
     ) {
         self.interfaceController = interfaceController
-        // Leading rather than trailing: the system puts its now-playing button
-        // on the trailing side of this same bar, and that button is the only
-        // route back to the player.
-        listTemplate.leadingNavigationBarButtons = [refreshButton]
         refreshRows()
         trackPlayer()
         trackStore()
@@ -151,7 +144,8 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
     }
 
     private func section(for section: CarPlaySection) -> CPListSection {
-        let items = section.rows.map(item(for:))
+        var items: [any CPListTemplateItem] = section.rows.map(item(for:))
+        if section.offersRefresh { items.insert(makeRefreshItem(), at: 0) }
         guard let title = section.title else { return CPListSection(items: items) }
         return CPListSection(items: items, header: title, sectionIndexTitle: nil)
     }
@@ -238,23 +232,55 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
 
     /// The car's own way to ask, since a list template has no pull-to-refresh.
     ///
+    /// A row rather than the navigation bar button it used to be: a list in a
+    /// tab bar has no navigation bar of its own, and buttons set on one are
+    /// silently not drawn — the History tab took the button away with it.
+    private func makeRefreshItem() -> CPListItem {
+        let item = CPListItem(
+            text: String(localized: "Refresh"),
+            detailText: refreshDetail,
+            image: refreshImage
+        )
+        item.handler = { [weak self] _, completion in
+            completion()
+            self?.refreshFeeds()
+        }
+        refreshItem = item
+        return item
+    }
+
+    /// Coloured like the row's text. A symbol handed to a row as it is draws
+    /// black, which on a car's dark list sat beside white text; the colour is
+    /// resolved against the car's own traits, not the phone's, so a car in
+    /// its light style gets dark again.
+    private var refreshImage: UIImage? {
+        let traits = interfaceController?.carTraitCollection
+            ?? UITraitCollection(userInterfaceStyle: .dark)
+        return UIImage(systemName: "arrow.clockwise")?
+            .withTintColor(UIColor.label.resolvedColor(with: traits), renderingMode: .alwaysOriginal)
+    }
+
+    /// The row's detail is the only progress the car shows: the rows
+    /// themselves cannot say they are being refetched, and
+    /// `showsSpinnerWhileEmpty` only covers an empty list. What the driver
+    /// sees is "Refreshing…" and the list change when it is done — or not
+    /// change, which is also an answer.
+    private var refreshDetail: String? {
+        refresher.isRefreshing ? String(localized: "Refreshing…") : nil
+    }
+
     /// `force`, like the phone's button and its pull-to-refresh — someone
     /// asking is not the same as a screen appearing, and the half-hour
-    /// staleness gate would make the button do nothing most of the time.
-    ///
-    /// The disabled button is the only progress the car shows. There is no
-    /// spinner in a `CPBarButton`, and the rows themselves cannot say they are
-    /// being refetched; `showsSpinnerWhileEmpty` only covers an empty list.
-    /// What the driver sees is the button go dim and the list change when it
-    /// is done — or not change, which is also an answer.
+    /// staleness gate would make the row do nothing most of the time.
     private func refreshFeeds() {
         guard !refresher.isRefreshing else { return }
-        refreshButton.isEnabled = false
+        refreshItem?.setDetailText(String(localized: "Refreshing…"))
         Task { @MainActor in
             await refresher.refreshAll(force: true)
-            refreshButton.isEnabled = true
-            // `didSave` does the redrawing, but only if something actually
-            // arrived. Nothing more is needed here.
+            // The item on screen now, which a rebuild along the way may have
+            // replaced — `didSave` does that redrawing, but only if something
+            // actually arrived.
+            refreshItem?.setDetailText(nil)
         }
     }
 
