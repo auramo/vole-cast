@@ -11,8 +11,8 @@ import UIKit
 /// initialiser is what puts the last played episode back in the player.
 ///
 /// Deliberately thin. What the rows say and what a selection means live in
-/// `CarPlayLatestList`, where they are tested; this turns those values into
-/// templates and back.
+/// `CarPlayLatestList` and `CarPlayHistoryList`, where they are tested; this
+/// turns those values into templates and back.
 @MainActor
 final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegate {
     private var interfaceController: CPInterfaceController?
@@ -31,6 +31,23 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
         title: String(localized: "Episodes"), sections: []
     )
 
+    /// Titled for the reason above: an untitled list loses its bar, and the
+    /// now-playing button with it.
+    private let historyTemplate = CPListTemplate(
+        title: String(localized: "History"), sections: []
+    )
+
+    /// Latest first, so connecting lands where it always has. Tabs rather than
+    /// a row leading into History, or a section under Latest: a tab is one
+    /// tap from anywhere, and it is how the car's own audio apps are laid out.
+    private lazy var tabs: CPTabBarTemplate = {
+        listTemplate.tabTitle = String(localized: "Latest")
+        listTemplate.tabImage = UIImage(systemName: "waveform")
+        historyTemplate.tabTitle = String(localized: "History")
+        historyTemplate.tabImage = UIImage(systemName: "clock.arrow.circlepath")
+        return CPTabBarTemplate(templates: [listTemplate, historyTemplate])
+    }()
+
     /// The episodes the rows on screen stand for, kept for as long as those
     /// rows are.
     ///
@@ -43,9 +60,10 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
     /// screen alive holding the same episodes decides it.
     private var shown: [PersistentIdentifier: Episode] = [:]
 
-    /// What the Latest section was built from, so a store change can be
-    /// compared against it rather than redrawn blindly.
+    /// What the Latest section and the History tab were built from, so a
+    /// store change can be compared against them rather than redrawn blindly.
     private var shownLatest: [PersistentIdentifier] = []
+    private var shownHistory: [PersistentIdentifier] = []
 
     /// The car's own, rather than the one `LatestEpisodesView` keeps in
     /// `@State`: that one belongs to a screen that may never have existed, and
@@ -57,26 +75,19 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
 
     private var storeObserver: (any NSObjectProtocol)?
 
-    /// Held, because its enabled state is the only progress the car shows.
-    private lazy var refreshButton = CPBarButton(
-        image: UIImage(systemName: "arrow.clockwise") ?? UIImage()
-    ) { [weak self] _ in
-        self?.refreshFeeds()
-    }
+    /// The row on screen now, held so its detail can say a refresh is under
+    /// way and say it stopped. Every rebuild makes a new one.
+    private var refreshItem: CPListItem?
 
     func templateApplicationScene(
         _ scene: CPTemplateApplicationScene,
         didConnect interfaceController: CPInterfaceController
     ) {
         self.interfaceController = interfaceController
-        // Leading rather than trailing: the system puts its now-playing button
-        // on the trailing side of this same bar, and that button is the only
-        // route back to the player.
-        listTemplate.leadingNavigationBarButtons = [refreshButton]
         refreshRows()
         trackPlayer()
         trackStore()
-        interfaceController.setRootTemplate(listTemplate, animated: false, completion: nil)
+        interfaceController.setRootTemplate(tabs, animated: false, completion: nil)
     }
 
     func templateApplicationScene(
@@ -101,25 +112,40 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
     /// is fed by `MPNowPlayingInfoCenter` and knows nothing about this list.
     private func refreshRows() {
         let host = PlaybackHost.shared
-        let latest = (try? host.container.mainContext.fetch(LatestEpisodes.descriptor())) ?? []
+        let context = host.container.mainContext
+        let latest = (try? context.fetch(LatestEpisodes.descriptor())) ?? []
+        let history = (try? context.fetch(Self.historyDescriptor)) ?? []
         let current = host.player.currentEpisode
         let sections = CarPlayLatestList.sections(
             current: current,
             at: host.player.position,
             latest: latest
         )
+        let historySections = CarPlayHistoryList.sections(
+            history: history,
+            current: current?.persistentModelID
+        )
         // Rebuilt wholesale alongside the rows, so it holds exactly what is on
-        // screen and an episode that has left the list is let go with its row.
-        // The current episode is usually in `latest` as well, so the keys
-        // collide by design — last one wins rather than trapping.
-        shown = (latest + [current].compactMap { $0 })
+        // screen and an episode that has left the lists is let go with its row.
+        // The current episode is usually in `latest` or `history` as well, so
+        // the keys collide by design — last one wins rather than trapping.
+        shown = (latest + history + [current].compactMap { $0 })
             .reduce(into: [:]) { $0[$1.persistentModelID] = $1 }
         shownLatest = latest.map(\.persistentModelID)
+        shownHistory = history.map(\.persistentModelID)
         listTemplate.updateSections(sections.map(section(for:)))
+        historyTemplate.updateSections(historySections.map(section(for:)))
+    }
+
+    /// As long as Latest, rather than the phone's hundred: a car can cap how
+    /// long a list may be, and the two tabs should be cut short alike.
+    private static var historyDescriptor: FetchDescriptor<Episode> {
+        ListeningHistory.descriptor(limit: LatestEpisodes.defaultLimit)
     }
 
     private func section(for section: CarPlaySection) -> CPListSection {
-        let items = section.rows.map(item(for:))
+        var items: [any CPListTemplateItem] = section.rows.map(item(for:))
+        if section.offersRefresh { items.insert(makeRefreshItem(), at: 0) }
         guard let title = section.title else { return CPListSection(items: items) }
         return CPListSection(items: items, header: title, sectionIndexTitle: nil)
     }
@@ -197,7 +223,8 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
         guard interfaceController != nil else { return }
         let context = PlaybackHost.shared.container.mainContext
         let latest = (try? context.fetchIdentifiers(LatestEpisodes.descriptor())) ?? []
-        guard latest != shownLatest else { return }
+        let history = (try? context.fetchIdentifiers(Self.historyDescriptor)) ?? []
+        guard latest != shownLatest || history != shownHistory else { return }
         refreshRows()
     }
 
@@ -205,23 +232,55 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
 
     /// The car's own way to ask, since a list template has no pull-to-refresh.
     ///
+    /// A row rather than the navigation bar button it used to be: a list in a
+    /// tab bar has no navigation bar of its own, and buttons set on one are
+    /// silently not drawn — the History tab took the button away with it.
+    private func makeRefreshItem() -> CPListItem {
+        let item = CPListItem(
+            text: String(localized: "Refresh"),
+            detailText: refreshDetail,
+            image: refreshImage
+        )
+        item.handler = { [weak self] _, completion in
+            completion()
+            self?.refreshFeeds()
+        }
+        refreshItem = item
+        return item
+    }
+
+    /// Coloured like the row's text. A symbol handed to a row as it is draws
+    /// black, which on a car's dark list sat beside white text; the colour is
+    /// resolved against the car's own traits, not the phone's, so a car in
+    /// its light style gets dark again.
+    private var refreshImage: UIImage? {
+        let traits = interfaceController?.carTraitCollection
+            ?? UITraitCollection(userInterfaceStyle: .dark)
+        return UIImage(systemName: "arrow.clockwise")?
+            .withTintColor(UIColor.label.resolvedColor(with: traits), renderingMode: .alwaysOriginal)
+    }
+
+    /// The row's detail is the only progress the car shows: the rows
+    /// themselves cannot say they are being refetched, and
+    /// `showsSpinnerWhileEmpty` only covers an empty list. What the driver
+    /// sees is "Refreshing…" and the list change when it is done — or not
+    /// change, which is also an answer.
+    private var refreshDetail: String? {
+        refresher.isRefreshing ? String(localized: "Refreshing…") : nil
+    }
+
     /// `force`, like the phone's button and its pull-to-refresh — someone
     /// asking is not the same as a screen appearing, and the half-hour
-    /// staleness gate would make the button do nothing most of the time.
-    ///
-    /// The disabled button is the only progress the car shows. There is no
-    /// spinner in a `CPBarButton`, and the rows themselves cannot say they are
-    /// being refetched; `showsSpinnerWhileEmpty` only covers an empty list.
-    /// What the driver sees is the button go dim and the list change when it
-    /// is done — or not change, which is also an answer.
+    /// staleness gate would make the row do nothing most of the time.
     private func refreshFeeds() {
         guard !refresher.isRefreshing else { return }
-        refreshButton.isEnabled = false
+        refreshItem?.setDetailText(String(localized: "Refreshing…"))
         Task { @MainActor in
             await refresher.refreshAll(force: true)
-            refreshButton.isEnabled = true
-            // `didSave` does the redrawing, but only if something actually
-            // arrived. Nothing more is needed here.
+            // The item on screen now, which a rebuild along the way may have
+            // replaced — `didSave` does that redrawing, but only if something
+            // actually arrived.
+            refreshItem?.setDetailText(nil)
         }
     }
 
@@ -281,7 +340,11 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
         case .resumeThenShowPlayer:
             // Carries on from the stored position, and hands the episode to
             // the engine if launching restored it without ever loading it.
-            host.player.resume()
+            // `toggle` rather than `resume`, safe here because this is never
+            // the playing case: for an episode that has just finished it
+            // starts over, where `resume` would play from its very end — and
+            // History holds finished episodes as a matter of course.
+            host.player.toggle(episode)
         case .showPlayer:
             break
         }

@@ -792,6 +792,16 @@
         }
       }
     },
+    "Refreshing…" : {
+      "localizations" : {
+        "fi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Päivitetään…"
+          }
+        }
+      }
+    },
     "Religion & Spirituality" : {
       "localizations" : {
         "fi" : {

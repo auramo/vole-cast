@@ -194,6 +194,35 @@ struct CarPlayLatestListTests {
         #expect(sections.first?.rows.map(\.title) == ["One"])
     }
 
+    // MARK: - Refreshing
+
+    /// A list inside a tab bar loses its navigation bar buttons, so the
+    /// refresh lives in the list, heading the episodes it would bring in.
+    @Test func theLatestSectionOffersARefresh() {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let episode = makeEpisode(context, guid: "c1", title: "One")
+
+        let sections = CarPlayLatestList.sections(current: nil, at: 0, latest: [episode])
+
+        #expect(sections.map(\.offersRefresh) == [true])
+    }
+
+    @Test func theContinueSectionDoesNot() {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let playing = makeEpisode(context, guid: "c1", title: "Carried Over")
+
+        let sections = CarPlayLatestList.sections(current: playing, at: 842, latest: [])
+
+        #expect(sections.map(\.offersRefresh) == [false, true])
+    }
+
+    /// Nothing subscribed yet, or nothing new: still a way to look again.
+    @Test func anEmptyLatestStillOffersARefresh() {
+        let sections = CarPlayLatestList.sections(current: nil, at: 0, latest: [])
+
+        #expect(sections.first?.offersRefresh == true)
+    }
+
     // MARK: - Artwork
 
     /// The same rule the phone row uses: the episode's own picture when the

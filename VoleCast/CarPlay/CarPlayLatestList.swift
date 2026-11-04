@@ -26,6 +26,10 @@ struct CarPlayRow: Equatable, Identifiable {
 struct CarPlaySection: Equatable {
     let title: String?
     let rows: [CarPlayRow]
+    /// Heads the rows with one that refreshes every feed. A row because a list
+    /// inside a tab bar loses its navigation bar buttons, and with them the
+    /// refresh button the list used to carry.
+    var offersRefresh = false
 }
 
 /// What selecting a row should do.
@@ -65,7 +69,9 @@ enum CarPlayLatestList {
         guard let current else {
             // Still titled with nothing playing: the template above carries no
             // title, so this is the only thing naming the list.
-            return [CarPlaySection(title: latestTitle, rows: rows(for: latest, current: nil))]
+            return [CarPlaySection(
+                title: latestTitle, rows: rows(for: latest, current: nil), offersRefresh: true
+            )]
         }
 
         let id = current.persistentModelID
@@ -86,7 +92,8 @@ enum CarPlayLatestList {
             // things to read and two places to tap for one outcome.
             CarPlaySection(
                 title: latestTitle,
-                rows: rows(for: latest.filter { $0.persistentModelID != id }, current: nil)
+                rows: rows(for: latest.filter { $0.persistentModelID != id }, current: nil),
+                offersRefresh: true
             ),
         ]
     }
@@ -107,7 +114,7 @@ enum CarPlayLatestList {
     }
 
     /// How far in, for a row that has no clock to show.
-    private static func percent(for episode: Episode) -> String? {
+    static func percent(for episode: Episode) -> String? {
         guard let fraction = PlaybackProgress.fraction(
             stored: episode.playbackPosition,
             duration: episode.duration,
@@ -116,8 +123,9 @@ enum CarPlayLatestList {
         return PlaybackTime.percent(fraction)
     }
 
-    /// One place, so the Continue row cannot drift from the Latest ones.
-    private static func artwork(for episode: Episode) -> String? {
+    /// One place, so the Continue row cannot drift from the Latest ones, nor
+    /// History's rows from either.
+    static func artwork(for episode: Episode) -> String? {
         episode.artworkURL ?? episode.podcast?.artworkURL
     }
 
@@ -140,7 +148,7 @@ enum CarPlayLatestList {
     /// exact point, so it names that point as a clock. A Latest row makes no
     /// such promise and only needs to convey how much is left, which a
     /// percentage does in less room.
-    private static func detail(
+    static func detail(
         for episode: Episode,
         at position: TimeInterval?,
         percent: String?
