@@ -216,6 +216,24 @@ struct CarPlayLatestListTests {
         #expect(sections.map(\.offersRefresh) == [false, true])
     }
 
+    /// The heading is the progress: it is the only text beside the button.
+    @Test func whileRefreshingTheLatestHeadingSaysSo() {
+        let context = ModelContext(VoleCastModelContainer.makeInMemory())
+        let playing = makeEpisode(context, guid: "c1", title: "Carried Over")
+
+        let sections = CarPlayLatestList.sections(
+            current: playing, at: 842, latest: [], isRefreshing: true
+        )
+
+        #expect(sections.map(\.title) == [CarPlayLatestList.continueTitle, CarPlayLatestList.refreshingTitle])
+    }
+
+    @Test func withNothingPlayingTheHeadingSaysSoToo() {
+        let sections = CarPlayLatestList.sections(current: nil, at: 0, latest: [], isRefreshing: true)
+
+        #expect(sections.map(\.title) == [CarPlayLatestList.refreshingTitle])
+    }
+
     /// Nothing subscribed yet, or nothing new: still a way to look again.
     @Test func anEmptyLatestStillOffersARefresh() {
         let sections = CarPlayLatestList.sections(current: nil, at: 0, latest: [])
