@@ -26,9 +26,9 @@ struct CarPlayRow: Equatable, Identifiable {
 struct CarPlaySection: Equatable {
     let title: String?
     let rows: [CarPlayRow]
-    /// Heads the rows with one that refreshes every feed. A row because a list
-    /// inside a tab bar loses its navigation bar buttons, and with them the
-    /// refresh button the list used to carry.
+    /// Carries a button on its heading's line that refreshes every feed. There
+    /// because a list inside a tab bar loses its navigation bar buttons, and
+    /// with them the refresh button the list used to carry.
     var offersRefresh = false
 }
 
@@ -51,6 +51,9 @@ enum CarPlayLatestList {
     /// anything touched this type.
     static var continueTitle: String { String(localized: "Continue") }
     static var latestTitle: String { String(localized: "Latest") }
+    /// Latest's heading while a refresh runs. The heading is the only text on
+    /// the refresh button's line, so it is where the progress is said.
+    static var refreshingTitle: String { String(localized: "Refreshing…") }
 
     /// The whole list: what you were in the middle of, then what is new.
     ///
@@ -64,8 +67,10 @@ enum CarPlayLatestList {
     static func sections(
         current: Episode?,
         at position: TimeInterval,
-        latest: [Episode]
+        latest: [Episode],
+        isRefreshing: Bool = false
     ) -> [CarPlaySection] {
+        let latestTitle = isRefreshing ? Self.refreshingTitle : Self.latestTitle
         guard let current else {
             // Still titled with nothing playing: the template above carries no
             // title, so this is the only thing naming the list.

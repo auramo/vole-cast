@@ -75,9 +75,10 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
 
     private var storeObserver: (any NSObjectProtocol)?
 
-    /// The row on screen now, held so its detail can say a refresh is under
-    /// way and say it stopped. Every rebuild makes a new one.
-    private var refreshItem: CPListItem?
+    /// The car's own, rather than `refresher.isRefreshing`: that one is set
+    /// and cleared inside `refreshAll`, with no moment in between to redraw
+    /// the heading that says so.
+    private var isRefreshingFeeds = false
 
     func templateApplicationScene(
         _ scene: CPTemplateApplicationScene,
@@ -119,7 +120,8 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
         let sections = CarPlayLatestList.sections(
             current: current,
             at: host.player.position,
-            latest: latest
+            latest: latest,
+            isRefreshing: isRefreshingFeeds
         )
         let historySections = CarPlayHistoryList.sections(
             history: history,
@@ -144,10 +146,19 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
     }
 
     private func section(for section: CarPlaySection) -> CPListSection {
-        var items: [any CPListTemplateItem] = section.rows.map(item(for:))
-        if section.offersRefresh { items.insert(makeRefreshItem(), at: 0) }
+        let items = section.rows.map(item(for:))
         guard let title = section.title else { return CPListSection(items: items) }
-        return CPListSection(items: items, header: title, sectionIndexTitle: nil)
+        guard section.offersRefresh else {
+            return CPListSection(items: items, header: title, sectionIndexTitle: nil)
+        }
+        return CPListSection(
+            items: items,
+            header: title,
+            headerSubtitle: nil,
+            headerImage: nil,
+            headerButton: makeRefreshButton(),
+            sectionIndexTitle: nil
+        )
     }
 
     private func item(for row: CarPlayRow) -> CPListItem {
@@ -232,55 +243,46 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
 
     /// The car's own way to ask, since a list template has no pull-to-refresh.
     ///
-    /// A row rather than the navigation bar button it used to be: a list in a
-    /// tab bar has no navigation bar of its own, and buttons set on one are
-    /// silently not drawn — the History tab took the button away with it.
-    private func makeRefreshItem() -> CPListItem {
-        let item = CPListItem(
-            text: String(localized: "Refresh"),
-            detailText: refreshDetail,
-            image: refreshImage
-        )
-        item.handler = { [weak self] _, completion in
-            completion()
+    /// On the Latest heading's line rather than in the navigation bar it used
+    /// to be in: a list in a tab bar has no navigation bar of its own, and
+    /// buttons set on one are silently not drawn — the History tab took the
+    /// button away with it. On the heading, too, rather than a row of its
+    /// own, which took a whole row's height for one glyph.
+    private func makeRefreshButton() -> CPButton {
+        let button = CPButton(image: Self.refreshImage) { [weak self] _ in
             self?.refreshFeeds()
         }
-        refreshItem = item
-        return item
+        button.isEnabled = !isRefreshingFeeds
+        return button
     }
 
-    /// Coloured like the row's text. A symbol handed to a row as it is draws
-    /// black, which on a car's dark list sat beside white text; the colour is
-    /// resolved against the car's own traits, not the phone's, so a car in
-    /// its light style gets dark again.
-    private var refreshImage: UIImage? {
-        let traits = interfaceController?.carTraitCollection
-            ?? UITraitCollection(userInterfaceStyle: .dark)
-        return UIImage(systemName: "arrow.clockwise")?
-            .withTintColor(UIColor.label.resolvedColor(with: traits), renderingMode: .alwaysOriginal)
-    }
-
-    /// The row's detail is the only progress the car shows: the rows
-    /// themselves cannot say they are being refetched, and
-    /// `showsSpinnerWhileEmpty` only covers an empty list. What the driver
-    /// sees is "Refreshing…" and the list change when it is done — or not
-    /// change, which is also an answer.
-    private var refreshDetail: String? {
-        refresher.isRefreshing ? String(localized: "Refreshing…") : nil
-    }
+    /// The bare arrow, as a template. CarPlay draws a header button's circle
+    /// itself and fills the image's shape with its own colour, so anything
+    /// more — a disc of our own, a colour — only puts a second circle inside
+    /// the car's. The black arrow a list row once drew does not happen here:
+    /// a row draws its image as given, a button does not.
+    private static let refreshImage: UIImage = UIImage(
+        systemName: "arrow.clockwise",
+        withConfiguration: UIImage.SymbolConfiguration(weight: .semibold)
+    )?.withRenderingMode(.alwaysTemplate) ?? UIImage()
 
     /// `force`, like the phone's button and its pull-to-refresh — someone
     /// asking is not the same as a screen appearing, and the half-hour
-    /// staleness gate would make the row do nothing most of the time.
+    /// staleness gate would make the button do nothing most of the time.
+    ///
+    /// The heading is the only progress the car shows: the rows themselves
+    /// cannot say they are being refetched, and `showsSpinnerWhileEmpty` only
+    /// covers an empty list. What the driver sees is Latest turn into
+    /// "Refreshing…" and back, and the list change when it is done — or not
+    /// change, which is also an answer.
     private func refreshFeeds() {
-        guard !refresher.isRefreshing else { return }
-        refreshItem?.setDetailText(String(localized: "Refreshing…"))
+        guard !isRefreshingFeeds else { return }
+        isRefreshingFeeds = true
+        refreshRows()
         Task { @MainActor in
             await refresher.refreshAll(force: true)
-            // The item on screen now, which a rebuild along the way may have
-            // replaced — `didSave` does that redrawing, but only if something
-            // actually arrived.
-            refreshItem?.setDetailText(nil)
+            isRefreshingFeeds = false
+            refreshRows()
         }
     }
 
